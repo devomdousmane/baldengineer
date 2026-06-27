@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+/* ── Light mode ── */
+:root {
+  --color-primary:    #1A2E1A;
+  --color-secondary:  #2D4A2D;
+  --color-cta:        #2E7D32;
+  --color-cta-hover:  #388E3C;
+  --color-cta-light:  #4CAF50;
+  --color-bg:         #F8FBF8;
+  --color-bg-2:       #EFF5EF;
+  --color-text:       #0D1F0D;
+  --color-muted:      #4A6741;
+  --color-border:     #C8DECC;
+  --color-card:       #FFFFFF;
+  --color-card-2:     #F4FAF4;
+  --color-accent:     #81C784;
+  --color-hero-bg:    #0D1F0D;
+  --color-input-bg:   #FFFFFF;
+  --color-input-border: #C8DECC;
+  --color-urgent-bg:  #1A2E1A;
+}
+
+/* ── Dark mode ── */
+.dark {
+  --color-primary:    #F0FAF0;
+  --color-secondary:  #D4EDDA;
+  --color-cta:        #4CAF50;
+  --color-cta-hover:  #66BB6A;
+  --color-cta-light:  #81C784;
+  --color-bg:         #060E06;
+  --color-bg-2:       #0C1A0C;
+  --color-text:       #EEF6EE;
+  --color-muted:      #8FBC8F;
+  --color-border:     #1C3A1C;
+  --color-card:       #0F1E0F;
+  --color-card-2:     #0C1A0C;
+  --color-accent:     #66BB6A;
+  --color-hero-bg:    #040A04;
+  --color-input-bg:   #0F1E0F;
+  --color-input-border: #1C3A1C;
+  --color-urgent-bg:  #0C2010;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+  html { scroll-behavior: auto; }
+}
