@@ -3,12 +3,7 @@
 import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import {
-  Settings,
-  FileText,
-  Search,
-  Users,
-  Cpu,
-  Calculator,
+  Settings, FileText, Search, Users, Cpu, Calculator,
 } from "lucide-react";
 import SectionHeader from "./SectionHeader";
 import AnimatedSection from "./AnimatedSection";
@@ -47,44 +42,52 @@ const skills = [
 ];
 
 function SkillCard({
-  icon: Icon,
-  title,
-  desc,
-  index,
-}: {
-  icon: typeof Settings;
-  title: string;
-  desc: string;
-  index: number;
-}) {
+  icon: Icon, title, desc, index,
+}: { icon: typeof Settings; title: string; desc: string; index: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-60px" });
 
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 40 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.55, delay: index * 0.08, ease: "easeOut" }}
-      className="group rounded-2xl p-6 border cursor-default transition-shadow duration-200 hover:shadow-md"
-      style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-card)" }}
+      transition={{ duration: 1.0, delay: index * 0.1, ease: [0.16, 1, 0.3, 1] }}
+      className="group rounded-2xl p-6 border cursor-default transition-all duration-500"
+      style={{
+        borderColor: "var(--color-border)",
+        backgroundColor: "var(--color-surface)",
+        boxShadow: "var(--shadow-2)",
+      }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLElement).style.boxShadow = "var(--shadow-3)";
+        (e.currentTarget as HTMLElement).style.transform = "translateY(-2px) scale(1.01)";
+        (e.currentTarget as HTMLElement).style.borderColor = "var(--color-border-hi)";
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLElement).style.boxShadow = "var(--shadow-2)";
+        (e.currentTarget as HTMLElement).style.transform = "";
+        (e.currentTarget as HTMLElement).style.borderColor = "var(--color-border)";
+      }}
+      role="article"
+      aria-label={title}
     >
       <div
-        className="w-11 h-11 rounded-xl flex items-center justify-center mb-4 transition-colors duration-200"
-        style={{ backgroundColor: "color-mix(in srgb, var(--color-cta) 12%, var(--color-card))" }}
+        className="w-11 h-11 rounded-xl flex items-center justify-center mb-5 transition-colors duration-300"
+        style={{ backgroundColor: "var(--color-accent-dim)", border: "1px solid var(--color-border)" }}
       >
-        <Icon
-          className="w-5 h-5 transition-colors duration-200 group-hover:text-white"
-          style={{ color: "var(--color-cta)" }}
-        />
+        <Icon className="w-5 h-5" style={{ color: "var(--color-accent)" }} strokeWidth={1.5} />
       </div>
       <h3
-        className="font-semibold text-base mb-2"
-        style={{ fontFamily: "var(--font-archivo), sans-serif", color: "var(--color-primary)" }}
+        className="font-medium text-base mb-3 leading-snug"
+        style={{ fontFamily: "var(--font-display)", fontStyle: "italic", color: "var(--color-text)", fontSize: "1.15rem" }}
       >
         {title}
       </h3>
-      <p className="text-sm leading-relaxed" style={{ color: "var(--color-muted)" }}>
+      <p
+        className="text-sm leading-relaxed"
+        style={{ color: "var(--color-text-2)", fontFamily: "var(--font-body)", lineHeight: 1.7 }}
+      >
         {desc}
       </p>
     </motion.div>
@@ -95,8 +98,8 @@ export default function Skills() {
   return (
     <section
       id="competences"
-      className="py-20 sm:py-28 px-4 sm:px-6"
-      style={{ backgroundColor: "var(--color-bg-2)" }}
+      className="py-28 sm:py-36 px-6 sm:px-10"
+      style={{ backgroundColor: "var(--color-deep)" }}
     >
       <div className="max-w-7xl mx-auto">
         <SectionHeader
@@ -112,25 +115,36 @@ export default function Skills() {
         </div>
 
         {/* Certifications bar */}
-        <AnimatedSection delay={0.2} className="mt-12">
+        <AnimatedSection delay={0.2} className="mt-10">
           <div
             className="rounded-2xl p-6 sm:p-8 border flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left"
-            style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-card)" }}
+            style={{
+              borderColor: "var(--color-border)",
+              backgroundColor: "var(--color-surface)",
+              boxShadow: "var(--shadow-1)",
+            }}
           >
             <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
-              style={{ backgroundColor: "color-mix(in srgb, var(--color-cta) 12%, var(--color-card))" }}
+              className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
+              style={{ backgroundColor: "var(--color-accent-dim)", border: "1px solid var(--color-border)" }}
+              aria-hidden="true"
             >
-              <Award className="w-7 h-7" style={{ color: "var(--color-cta)" }} />
+              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="8" r="6" />
+                <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
+              </svg>
             </div>
             <div>
               <h3
-                className="font-semibold text-lg mb-1"
-                style={{ fontFamily: "var(--font-archivo), sans-serif", color: "var(--color-primary)" }}
+                className="font-medium text-lg mb-2 italic"
+                style={{ fontFamily: "var(--font-display)", color: "var(--color-text)" }}
               >
                 Conformité & normes
               </h3>
-              <p className="text-sm leading-relaxed" style={{ color: "var(--color-muted)" }}>
+              <p
+                className="text-sm leading-relaxed"
+                style={{ color: "var(--color-text-2)", fontFamily: "var(--font-body)", lineHeight: 1.7 }}
+              >
                 Mise en conformité NF C 15-100, habilitations électriques, normes HTA/HTB.
                 Intégration des solutions connectées : GTB, domotique, supervision.
               </p>
@@ -139,25 +153,5 @@ export default function Skills() {
         </AnimatedSection>
       </div>
     </section>
-  );
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function Award({ className, style }: { className?: string; style?: React.CSSProperties }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      style={style}
-    >
-      <circle cx="12" cy="8" r="6" />
-      <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
-    </svg>
   );
 }

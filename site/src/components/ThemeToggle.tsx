@@ -8,16 +8,26 @@ export default function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-  if (!mounted) return <div className="w-9 h-9" />;
+  if (!mounted) return <div className="w-9 h-9" aria-hidden="true" />;
+
+  const isDark = theme === "dark";
 
   return (
     <button
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className="w-9 h-9 flex items-center justify-center rounded-xl transition-colors duration-200 cursor-pointer"
-      style={{ backgroundColor: "var(--color-bg-2)", color: "var(--color-secondary)" }}
-      aria-label="Changer le thème"
+      onClick={() => setTheme(isDark ? "light" : "dark")}
+      className="w-9 h-9 flex items-center justify-center rounded-full transition-all duration-300 cursor-pointer"
+      style={{
+        backgroundColor: "var(--color-accent-dim)",
+        color: "var(--color-accent-hi)",
+        border: "1px solid var(--color-border)",
+      }}
+      aria-label={isDark ? "Passer en mode clair" : "Passer en mode sombre"}
     >
-      {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+      {isDark ? (
+        <Sun className="w-3.5 h-3.5" strokeWidth={1.5} />
+      ) : (
+        <Moon className="w-3.5 h-3.5" strokeWidth={1.5} />
+      )}
     </button>
   );
 }

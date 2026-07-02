@@ -16,11 +16,10 @@ export default function AnimatedSection({
   className = "",
   delay = 0,
   direction = "up",
-  distance = 28,
+  distance = 40,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
-  /* margin: trigger when element is 10% into viewport — earlier than "-80px" */
-  const inView = useInView(ref, { once: true, margin: "-10% 0px -5% 0px" });
+  const inView = useInView(ref, { once: true, margin: "-8% 0px -4% 0px" });
 
   return (
     <motion.div
@@ -31,11 +30,7 @@ export default function AnimatedSection({
         x: direction === "left" ? -distance : direction === "right" ? distance : 0,
       }}
       animate={inView ? { opacity: 1, y: 0, x: 0 } : {}}
-      transition={{
-        duration: 0.5,
-        delay,
-        ease: "easeOut",
-      }}
+      transition={{ duration: 1.0, delay, ease: [0.16, 1, 0.3, 1] }}
       className={className}
     >
       {children}

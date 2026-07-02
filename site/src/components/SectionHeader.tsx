@@ -8,28 +8,45 @@ interface Props {
 
 export default function SectionHeader({ label, title, subtitle }: Props) {
   return (
-    <div className="text-center mb-12 sm:mb-16">
+    <div className="text-center mb-16 sm:mb-24">
       <AnimatedSection delay={0}>
-        <span
-          className="inline-block px-3 py-1 rounded-full text-xs font-medium uppercase tracking-widest mb-4"
+        <div className="inline-flex flex-col items-center gap-3 mb-6">
+          <span
+            className="text-[10px] uppercase tracking-[0.25em] font-medium"
+            style={{ color: "var(--color-accent)", fontFamily: "var(--font-mono)" }}
+          >
+            {label}
+          </span>
+          <div
+            className="h-px w-12"
+            style={{ backgroundColor: "var(--color-gold)", opacity: 0.5 }}
+          />
+        </div>
+      </AnimatedSection>
+
+      <AnimatedSection delay={0.1}>
+        <h2
+          className="text-4xl sm:text-5xl md:text-6xl font-light italic mb-6 leading-[1.1]"
           style={{
-            backgroundColor: "color-mix(in srgb, var(--color-cta) 14%, transparent)",
-            color: "var(--color-cta)",
-            fontFamily: "var(--font-jetbrains), monospace",
-            border: "1px solid color-mix(in srgb, var(--color-cta) 25%, transparent)",
+            fontFamily: "var(--font-display)",
+            color: "var(--color-text)",
+            letterSpacing: "-0.01em",
           }}
         >
-          {label}
-        </span>
-      </AnimatedSection>
-      <AnimatedSection delay={0.1}>
-        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4" style={{ fontFamily: "var(--font-space-grotesk), sans-serif", color: "var(--color-primary)" }}>
           {title}
         </h2>
       </AnimatedSection>
+
       {subtitle && (
-        <AnimatedSection delay={0.2}>
-          <p className="max-w-2xl mx-auto text-base sm:text-lg leading-relaxed" style={{ color: "var(--color-muted)" }}>
+        <AnimatedSection delay={0.18}>
+          <p
+            className="max-w-xl mx-auto leading-relaxed"
+            style={{
+              color: "var(--color-text-2)",
+              fontSize: "var(--text-base)",
+              fontFamily: "var(--font-body)",
+            }}
+          >
             {subtitle}
           </p>
         </AnimatedSection>

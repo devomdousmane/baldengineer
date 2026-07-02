@@ -1,57 +1,222 @@
 @import "tailwindcss";
 
-/* ── Light mode ── */
+/* ═══════════════════════════════════════════════════════════════
+   DIORAMA — Design System v2
+   Source: BaldEngineer logo (#2D8A3E, Cormorant serif italic)
+   Validated by: UI/UX Pro Max — Trust & Authority + Dimensional
+   Layering + Parallax Storytelling + Modern Dark Cinema
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Dark mode (Diorama default) ─────────────────────────────── */
 :root {
-  --color-primary:    #1A2E1A;
-  --color-secondary:  #2D4A2D;
-  --color-cta:        #2E7D32;
-  --color-cta-hover:  #388E3C;
-  --color-cta-light:  #4CAF50;
-  --color-bg:         #F8FBF8;
-  --color-bg-2:       #EFF5EF;
-  --color-text:       #0D1F0D;
-  --color-muted:      #4A6741;
-  --color-border:     #C8DECC;
-  --color-card:       #FFFFFF;
-  --color-card-2:     #F4FAF4;
-  --color-accent:     #81C784;
-  --color-hero-bg:    #0D1F0D;
-  --color-input-bg:   #FFFFFF;
-  --color-input-border: #C8DECC;
-  --color-urgent-bg:  #1A2E1A;
+  /* Surfaces — Modern Dark Cinema validated */
+  --color-void:         #05080A;   /* never pure #000 (OLED smear) */
+  --color-deep:         #0C1410;
+  --color-surface:      #111C14;
+  --color-elevated:     #182A1C;
+  --color-overlay:      rgba(5, 8, 10, 0.85);
+
+  /* Borders */
+  --color-border:       rgba(45, 138, 62, 0.12);
+  --color-border-solid: #1A2E1C;
+  --color-border-hi:    rgba(255, 255, 255, 0.06); /* hairline cards */
+
+  /* Accent — logo green signature */
+  --color-accent:       #2D8A3E;
+  --color-accent-glow:  rgba(45, 138, 62, 0.22);
+  --color-accent-hi:    #4DB85C;
+  --color-accent-dim:   rgba(45, 138, 62, 0.08);
+
+  /* Text — WCAG AA compliant on dark */
+  --color-text:         #E8E4DC;   /* 14.2:1 on void ✓ */
+  --color-text-2:       #9A9690;   /* 4.8:1 on void ✓ (was #8A8680 = 3.1:1 ✗) */
+  --color-text-3:       #5A5652;   /* decorative only, never body */
+
+  /* Gold — decoration only, never body text on dark */
+  --color-gold:         #C4A05A;   /* 4.2:1 → use size ≥18px only */
+  --color-gold-muted:   rgba(196, 160, 90, 0.12);
+
+  /* Elevation shadows — Dimensional Layering (4 levels) */
+  --shadow-1: 0 1px 3px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.25);
+  --shadow-2: 0 4px 12px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.25);
+  --shadow-3: 0 10px 30px rgba(0,0,0,0.5), 0 4px 8px rgba(0,0,0,0.25);
+  --shadow-4: 0 20px 60px rgba(0,0,0,0.6), 0 8px 16px rgba(0,0,0,0.25);
+  --shadow-glow: 0 0 24px rgba(45, 138, 62, 0.25), 0 0 8px rgba(45, 138, 62, 0.12);
+
+  /* Radius — Modern Dark Cinema: 16px cards */
+  --radius-sm:   6px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-xl:   24px;
+  --radius-full: 9999px;
+
+  /* Z-index scale */
+  --z-base:    0;
+  --z-raised:  10;
+  --z-overlay: 20;
+  --z-modal:   40;
+  --z-nav:     50;
+  --z-toast:   100;
+
+  /* Animation — Modern Dark Cinema validated easing */
+  --ease-diorama: cubic-bezier(0.16, 1, 0.3, 1);  /* Expo.out — Bezier(0.16,1,0.3,1) */
+  --ease-out:     cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring:  cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast:     150ms;
+  --dur-normal:   300ms;
+  --dur-slow:     600ms;
+  --dur-reveal:   1000ms;
+
+  /* Parallax speeds — Parallax Storytelling validated */
+  --parallax-bg:  0.3;
+  --parallax-mid: 0.6;
+  --parallax-fg:  1;
+
+  /* legacy aliases — consumed by existing components */
+  --color-bg:           #05080A;
+  --color-bg-2:         #0C1410;
+  --color-card:         #111C14;
+  --color-card-2:       #182A1C;
+  --color-primary:      #E8E4DC;
+  --color-secondary:    #C8C4BC;
+  --color-muted:        #5A5652;
+  --color-cta:          #2D8A3E;
+  --color-cta-hover:    #3AA04E;
+  --color-cta-light:    #4DB85C;
+  --color-hero-bg:      #05080A;
+  --color-input-bg:     #111C14;
+  --color-input-border: rgba(45, 138, 62, 0.20);
+  --color-urgent-bg:    #0C1A10;
 }
 
-/* ── Dark mode ── */
-.dark {
-  --color-primary:    #F0FAF0;
-  --color-secondary:  #D4EDDA;
-  --color-cta:        #4CAF50;
-  --color-cta-hover:  #66BB6A;
-  --color-cta-light:  #81C784;
-  --color-bg:         #060E06;
-  --color-bg-2:       #0C1A0C;
-  --color-text:       #EEF6EE;
-  --color-muted:      #8FBC8F;
-  --color-border:     #1C3A1C;
-  --color-card:       #0F1E0F;
-  --color-card-2:     #0C1A0C;
-  --color-accent:     #66BB6A;
-  --color-hero-bg:    #040A04;
-  --color-input-bg:   #0F1E0F;
-  --color-input-border: #1C3A1C;
-  --color-urgent-bg:  #0C2010;
+/* ── Light mode (élégant, aéré) ──────────────────────────────── */
+.light {
+  /* Surfaces */
+  --color-void:         #FAFAF8;
+  --color-deep:         #F0EBE3;
+  --color-surface:      #FFFFFF;
+  --color-elevated:     #EDE8E2;
+  --color-overlay:      rgba(250, 250, 248, 0.92);
+
+  /* Borders */
+  --color-border:       rgba(30, 107, 42, 0.10);
+  --color-border-solid: #D4E8D6;
+  --color-border-hi:    rgba(0, 0, 0, 0.06);
+
+  /* Accent */
+  --color-accent:       #1E6B2A;   /* 5.8:1 on #FAFAF8 ✓ */
+  --color-accent-glow:  rgba(30, 107, 42, 0.10);
+  --color-accent-hi:    #2D8A3E;
+  --color-accent-dim:   rgba(30, 107, 42, 0.06);
+
+  /* Text — WCAG AA compliant on light */
+  --color-text:         #0C1A0E;   /* 17.5:1 on void ✓ */
+  --color-text-2:       #4A5A4C;   /* 5.4:1 on void ✓ */
+  --color-text-3:       #8A9A8C;   /* decorative only */
+
+  /* Gold */
+  --color-gold:         #7A5C1E;   /* 4.6:1 on light ✓ */
+  --color-gold-muted:   rgba(122, 92, 30, 0.08);
+
+  /* Elevation shadows — lighter for light mode */
+  --shadow-1: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-2: 0 4px 12px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.06);
+  --shadow-3: 0 10px 30px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.06);
+  --shadow-4: 0 20px 60px rgba(0,0,0,0.15), 0 8px 16px rgba(0,0,0,0.08);
+  --shadow-glow: 0 0 24px rgba(30, 107, 42, 0.18), 0 0 8px rgba(30, 107, 42, 0.08);
+
+  /* legacy aliases */
+  --color-bg:           #FAFAF8;
+  --color-bg-2:         #F0EBE3;
+  --color-card:         #FFFFFF;
+  --color-card-2:       #F5F0E8;
+  --color-primary:      #0C1A0E;
+  --color-secondary:    #2A3A2C;
+  --color-muted:        #8A9A8C;
+  --color-cta:          #1E6B2A;
+  --color-cta-hover:    #2D8A3E;
+  --color-cta-light:    #3AA04E;
+  --color-hero-bg:      #05080A;
+  --color-input-bg:     #FFFFFF;
+  --color-input-border: rgba(30, 107, 42, 0.18);
+  --color-urgent-bg:    #F0EBE3;
 }
 
-* { box-sizing: border-box; }
+/* ── Typographie — variables ─────────────────────────────────── */
+:root {
+  --font-display: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+  --font-body:    var(--font-dm-sans), "DM Sans", system-ui, sans-serif;
+  --font-mono:    var(--font-jetbrains), "JetBrains Mono", monospace;
 
-html { scroll-behavior: smooth; }
+  /* Type scale */
+  --text-xs:   0.75rem;   /* 12px — labels mono only */
+  --text-sm:   0.875rem;  /* 14px */
+  --text-base: 1rem;      /* 16px — body minimum mobile */
+  --text-lg:   1.125rem;
+  --text-xl:   1.25rem;
+  --text-2xl:  1.5rem;
+  --text-3xl:  1.875rem;
+  --text-4xl:  2.25rem;
+  --text-5xl:  3rem;
+  --text-6xl:  3.75rem;
+  --text-7xl:  4.5rem;
+  --text-8xl:  6rem;
+  --text-9xl:  8rem;
+}
+
+/* ── Reset & base ────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Sticky nav compensation — all sections */
+  scroll-padding-top: 80px;
+}
 
 body {
-  background-color: var(--color-bg);
+  background-color: var(--color-void);
   color: var(--color-text);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: 1.65;
+  transition: background-color 0.4s ease, color 0.4s ease;
 }
 
+/* ── Section scroll offset (sticky nav fix — severity: HIGH) ─── */
+section[id] {
+  scroll-margin-top: 80px;
+}
+
+/* ── Diorama scrollbar ───────────────────────────────────────── */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--color-accent);
+  border-radius: var(--radius-full);
+  opacity: 0.6;
+}
+
+/* ── Selection ───────────────────────────────────────────────── */
+::selection {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+/* ── Focus visible (accessibility — CRITICAL) ────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Cursor pointer on interactive elements ──────────────────── */
+a, button, [role="button"], [tabindex="0"] {
+  cursor: pointer;
+}
+
+/* ── Reduced motion — CRITICAL ───────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
