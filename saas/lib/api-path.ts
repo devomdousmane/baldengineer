@@ -1,8 +1,8 @@
 /**
- * Préfixe un chemin d'API avec le basePath Next.js ("/app", voir next.config.ts).
- * Nécessaire car `fetch()` n'applique pas automatiquement basePath, contrairement
- * à next/link et router.push. Sans ce préfixe, tout fetch("/api/...") appelle
- * la racine du domaine au lieu de la zone SaaS en Multi-Zones.
+ * Préfixe un chemin avec le basePath Next.js ("/app", voir next.config.ts).
+ * Nécessaire pour tout chemin absolu construit manuellement — fetch(), et les
+ * redirections NextResponse.redirect()/NextResponse.next() qui, contrairement
+ * à next/link et router.push, n'appliquent jamais basePath automatiquement.
  *
  * Garder cette valeur synchronisée avec `basePath` dans next.config.ts.
  */
