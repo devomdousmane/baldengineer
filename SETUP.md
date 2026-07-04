@@ -24,8 +24,7 @@ Dans Supabase → **Authentication → Providers → Google** :
 ## 4. Lancer le serveur de développement
 
 ```bash
-cd saas
-npm run dev -- --port 3001
+npm run dev
 ```
 
 ## 5. Générer les types TypeScript depuis Supabase (optionnel)
@@ -51,7 +50,6 @@ L'envoi de devis, factures, relances et notifications par email passe par [Resen
 ## Architecture
 
 ```
-saas/
 ├── app/
 │   ├── login/           → Page de connexion Google
 │   ├── auth/callback/   → Callback OAuth
