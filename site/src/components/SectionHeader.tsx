@@ -1,3 +1,7 @@
+"use client";
+
+import { useRef } from "react";
+import { motion, useInView, useReducedMotion } from "framer-motion";
 import AnimatedSection from "./AnimatedSection";
 
 interface Props {
@@ -7,6 +11,10 @@ interface Props {
 }
 
 export default function SectionHeader({ label, title, subtitle }: Props) {
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const titleInView = useInView(titleRef, { once: true, margin: "-10% 0px" });
+  const reducedMotion = useReducedMotion();
+
   return (
     <div className="text-center mb-16 sm:mb-24">
       <AnimatedSection delay={0}>
@@ -24,18 +32,26 @@ export default function SectionHeader({ label, title, subtitle }: Props) {
         </div>
       </AnimatedSection>
 
-      <AnimatedSection delay={0.1}>
-        <h2
-          className="text-4xl sm:text-5xl md:text-6xl font-light italic mb-6 leading-[1.1]"
-          style={{
-            fontFamily: "var(--font-display)",
-            color: "var(--color-text)",
-            letterSpacing: "-0.01em",
-          }}
-        >
-          {title}
-        </h2>
-      </AnimatedSection>
+      <motion.h2
+        ref={titleRef}
+        initial={reducedMotion ? undefined : { opacity: 0, y: 40, scale: 0.94, filter: "blur(6px)" }}
+        animate={
+          titleInView
+            ? reducedMotion
+              ? { opacity: 1 }
+              : { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }
+            : {}
+        }
+        transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+        className="text-4xl sm:text-5xl md:text-6xl font-light italic mb-6 leading-[1.1]"
+        style={{
+          fontFamily: "var(--font-display)",
+          color: "var(--color-text)",
+          letterSpacing: "-0.01em",
+        }}
+      >
+        {title}
+      </motion.h2>
 
       {subtitle && (
         <AnimatedSection delay={0.18}>

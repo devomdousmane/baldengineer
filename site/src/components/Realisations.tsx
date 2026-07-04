@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useInView, useScroll, useTransform } from "framer-motion";
+import { motion, useInView, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import { CheckCircle2 } from "lucide-react";
 import SectionHeader from "./SectionHeader";
@@ -62,8 +62,11 @@ function ProjectCard({ project, index }: { project: typeof projects[0]; index: n
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-8% 0px" });
   const cardRef = useRef<HTMLDivElement>(null);
+  const reducedMotion = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: cardRef, offset: ["start end", "end start"] });
   const imgShift = useTransform(scrollYProgress, [0, 1], ["-6%", "6%"]);
+  const { scrollYProgress: cardProgress } = useScroll({ target: ref, offset: ["start end", "center center"] });
+  const rotateX = useTransform(cardProgress, [0, 1], reducedMotion ? [0, 0] : [8, 0]);
 
   return (
     <motion.div
@@ -71,12 +74,14 @@ function ProjectCard({ project, index }: { project: typeof projects[0]; index: n
       initial={{ opacity: 0, y: 30 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 1.0, delay: (index % 3) * 0.1, ease: [0.16, 1, 0.3, 1] }}
-      className="group rounded-2xl border overflow-hidden transition-all duration-500 cursor-default"
       style={{
         borderColor: "var(--color-border)",
         backgroundColor: "var(--color-surface)",
         boxShadow: "var(--shadow-2)",
+        rotateX,
+        transformPerspective: 800,
       }}
+      className="group rounded-2xl border overflow-hidden transition-all duration-500 cursor-default"
       onMouseEnter={(e) => {
         (e.currentTarget as HTMLElement).style.boxShadow = "var(--shadow-3)";
         (e.currentTarget as HTMLElement).style.borderColor = project.accent;

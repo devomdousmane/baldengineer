@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import { Zap, Wifi, Shield, Cpu, Building2, CheckCircle2, MonitorSmartphone, Network } from "lucide-react";
 import SectionHeader from "./SectionHeader";
 import { SectionTexture } from "./SectionTexture";
@@ -51,6 +51,9 @@ const sectors = [
 function ServiceCard({ service, index }: { service: typeof services[0]; index: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-8% 0px" });
+  const reducedMotion = useReducedMotion();
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "center center"] });
+  const rotateX = useTransform(scrollYProgress, [0, 1], reducedMotion ? [0, 0] : [10, 0]);
   const Icon = service.icon;
 
   return (
@@ -64,6 +67,8 @@ function ServiceCard({ service, index }: { service: typeof services[0]; index: n
         borderColor: "var(--color-border)",
         backgroundColor: "var(--color-surface)",
         boxShadow: "var(--shadow-2)",
+        rotateX,
+        transformPerspective: 800,
       }}
     >
       {/* Header */}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useInView, useScroll, useTransform } from "framer-motion";
+import { motion, useInView, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import SectionHeader from "./SectionHeader";
 import { SectionTexture } from "./SectionTexture";
 
@@ -109,6 +109,7 @@ function TimelineItem({
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-5% 0px" });
   const accent = sectorAccent[exp.sector] ?? "var(--color-accent)";
+  const reducedMotion = useReducedMotion();
 
   return (
     <div
@@ -117,8 +118,18 @@ function TimelineItem({
     >
       {/* Card */}
       <motion.div
-        initial={{ opacity: 0, x: isLeft ? -40 : 40 }}
-        animate={inView ? { opacity: 1, x: 0 } : {}}
+        initial={
+          reducedMotion
+            ? { opacity: 0 }
+            : { opacity: 0, x: isLeft ? -40 : 40, scale: 0.96, filter: "blur(4px)" }
+        }
+        animate={
+          inView
+            ? reducedMotion
+              ? { opacity: 1 }
+              : { opacity: 1, x: 0, scale: 1, filter: "blur(0px)" }
+            : {}
+        }
         transition={{ duration: 1.0, delay: index * 0.05, ease: [0.16, 1, 0.3, 1] }}
         className={`w-full md:w-[calc(50%-28px)] rounded-2xl border overflow-hidden transition-all duration-400 ${isLeft ? "mr-auto" : "ml-auto"}`}
         style={{
