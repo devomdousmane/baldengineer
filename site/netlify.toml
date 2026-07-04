@@ -1,6 +1,6 @@
 [build]
   base = "/"
-  command = "npm install && npm run build --workspace=site"
+  command = "npm run build --workspace=site"
   publish = "site/.next"
 
 [[plugins]]

@@ -1,6 +1,6 @@
 [build]
   base = "/"
-  command = "npm install && npm run build --workspace=saas"
+  command = "npm run build --workspace=saas"
   publish = "saas/.next"
 
 [[plugins]]
