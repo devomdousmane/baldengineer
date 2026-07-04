@@ -1,14 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
-/**
- * En Multi-Zones, les assets statiques (_next/static/...) sont servis depuis
- * l'URL de déploiement Netlify propre au SaaS (assetPrefix, voir next.config.ts),
- * un domaine différent de celui visité par l'utilisateur (baldengineer.fr).
- * La CSP doit donc les autoriser explicitement en plus de 'self'.
- */
-const ASSET_ORIGIN = process.env.NEXT_PUBLIC_SAAS_DEPLOY_URL ?? "";
-
 // ── Security headers ─────────────────────────────────────────
 const SECURITY_HEADERS: Record<string, string> = {
   "X-Frame-Options":           "DENY",
@@ -19,10 +11,10 @@ const SECURITY_HEADERS: Record<string, string> = {
   "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
   "Content-Security-Policy": [
     "default-src 'self'",
-    `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${ASSET_ORIGIN}`,
-    `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com ${ASSET_ORIGIN}`,
-    `font-src 'self' https://fonts.gstatic.com data: ${ASSET_ORIGIN}`,
-    `img-src 'self' data: blob: https: ${ASSET_ORIGIN}`,
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com data:",
+    "img-src 'self' data: blob: https:",
     "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
     "frame-ancestors 'none'",
     "base-uri 'self'",
