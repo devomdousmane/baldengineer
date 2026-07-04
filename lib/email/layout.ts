@@ -112,6 +112,17 @@ export function para(text: string, muted = false): string {
   return `<p style="margin:0 0 16px;font-size:14px;line-height:1.7;color:${muted ? "#64748B" : "#334155"};">${text}</p>`;
 }
 
+/**
+ * Message client : si customMessage est fourni, il est déjà du HTML (converti
+ * depuis markdown côté API) avec ses propres balises <p>/<ul>/etc. — on le
+ * stylise via un wrapper plutôt que de l'imbriquer dans un second <p>.
+ * Sinon on affiche le texte de secours via para().
+ */
+export function customMessageBlock(customMessage: string | null | undefined, fallback: string): string {
+  if (!customMessage) return para(fallback);
+  return `<div style="margin:0 0 16px;font-size:14px;line-height:1.7;color:#334155;">${customMessage}</div>`;
+}
+
 export function highlightBox(label: string, value: string, accent = false): string {
   return `
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:8px;">

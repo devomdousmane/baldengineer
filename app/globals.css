@@ -334,6 +334,10 @@ select {
   0%   { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
+@keyframes mesh-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-1.5%, 1.5%) scale(1.05); }
+}
 
 /* ── Gradients de marque (navy → vert) ── */
 .text-gradient {

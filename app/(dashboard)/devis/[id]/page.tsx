@@ -71,7 +71,7 @@ export default async function DevisDetailPage({ params }: { params: Promise<{ id
         }
       />
 
-      <PageWrapper className="max-w-4xl">
+      <PageWrapper>
         {/* Status bar */}
         <div className="flex items-center justify-between bg-[var(--color-card)] rounded-[var(--radius-lg)] border border-[var(--color-border)] px-4 py-3">
           <div className="flex items-center gap-3">
@@ -85,107 +85,118 @@ export default async function DevisDetailPage({ params }: { params: Promise<{ id
           <DevisActions quote={quote} canConvert={canConvert} />
         </div>
 
-        {/* Meta */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <Card padding="sm" hover>
-            <div className="flex items-center gap-2 mb-1">
-              <Hash className="w-3.5 h-3.5 text-[var(--color-text-3)]" />
-              <p className="text-xs text-[var(--color-text-3)]">Numéro</p>
-            </div>
-            <p className="font-mono text-sm font-medium text-[var(--color-accent)]">{quote.number}</p>
-          </Card>
-          <Card padding="sm" hover>
-            <div className="flex items-center gap-2 mb-1">
-              {quote.client?.type === "company"
-                ? <Building2 className="w-3.5 h-3.5 text-[var(--color-text-3)]" />
-                : <User className="w-3.5 h-3.5 text-[var(--color-text-3)]" />}
-              <p className="text-xs text-[var(--color-text-3)]">Client</p>
-            </div>
-            <p className="text-sm font-medium text-[var(--color-text)] truncate">{quote.client?.name ?? "—"}</p>
-          </Card>
-          <Card padding="sm" hover>
-            <div className="flex items-center gap-2 mb-1">
-              <Calendar className="w-3.5 h-3.5 text-[var(--color-text-3)]" />
-              <p className="text-xs text-[var(--color-text-3)]">Date</p>
-            </div>
-            <p className="text-sm font-medium text-[var(--color-text)]">
-              {new Date(quote.date).toLocaleDateString("fr-FR")}
-            </p>
-          </Card>
-          <Card padding="sm" hover>
-            <div className="flex items-center gap-2 mb-1">
-              <Calendar className="w-3.5 h-3.5 text-[var(--color-text-3)]" />
-              <p className="text-xs text-[var(--color-text-3)]">Validité</p>
-            </div>
-            <p className="text-sm font-medium text-[var(--color-text)]">
-              {new Date(quote.valid_until).toLocaleDateString("fr-FR")}
-            </p>
-          </Card>
-        </div>
+        {/* Layout 2 colonnes — remplit la largeur disponible */}
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-4 items-start">
+          {/* Colonne principale */}
+          <div className="space-y-4 min-w-0">
+            {/* Lines */}
+            <Card padding="none">
+              <div className="px-4 py-3 border-b border-[var(--color-border)]">
+                <h2 className="text-sm font-semibold text-[var(--color-text)]">Lignes du devis</h2>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-[var(--color-border)]">
+                      <th className="py-2.5 pr-4 text-left text-xs font-medium text-[var(--color-text-3)]">Description</th>
+                      <th className="py-2.5 px-4 text-center text-xs font-medium text-[var(--color-text-3)]">Qté</th>
+                      <th className="py-2.5 px-4 text-center text-xs font-medium text-[var(--color-text-3)]">Unité</th>
+                      <th className="py-2.5 px-4 text-right text-xs font-medium text-[var(--color-text-3)]">P.U.</th>
+                      {hasDiscount && <th className="py-2.5 px-4 text-right text-xs font-medium text-[var(--color-text-3)]">Remise</th>}
+                      <th className="py-2.5 pl-4 text-right text-xs font-medium text-[var(--color-text-3)]">Total HT</th>
+                      <th className="py-2.5 pl-4 text-right text-xs font-medium text-[var(--color-text-3)]">TVA</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {lines.map((l) => <LineRow key={l.id} line={l} currency={currency} />)}
+                    {lines.length === 0 && (
+                      <tr><td colSpan={7} className="py-8 text-center text-xs text-[var(--color-text-3)]">Aucune ligne</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
 
-        {/* Lines */}
-        <Card padding="none">
-          <div className="px-4 py-3 border-b border-[var(--color-border)]">
-            <h2 className="text-sm font-semibold text-[var(--color-text)]">Lignes du devis</h2>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-[var(--color-border)]">
-                  <th className="py-2.5 pr-4 text-left text-xs font-medium text-[var(--color-text-3)]">Description</th>
-                  <th className="py-2.5 px-4 text-center text-xs font-medium text-[var(--color-text-3)]">Qté</th>
-                  <th className="py-2.5 px-4 text-center text-xs font-medium text-[var(--color-text-3)]">Unité</th>
-                  <th className="py-2.5 px-4 text-right text-xs font-medium text-[var(--color-text-3)]">P.U.</th>
-                  {hasDiscount && <th className="py-2.5 px-4 text-right text-xs font-medium text-[var(--color-text-3)]">Remise</th>}
-                  <th className="py-2.5 pl-4 text-right text-xs font-medium text-[var(--color-text-3)]">Total HT</th>
-                  <th className="py-2.5 pl-4 text-right text-xs font-medium text-[var(--color-text-3)]">TVA</th>
-                </tr>
-              </thead>
-              <tbody>
-                {lines.map((l) => <LineRow key={l.id} line={l} currency={currency} />)}
-                {lines.length === 0 && (
-                  <tr><td colSpan={7} className="py-8 text-center text-xs text-[var(--color-text-3)]">Aucune ligne</td></tr>
+              {/* Totals */}
+              <div className="border-t border-[var(--color-border)] px-4 py-4">
+                <div className="ml-auto w-full sm:w-72 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-[var(--color-text-2)]">Sous-total HT</span>
+                    <span className="tabular-nums font-medium">{fmt(quote.subtotal_ht, currency)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-[var(--color-text-2)]">TVA</span>
+                    <span className="tabular-nums">{fmt(quote.total_vat, currency)}</span>
+                  </div>
+                  <div className="flex justify-between text-base font-semibold border-t border-[var(--color-border)] pt-2">
+                    <span>Total TTC</span>
+                    <span className="tabular-nums text-[var(--color-accent)]">{fmt(quote.total_ttc, currency)}</span>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* Notes */}
+            {(quote.notes || quote.terms) && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {quote.notes && (
+                  <Card padding="md">
+                    <h3 className="text-xs font-semibold text-[var(--color-text-3)] uppercase mb-2">Notes</h3>
+                    <p className="text-sm text-[var(--color-text-2)] whitespace-pre-wrap">{quote.notes}</p>
+                  </Card>
                 )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Totals */}
-          <div className="border-t border-[var(--color-border)] px-4 py-4">
-            <div className="ml-auto w-64 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-[var(--color-text-2)]">Sous-total HT</span>
-                <span className="tabular-nums font-medium">{fmt(quote.subtotal_ht, currency)}</span>
+                {quote.terms && (
+                  <Card padding="md">
+                    <h3 className="text-xs font-semibold text-[var(--color-text-3)] uppercase mb-2">Conditions</h3>
+                    <p className="text-sm text-[var(--color-text-2)] whitespace-pre-wrap">{quote.terms}</p>
+                  </Card>
+                )}
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-[var(--color-text-2)]">TVA</span>
-                <span className="tabular-nums">{fmt(quote.total_vat, currency)}</span>
-              </div>
-              <div className="flex justify-between text-base font-semibold border-t border-[var(--color-border)] pt-2">
-                <span>Total TTC</span>
-                <span className="tabular-nums text-[var(--color-accent)]">{fmt(quote.total_ttc, currency)}</span>
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Notes */}
-        {(quote.notes || quote.terms) && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {quote.notes && (
-              <Card padding="md">
-                <h3 className="text-xs font-semibold text-[var(--color-text-3)] uppercase mb-2">Notes</h3>
-                <p className="text-sm text-[var(--color-text-2)] whitespace-pre-wrap">{quote.notes}</p>
-              </Card>
-            )}
-            {quote.terms && (
-              <Card padding="md">
-                <h3 className="text-xs font-semibold text-[var(--color-text-3)] uppercase mb-2">Conditions</h3>
-                <p className="text-sm text-[var(--color-text-2)] whitespace-pre-wrap">{quote.terms}</p>
-              </Card>
             )}
           </div>
-        )}
+
+          {/* Colonne latérale — métadonnées */}
+          <div className="space-y-4">
+            <Card padding="md">
+              <h3 className="text-xs font-semibold text-[var(--color-text-3)] uppercase mb-3">Informations</h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2.5">
+                  <Hash className="w-3.5 h-3.5 text-[var(--color-text-3)] shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[11px] text-[var(--color-text-3)]">Numéro</p>
+                    <p className="font-mono text-sm font-medium text-[var(--color-accent)] truncate">{quote.number}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  {quote.client?.type === "company"
+                    ? <Building2 className="w-3.5 h-3.5 text-[var(--color-text-3)] shrink-0" />
+                    : <User className="w-3.5 h-3.5 text-[var(--color-text-3)] shrink-0" />}
+                  <div className="min-w-0">
+                    <p className="text-[11px] text-[var(--color-text-3)]">Client</p>
+                    <p className="text-sm font-medium text-[var(--color-text)] truncate">{quote.client?.name ?? "—"}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <Calendar className="w-3.5 h-3.5 text-[var(--color-text-3)] shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[11px] text-[var(--color-text-3)]">Date</p>
+                    <p className="text-sm font-medium text-[var(--color-text)]">
+                      {new Date(quote.date).toLocaleDateString("fr-FR")}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <Calendar className="w-3.5 h-3.5 text-[var(--color-text-3)] shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[11px] text-[var(--color-text-3)]">Validité</p>
+                    <p className="text-sm font-medium text-[var(--color-text)]">
+                      {new Date(quote.valid_until).toLocaleDateString("fr-FR")}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
       </PageWrapper>
     </>
   );

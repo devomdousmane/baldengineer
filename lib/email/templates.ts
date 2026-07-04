@@ -1,4 +1,4 @@
-import { layout, heading, para, highlightBox, amountBox, ctaButton, divider, infoGrid, alertBox } from "./layout";
+import { layout, heading, para, customMessageBlock, highlightBox, amountBox, ctaButton, divider, infoGrid, alertBox } from "./layout";
 import type { EmailLayoutOptions } from "./layout";
 
 function fmt(n: number, currency: string) {
@@ -54,7 +54,7 @@ export function devisEnvoye(d: DevisEnvoyeData): string {
   const content = `
     ${heading(`Votre devis est prêt`, `${d.companyName} vous a adressé un devis`)}
     ${para(`Bonjour ${d.clientName},`)}
-    ${para(d.customMessage ?? `Veuillez trouver ci-dessous votre devis <strong>${d.quoteNumber}</strong>${d.title ? ` — ${d.title}` : ""}. Nous restons disponibles pour toute question.`)}
+    ${customMessageBlock(d.customMessage, `Veuillez trouver ci-dessous votre devis <strong>${d.quoteNumber}</strong>${d.title ? ` — ${d.title}` : ""}. Nous restons disponibles pour toute question.`)}
     ${amountBox(fmt(d.subtotalHt, d.currency), fmt(d.totalVat, d.currency), fmt(d.totalTtc, d.currency), d.currency)}
     ${infoGrid([
       { label: "Référence", value: d.quoteNumber },
@@ -170,7 +170,7 @@ export function factureEnvoyee(d: FactureEnvoyeeData): string {
   const content = `
     ${heading(`Facture ${d.invoiceNumber}`, `${d.companyName} vous adresse une facture`)}
     ${para(`Bonjour ${d.clientName},`)}
-    ${para(d.customMessage ?? `Veuillez trouver ci-dessous votre facture <strong>${d.invoiceNumber}</strong>${d.title ? ` — ${d.title}` : ""}.`)}
+    ${customMessageBlock(d.customMessage, `Veuillez trouver ci-dessous votre facture <strong>${d.invoiceNumber}</strong>${d.title ? ` — ${d.title}` : ""}.`)}
     ${amountBox(fmt(d.subtotalHt, d.currency), fmt(d.totalVat, d.currency), fmt(d.totalTtc, d.currency), d.currency)}
     ${infoGrid([
       { label: "Référence", value: d.invoiceNumber },
@@ -367,7 +367,7 @@ export function missionDemarree(d: MissionEmailData): string {
   const content = `
     ${heading("Démarrage de mission", d.missionTitle)}
     ${para(`Bonjour ${d.clientName},`)}
-    ${para(d.customMessage ?? `Nous avons le plaisir de vous confirmer le démarrage de la mission <strong>${d.missionTitle}</strong>.`)}
+    ${customMessageBlock(d.customMessage, `Nous avons le plaisir de vous confirmer le démarrage de la mission <strong>${d.missionTitle}</strong>.`)}
     ${d.description ? para(d.description, true) : ""}
     ${infoGrid([
       ...(d.startDate ? [{ label: "Début", value: fmtDate(d.startDate) }] : []),
@@ -409,7 +409,7 @@ export function missionAvancement(d: MissionEmailData): string {
   const content = `
     ${heading("Rapport d'avancement", d.missionTitle)}
     ${para(`Bonjour ${d.clientName},`)}
-    ${para(d.customMessage ?? `Voici une mise à jour de l'avancement de la mission <strong>${d.missionTitle}</strong>.`)}
+    ${customMessageBlock(d.customMessage, `Voici une mise à jour de l'avancement de la mission <strong>${d.missionTitle}</strong>.`)}
     ${progressBar}
     ${d.progressNote ? `<div style="background:#F8FAFC;border-left:3px solid #2D8A3E;padding:12px 16px;border-radius:0 8px 8px 0;margin:12px 0;"><p style="margin:0;font-size:13px;color:#334155;line-height:1.7;">${d.progressNote}</p></div>` : ""}
     ${infoGrid([
@@ -439,7 +439,7 @@ export function missionTerminee(d: MissionEmailData): string {
   const content = `
     ${heading("Mission accomplie ✓", d.missionTitle)}
     ${para(`Bonjour ${d.clientName},`)}
-    ${para(d.customMessage ?? `Nous avons le plaisir de vous annoncer la clôture de la mission <strong>${d.missionTitle}</strong>. Nous espérons que cette collaboration a répondu à vos attentes.`)}
+    ${customMessageBlock(d.customMessage, `Nous avons le plaisir de vous annoncer la clôture de la mission <strong>${d.missionTitle}</strong>. Nous espérons que cette collaboration a répondu à vos attentes.`)}
     ${infoGrid([
       ...(d.startDate ? [{ label: "Début", value: fmtDate(d.startDate) }] : []),
       ...(d.endDate ? [{ label: "Fin", value: fmtDate(d.endDate) }] : []),

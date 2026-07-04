@@ -99,7 +99,7 @@ export default async function FactureDetailPage({ params }: { params: Promise<{ 
         }
       />
 
-      <PageWrapper className="max-w-4xl">
+      <PageWrapper>
         {/* Status bar */}
         <div className="flex items-center justify-between bg-[var(--color-card)] rounded-[var(--radius-lg)] border border-[var(--color-border)] px-4 py-3 flex-wrap gap-3">
           <div className="flex items-center gap-3 flex-wrap">
@@ -132,143 +132,152 @@ export default async function FactureDetailPage({ params }: { params: Promise<{ 
           </div>
         )}
 
-        {/* Meta grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <Card padding="sm" hover>
-            <div className="flex items-center gap-2 mb-1">
-              <Hash className="w-3.5 h-3.5 text-[var(--color-text-3)]" />
-              <p className="text-xs text-[var(--color-text-3)]">Numéro</p>
-            </div>
-            <p className="font-mono text-sm font-medium text-[var(--color-accent)]">{invoice.number}</p>
-          </Card>
-          <Card padding="sm" hover>
-            <div className="flex items-center gap-2 mb-1">
-              {invoice.client?.type === "company"
-                ? <Building2 className="w-3.5 h-3.5 text-[var(--color-text-3)]" />
-                : <User className="w-3.5 h-3.5 text-[var(--color-text-3)]" />}
-              <p className="text-xs text-[var(--color-text-3)]">Client</p>
-            </div>
-            <p className="text-sm font-medium text-[var(--color-text)] truncate">{invoice.client?.name ?? "—"}</p>
-          </Card>
-          <Card padding="sm" hover>
-            <div className="flex items-center gap-2 mb-1">
-              <Calendar className="w-3.5 h-3.5 text-[var(--color-text-3)]" />
-              <p className="text-xs text-[var(--color-text-3)]">Émission</p>
-            </div>
-            <p className="text-sm font-medium text-[var(--color-text)]">
-              {new Date(invoice.date).toLocaleDateString("fr-FR")}
-            </p>
-          </Card>
-          <Card padding="sm" hover>
-            <div className="flex items-center gap-2 mb-1">
-              <Calendar className="w-3.5 h-3.5 text-[var(--color-text-3)]" />
-              <p className="text-xs text-[var(--color-text-3)]">Échéance</p>
-            </div>
-            <p className="text-sm font-medium" style={{
-              color: invoice.status === "overdue" ? "var(--color-danger)" : "var(--color-text)",
-            }}>
-              {new Date(invoice.due_date).toLocaleDateString("fr-FR")}
-            </p>
-          </Card>
-        </div>
+        {/* Layout 2 colonnes — remplit la largeur disponible */}
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-4 items-start">
+          {/* Colonne principale */}
+          <div className="space-y-4 min-w-0">
+            {/* Lines */}
+            <Card padding="none">
+              <div className="px-4 py-3 border-b border-[var(--color-border)]">
+                <h2 className="text-sm font-semibold text-[var(--color-text)]">Lignes de facturation</h2>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-[var(--color-border)]">
+                      <th className="py-2.5 pr-4 text-left text-xs font-medium text-[var(--color-text-3)]">Description</th>
+                      <th className="py-2.5 px-4 text-center text-xs font-medium text-[var(--color-text-3)]">Qté</th>
+                      <th className="py-2.5 px-4 text-center text-xs font-medium text-[var(--color-text-3)]">Unité</th>
+                      <th className="py-2.5 px-4 text-right text-xs font-medium text-[var(--color-text-3)]">P.U.</th>
+                      {hasDiscount && <th className="py-2.5 px-4 text-right text-xs font-medium text-[var(--color-text-3)]">Remise</th>}
+                      <th className="py-2.5 pl-4 text-right text-xs font-medium text-[var(--color-text-3)]">Total HT</th>
+                      <th className="py-2.5 pl-4 text-right text-xs font-medium text-[var(--color-text-3)]">TVA</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {lines.map((l) => <LineRow key={l.id} line={l} currency={currency} />)}
+                    {lines.length === 0 && (
+                      <tr><td colSpan={7} className="py-8 text-center text-xs text-[var(--color-text-3)]">Aucune ligne</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              <div className="border-t border-[var(--color-border)] px-4 py-4">
+                <div className="ml-auto w-full sm:w-72 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-[var(--color-text-2)]">Sous-total HT</span>
+                    <span className="tabular-nums font-medium">{fmt(invoice.subtotal_ht, currency)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-[var(--color-text-2)]">TVA</span>
+                    <span className="tabular-nums">{fmt(invoice.total_vat, currency)}</span>
+                  </div>
+                  <div className="flex justify-between text-base font-semibold border-t border-[var(--color-border)] pt-2">
+                    <span>Total TTC</span>
+                    <span className="tabular-nums text-[var(--color-accent)]">{fmt(invoice.total_ttc, currency)}</span>
+                  </div>
+                  {invoice.paid_amount > 0 && (
+                    <>
+                      <div className="flex justify-between text-sm" style={{ color: "var(--color-success)" }}>
+                        <span>Déjà encaissé</span>
+                        <span className="tabular-nums">-{fmt(invoice.paid_amount, currency)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm font-semibold">
+                        <span>Reste à payer</span>
+                        <span className="tabular-nums" style={{ color: remaining > 0 ? "var(--color-danger)" : "var(--color-success)" }}>
+                          {fmt(remaining, currency)}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            </Card>
 
-        {/* Lines */}
-        <Card padding="none">
-          <div className="px-4 py-3 border-b border-[var(--color-border)]">
-            <h2 className="text-sm font-semibold text-[var(--color-text)]">Lignes de facturation</h2>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-[var(--color-border)]">
-                  <th className="py-2.5 pr-4 text-left text-xs font-medium text-[var(--color-text-3)]">Description</th>
-                  <th className="py-2.5 px-4 text-center text-xs font-medium text-[var(--color-text-3)]">Qté</th>
-                  <th className="py-2.5 px-4 text-center text-xs font-medium text-[var(--color-text-3)]">Unité</th>
-                  <th className="py-2.5 px-4 text-right text-xs font-medium text-[var(--color-text-3)]">P.U.</th>
-                  {hasDiscount && <th className="py-2.5 px-4 text-right text-xs font-medium text-[var(--color-text-3)]">Remise</th>}
-                  <th className="py-2.5 pl-4 text-right text-xs font-medium text-[var(--color-text-3)]">Total HT</th>
-                  <th className="py-2.5 pl-4 text-right text-xs font-medium text-[var(--color-text-3)]">TVA</th>
-                </tr>
-              </thead>
-              <tbody>
-                {lines.map((l) => <LineRow key={l.id} line={l} currency={currency} />)}
-                {lines.length === 0 && (
-                  <tr><td colSpan={7} className="py-8 text-center text-xs text-[var(--color-text-3)]">Aucune ligne</td></tr>
+            {/* Notes */}
+            {(invoice.notes || invoice.terms) && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {invoice.notes && (
+                  <Card padding="md">
+                    <h3 className="text-xs font-semibold text-[var(--color-text-3)] uppercase mb-2">Notes</h3>
+                    <p className="text-sm text-[var(--color-text-2)] whitespace-pre-wrap">{invoice.notes}</p>
+                  </Card>
                 )}
-              </tbody>
-            </table>
+                {invoice.terms && (
+                  <Card padding="md">
+                    <h3 className="text-xs font-semibold text-[var(--color-text-3)] uppercase mb-2">Conditions</h3>
+                    <p className="text-sm text-[var(--color-text-2)] whitespace-pre-wrap">{invoice.terms}</p>
+                  </Card>
+                )}
+              </div>
+            )}
           </div>
-          <div className="border-t border-[var(--color-border)] px-4 py-4">
-            <div className="ml-auto w-64 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-[var(--color-text-2)]">Sous-total HT</span>
-                <span className="tabular-nums font-medium">{fmt(invoice.subtotal_ht, currency)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-[var(--color-text-2)]">TVA</span>
-                <span className="tabular-nums">{fmt(invoice.total_vat, currency)}</span>
-              </div>
-              <div className="flex justify-between text-base font-semibold border-t border-[var(--color-border)] pt-2">
-                <span>Total TTC</span>
-                <span className="tabular-nums text-[var(--color-accent)]">{fmt(invoice.total_ttc, currency)}</span>
-              </div>
-              {invoice.paid_amount > 0 && (
-                <>
-                  <div className="flex justify-between text-sm" style={{ color: "var(--color-success)" }}>
-                    <span>Déjà encaissé</span>
-                    <span className="tabular-nums">-{fmt(invoice.paid_amount, currency)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm font-semibold">
-                    <span>Reste à payer</span>
-                    <span className="tabular-nums" style={{ color: remaining > 0 ? "var(--color-danger)" : "var(--color-success)" }}>
-                      {fmt(remaining, currency)}
-                    </span>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </Card>
 
-        {/* Bank + payment info */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {(profile?.bank_iban || profile?.bank_name) && (
+          {/* Colonne latérale — métadonnées */}
+          <div className="space-y-4">
             <Card padding="md">
-              <div className="flex items-center gap-2 mb-3">
-                <CreditCard className="w-4 h-4 text-[var(--color-text-3)]" />
-                <h3 className="text-xs font-semibold text-[var(--color-text-3)] uppercase">Coordonnées bancaires</h3>
+              <h3 className="text-xs font-semibold text-[var(--color-text-3)] uppercase mb-3">Informations</h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2.5">
+                  <Hash className="w-3.5 h-3.5 text-[var(--color-text-3)] shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[11px] text-[var(--color-text-3)]">Numéro</p>
+                    <p className="font-mono text-sm font-medium text-[var(--color-accent)] truncate">{invoice.number}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  {invoice.client?.type === "company"
+                    ? <Building2 className="w-3.5 h-3.5 text-[var(--color-text-3)] shrink-0" />
+                    : <User className="w-3.5 h-3.5 text-[var(--color-text-3)] shrink-0" />}
+                  <div className="min-w-0">
+                    <p className="text-[11px] text-[var(--color-text-3)]">Client</p>
+                    <p className="text-sm font-medium text-[var(--color-text)] truncate">{invoice.client?.name ?? "—"}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <Calendar className="w-3.5 h-3.5 text-[var(--color-text-3)] shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[11px] text-[var(--color-text-3)]">Émission</p>
+                    <p className="text-sm font-medium text-[var(--color-text)]">
+                      {new Date(invoice.date).toLocaleDateString("fr-FR")}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <Calendar className="w-3.5 h-3.5 text-[var(--color-text-3)] shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[11px] text-[var(--color-text-3)]">Échéance</p>
+                    <p className="text-sm font-medium" style={{
+                      color: invoice.status === "overdue" ? "var(--color-danger)" : "var(--color-text)",
+                    }}>
+                      {new Date(invoice.due_date).toLocaleDateString("fr-FR")}
+                    </p>
+                  </div>
+                </div>
               </div>
-              {profile.bank_name && <p className="text-sm text-[var(--color-text)]">{profile.bank_name}</p>}
-              {profile.bank_iban && <p className="font-mono text-xs text-[var(--color-text-2)] mt-1">{profile.bank_iban}</p>}
-              {profile.bank_bic && <p className="font-mono text-xs text-[var(--color-text-2)]">BIC : {profile.bank_bic}</p>}
             </Card>
-          )}
-          {invoice.payment_method && (
-            <Card padding="md">
-              <h3 className="text-xs font-semibold text-[var(--color-text-3)] uppercase mb-2">Paiement reçu</h3>
-              <p className="text-sm font-medium text-[var(--color-success)]">{paymentMethodLabels[invoice.payment_method] ?? invoice.payment_method}</p>
-              {invoice.paid_at && <p className="text-xs text-[var(--color-text-3)] mt-1">{new Date(invoice.paid_at).toLocaleDateString("fr-FR")}</p>}
-            </Card>
-          )}
+
+            {(profile?.bank_iban || profile?.bank_name) && (
+              <Card padding="md">
+                <div className="flex items-center gap-2 mb-3">
+                  <CreditCard className="w-4 h-4 text-[var(--color-text-3)]" />
+                  <h3 className="text-xs font-semibold text-[var(--color-text-3)] uppercase">Coordonnées bancaires</h3>
+                </div>
+                {profile.bank_name && <p className="text-sm text-[var(--color-text)]">{profile.bank_name}</p>}
+                {profile.bank_iban && <p className="font-mono text-xs text-[var(--color-text-2)] mt-1 break-all">{profile.bank_iban}</p>}
+                {profile.bank_bic && <p className="font-mono text-xs text-[var(--color-text-2)]">BIC : {profile.bank_bic}</p>}
+              </Card>
+            )}
+
+            {invoice.payment_method && (
+              <Card padding="md">
+                <h3 className="text-xs font-semibold text-[var(--color-text-3)] uppercase mb-2">Paiement reçu</h3>
+                <p className="text-sm font-medium text-[var(--color-success)]">{paymentMethodLabels[invoice.payment_method] ?? invoice.payment_method}</p>
+                {invoice.paid_at && <p className="text-xs text-[var(--color-text-3)] mt-1">{new Date(invoice.paid_at).toLocaleDateString("fr-FR")}</p>}
+              </Card>
+            )}
+          </div>
         </div>
-
-        {/* Notes */}
-        {(invoice.notes || invoice.terms) && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {invoice.notes && (
-              <Card padding="md">
-                <h3 className="text-xs font-semibold text-[var(--color-text-3)] uppercase mb-2">Notes</h3>
-                <p className="text-sm text-[var(--color-text-2)] whitespace-pre-wrap">{invoice.notes}</p>
-              </Card>
-            )}
-            {invoice.terms && (
-              <Card padding="md">
-                <h3 className="text-xs font-semibold text-[var(--color-text-3)] uppercase mb-2">Conditions</h3>
-                <p className="text-sm text-[var(--color-text-2)] whitespace-pre-wrap">{invoice.terms}</p>
-              </Card>
-            )}
-          </div>
-        )}
       </PageWrapper>
     </>
   );

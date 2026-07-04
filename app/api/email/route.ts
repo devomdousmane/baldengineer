@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { sendEmail } from "@/lib/email/send";
 import { auditLog } from "@/lib/audit";
+import { markdownToSafeHtml } from "@/lib/markdown";
 import {
   devisEnvoye, devisRelance,
   factureEnvoyee, relancePaiement, paiementRecu, paiementNotifAdmin,
@@ -51,7 +52,7 @@ export async function POST(req: NextRequest) {
     companyPhone: profile.company_phone,
     companyCity: profile.company_city,
     appUrl: APP_URL,
-    customMessage: customMessage ?? null,
+    customMessage: customMessage ? markdownToSafeHtml(customMessage) : null,
   };
 
   let html = "";
