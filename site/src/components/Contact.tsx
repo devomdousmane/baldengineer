@@ -4,6 +4,7 @@ import { useState, useRef, FormEvent } from "react";
 import { motion, useInView } from "framer-motion";
 import { Phone, Mail, MapPin, Clock, Send, CheckCircle2, Loader2 } from "lucide-react";
 import SectionHeader from "./SectionHeader";
+import { SectionTexture } from "./SectionTexture";
 
 const infos = [
   { icon: Mail,  label: "Email",    value: "thierno.balde@baldengineer.fr", href: "mailto:thierno.balde@baldengineer.fr" },
@@ -51,10 +52,11 @@ export default function Contact() {
   return (
     <section
       id="contact"
-      className="py-28 sm:py-36 px-6 sm:px-10"
+      className="relative py-28 sm:py-36 px-6 sm:px-10"
       style={{ backgroundColor: "var(--color-deep)" }}
     >
-      <div className="max-w-7xl mx-auto">
+      <SectionTexture glow="top-right" />
+      <div className="relative z-10 max-w-7xl mx-auto">
         <SectionHeader
           label="Contact"
           title="Discutons de votre projet"

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
-import { Phone, X, ArrowUpRight, Menu } from "lucide-react";
+import { Phone, X, ArrowUpRight, Menu, LogIn } from "lucide-react";
 import Image from "next/image";
 import ThemeToggle from "./ThemeToggle";
 
@@ -88,10 +88,10 @@ export default function Navbar() {
           aria-label="BaldEngineer — retour accueil"
         >
           <Image
-            src="/logo.jpg"
+            src="/logo.png"
             alt="BaldEngineer"
             width={130}
-            height={36}
+            height={77}
             className={scrolled ? "" : "brightness-0 invert"}
             style={{ transition: "filter 0.4s ease" }}
             unoptimized
@@ -150,6 +150,18 @@ export default function Navbar() {
               </motion.a>
             )}
           </AnimatePresence>
+
+          <a
+            href="/app"
+            className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[11px] font-medium min-h-[44px] transition-all duration-200 hover:bg-white/5 active:scale-95"
+            style={{
+              color: scrolled ? "var(--color-text-2)" : "rgba(255,255,255,0.85)",
+              border: "1px solid var(--color-border)",
+            }}
+          >
+            <LogIn className="w-3.5 h-3.5 shrink-0" strokeWidth={1.75} />
+            Espace client
+          </a>
 
           <a
             href="#contact"
@@ -213,7 +225,7 @@ export default function Navbar() {
                 className="flex items-center justify-between px-6 h-[72px] shrink-0 border-b"
                 style={{ borderColor: "var(--color-border)" }}
               >
-                <Image src="/logo.jpg" alt="BaldEngineer" width={110} height={30} unoptimized />
+                <Image src="/logo.png" alt="BaldEngineer" width={110} height={65} unoptimized />
                 <button
                   onClick={() => setMobileOpen(false)}
                   className="w-9 h-9 flex items-center justify-center rounded-full transition-colors duration-200"
@@ -281,6 +293,15 @@ export default function Navbar() {
                 >
                   Demander un devis
                   <ArrowUpRight className="w-4 h-4 shrink-0" />
+                </a>
+                <a
+                  href="/app"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center justify-center gap-2 py-3.5 rounded-full border text-sm font-medium min-h-[52px] transition-opacity duration-200 hover:opacity-70"
+                  style={{ color: "var(--color-text-2)", borderColor: "var(--color-border)" }}
+                >
+                  <LogIn className="w-4 h-4 shrink-0" strokeWidth={1.75} />
+                  Espace client
                 </a>
               </motion.div>
             </motion.div>

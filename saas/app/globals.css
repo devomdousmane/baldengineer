@@ -3,8 +3,75 @@
 /* ═══════════════════════════════════════════════════════════════
    BaldPro SaaS — Design System
    Style: Financial Dashboard (UI/UX Pro Max — B2B Professional)
-   Default: Light mode | Navy #0F172A + Blue #0369A1
+   Default: Light mode | Navy #0F172A + Green #2D8A3E
+   Master : design-system/baldpro/MASTER.md (racine du repo)
    ═══════════════════════════════════════════════════════════════ */
+
+/* ── Tokens Tailwind (utilitaires sémantiques) ──────────────────
+   Mappés sur les variables :root ci-dessous — mêmes couleurs.
+   Débloque : bg-accent, text-foreground, border-border, shadow-glow,
+   rounded-lg (=12px), font-heading, animate-fade-in, ease-smooth…   */
+@theme inline {
+  /* Surfaces */
+  --color-bg: var(--color-bg);
+  --color-bg-2: var(--color-bg-2);
+  --color-card: var(--color-card);
+  --color-elevated: var(--color-elevated);
+  --color-background: var(--color-bg);
+  --color-foreground: var(--color-text);
+  --color-muted: var(--color-bg-2);
+  --color-muted-foreground: var(--color-text-2);
+
+  /* Bordures */
+  --color-border: var(--color-border);
+  --color-border-2: var(--color-border-2);
+
+  /* Marque */
+  --color-primary: var(--color-primary);
+  --color-primary-2: var(--color-primary-2);
+  --color-accent: var(--color-accent);
+  --color-accent-hi: var(--color-accent-hi);
+  --color-accent-dim: var(--color-accent-dim);
+
+  /* Sémantique */
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-danger: var(--color-danger);
+  --color-destructive: var(--color-danger);
+  --color-info: var(--color-info);
+
+  /* Marchés */
+  --color-fr: var(--color-fr);
+  --color-gn: var(--color-gn);
+
+  /* Radius */
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+
+  /* Élévations */
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
+  --shadow-glow: var(--shadow-glow);
+  --shadow-glow-primary: var(--shadow-glow-primary);
+
+  /* Typographie */
+  --font-sans: var(--font-sans);
+  --font-heading: var(--font-heading);
+  --font-mono: var(--font-mono);
+
+  /* Motion */
+  --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-fade-in: fade-in 0.4s ease-out;
+  --animate-slide-up: slide-up 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-slide-in: slide-in 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-pulse-soft: pulse-soft 2.4s ease-in-out infinite;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+}
 
 :root {
   /* ── Surfaces ── */
@@ -53,6 +120,14 @@
   --shadow-md: 0 4px 6px rgba(15,23,42,0.07), 0 2px 4px rgba(15,23,42,0.06);
   --shadow-lg: 0 10px 15px rgba(15,23,42,0.10), 0 4px 6px rgba(15,23,42,0.05);
   --shadow-xl: 0 20px 25px rgba(15,23,42,0.10), 0 8px 10px rgba(15,23,42,0.04);
+
+  /* ── Glow (suit l'accent / le primary du mode courant) ── */
+  --shadow-glow:
+    0 0 0 1px color-mix(in srgb, var(--color-accent) 20%, transparent),
+    0 12px 32px -8px color-mix(in srgb, var(--color-accent) 35%, transparent);
+  --shadow-glow-primary:
+    0 0 0 1px color-mix(in srgb, var(--color-primary) 18%, transparent),
+    0 12px 32px -8px color-mix(in srgb, var(--color-primary) 32%, transparent);
 
   /* ── Layout ── */
   --sidebar-width:      240px;
@@ -111,9 +186,9 @@
 
   --color-primary:     #E2E8F0;
   --color-primary-2:   #94A3B8;
-  --color-accent:      #4DB85C;   /* logo green — dark mode */
-  --color-accent-hi:   #6DC97A;
-  --color-accent-dim:  rgba(77,184,92,0.15);
+  --color-accent:      #3D9A4C;   /* logo green — dark mode, assombri */
+  --color-accent-hi:   #4DB85C;
+  --color-accent-dim:  rgba(61,154,76,0.15);
 
   --color-success:     #34D399;
   --color-success-dim: rgba(52,211,153,0.13);
@@ -174,6 +249,9 @@ body {
 ::-webkit-scrollbar-thumb { background: var(--color-border-2); border-radius: var(--radius-full); }
 ::-webkit-scrollbar-thumb:hover { background: var(--color-text-3); }
 
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
 /* ── Cursor ── */
 a, button, [role="button"], [tabindex="0"] { cursor: pointer; }
 
@@ -210,6 +288,92 @@ select {
   max-width: var(--content-max);
   width: 100%;
   margin-inline: auto;
+}
+
+/* ── Sidebar finance — navy permanent (light & dark) ────────────
+   Re-scope les tokens : tout composant rendu dans la sidebar
+   (nav, market-switcher…) adopte automatiquement la surface navy. */
+.sidebar-surface {
+  background-color: #0F172A;
+
+  --color-card: #16243F;
+  --color-elevated: #1B2B4A;
+  --color-bg-2: rgba(255, 255, 255, 0.06);
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-2: rgba(255, 255, 255, 0.16);
+  --color-primary: #334155;
+  --color-accent: #4DB85C;
+  --color-accent-hi: #6DC97A;
+  --color-accent-dim: rgba(77, 184, 92, 0.15);
+  --color-danger: #F87171;
+  --color-text: #F1F5F9;
+  --color-text-2: #94A3B8;
+  --color-text-3: #64748B;
+  --color-fr: #60A5FA;
+  --color-gn: #F87171;
+}
+
+/* ── Keyframes ── */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slide-up {
+  from { transform: translateY(8px); opacity: 0; }
+  to   { transform: translateY(0);   opacity: 1; }
+}
+@keyframes slide-in {
+  from { transform: translateX(-12px); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ── Gradients de marque (navy → vert) ── */
+.text-gradient {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.bg-gradient-primary {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+}
+.bg-gradient-accent {
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-hi));
+}
+
+/* ── Mesh background (login, empty states) ── */
+.bg-mesh {
+  background-image:
+    radial-gradient(at 20% 20%, color-mix(in srgb, var(--color-primary) 9%, transparent) 0, transparent 50%),
+    radial-gradient(at 80% 0%,  color-mix(in srgb, var(--color-accent) 10%, transparent) 0, transparent 50%),
+    radial-gradient(at 0% 80%,  color-mix(in srgb, var(--color-primary) 6%, transparent) 0, transparent 50%);
+}
+
+/* ── Skeleton shimmer ── */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-2) 0%,
+    var(--color-border) 50%,
+    var(--color-bg-2) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+  border-radius: var(--radius-md);
+}
+
+/* ── Surface (carte simple) ── */
+.surface {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
 }
 
 /* ── Print ── */

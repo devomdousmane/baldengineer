@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import SectionHeader from "./SectionHeader";
 import AnimatedSection from "./AnimatedSection";
+import { SectionTexture } from "./SectionTexture";
 
 const skills = [
   {
@@ -98,10 +99,11 @@ export default function Skills() {
   return (
     <section
       id="competences"
-      className="py-28 sm:py-36 px-6 sm:px-10"
+      className="relative py-28 sm:py-36 px-6 sm:px-10"
       style={{ backgroundColor: "var(--color-deep)" }}
     >
-      <div className="max-w-7xl mx-auto">
+      <SectionTexture glow="top-left" />
+      <div className="relative z-10 max-w-7xl mx-auto">
         <SectionHeader
           label="Compétences"
           title="Savoir-faire technique"

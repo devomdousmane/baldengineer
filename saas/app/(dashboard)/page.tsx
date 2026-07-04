@@ -6,25 +6,47 @@ import { KpiCard } from "@/components/ui/card";
 import { Header } from "@/components/layout/header";
 import { AiPanel } from "@/components/ai/ai-panel";
 import { RevenueChart } from "@/components/modules/revenue-chart";
+import { InvoiceStatusChart, type StatusBreakdownItem } from "@/components/modules/invoice-status-chart";
 import type { RevenuePoint } from "@/lib/actions/dashboard";
+import { apiPath } from "@/lib/api-path";
 import {
   TrendingUp, Receipt, FileText, Briefcase,
-  AlertTriangle, Users, Wallet, BarChart3,
+  AlertTriangle, Users, Wallet, BarChart3, CalendarClock,
 } from "lucide-react";
+
+type Period = "month" | "quarter" | "year";
+type MarketFilter = "france" | "guinee" | "all";
+
+const PERIOD_OPTIONS: { value: Period; label: string }[] = [
+  { value: "month", label: "Ce mois" },
+  { value: "quarter", label: "Ce trimestre" },
+  { value: "year", label: "Cette année" },
+];
+
+const MARKET_OPTIONS: { value: MarketFilter; label: string }[] = [
+  { value: "france", label: "🇫🇷 France" },
+  { value: "guinee", label: "🇬🇳 Guinée" },
+  { value: "all", label: "Tous" },
+];
 
 interface DashboardData {
   kpis: {
-    revenue_month: number; revenue_year: number;
+    period_revenue: number; revenue_year: number;
     pending_quotes: number; pending_quotes_amount: number;
     unpaid_invoices: number; unpaid_invoices_amount: number;
     active_missions: number; overdue_invoices: number;
     overdue_amount: number; total_clients: number;
-    collection_rate: number;
+    collection_rate: number; conversion_rate: number;
+    upcoming_missions_count: number;
   };
+  upcomingMissions: { id: string; title: string; startDate: string | null; endDate: string | null; client: string }[];
   chartData: { month: string; france: number; guinee: number }[];
+  invoiceStatusBreakdown: StatusBreakdownItem[];
+  quoteStatusBreakdown: StatusBreakdownItem[];
   recentInvoices: { id: string; number: string; client: string; amount: number; status: string; date: string }[];
   currency: string;
   market: string;
+  period: Period;
   year: number;
 }
 
@@ -77,6 +99,46 @@ function RecentActivity({ items, currency }: { items: DashboardData["recentInvoi
   );
 }
 
+function UpcomingMissions({ items }: { items: DashboardData["upcomingMissions"] }) {
+  return (
+    <div className="bg-[var(--color-card)] rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-sm)]">
+      <div className="px-4 py-3 border-b border-[var(--color-border)]">
+        <h2 className="font-heading text-sm font-semibold text-[var(--color-text)]">Échéances à venir (7 jours)</h2>
+      </div>
+      <div className="divide-y divide-[var(--color-border)]">
+        {items.length === 0 && (
+          <p className="px-4 py-6 text-center text-xs text-[var(--color-text-3)]">Aucune échéance proche</p>
+        )}
+        {items.map((m, i) => {
+          const date = m.endDate ?? m.startDate;
+          const label = m.endDate ? "Fin" : "Début";
+          return (
+            <motion.div
+              key={m.id}
+              initial={{ opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 + i * 0.05, duration: 0.25 }}
+              className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--color-bg-2)] transition-colors cursor-pointer"
+            >
+              <CalendarClock className="w-4 h-4 shrink-0 text-[var(--color-warning)]" />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-[var(--color-text)] truncate">{m.title}</p>
+                <p className="text-[10px] text-[var(--color-text-3)]">{m.client}</p>
+              </div>
+              {date && (
+                <div className="text-right shrink-0">
+                  <p className="text-[10px] text-[var(--color-text-3)]">{label}</p>
+                  <p className="text-xs font-medium text-[var(--color-text)]">{new Date(date).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}</p>
+                </div>
+              )}
+            </motion.div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function QuickActions() {
   const actions = [
     { label: "Nouveau devis", href: "/devis/new", color: "var(--color-accent)", bg: "var(--color-accent-dim)" },
@@ -91,7 +153,7 @@ function QuickActions() {
           <a
             key={a.href}
             href={a.href}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-md)] transition-all hover:shadow-[var(--shadow-sm)]"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-md)] transition-all duration-[var(--dur-fast)] hover:shadow-[var(--shadow-sm)] hover:brightness-105 cursor-pointer"
             style={{ backgroundColor: a.bg, color: a.color }}
           >
             <span className="text-xs font-medium">{a.label}</span>
@@ -102,20 +164,49 @@ function QuickActions() {
   );
 }
 
+function FilterPills<T extends string>({ options, value, onChange }: { options: { value: T; label: string }[]; value: T; onChange: (v: T) => void }) {
+  return (
+    <div className="flex items-center gap-1 p-1 rounded-[var(--radius-md)] bg-[var(--color-bg-2)] border border-[var(--color-border)] w-fit">
+      {options.map((o) => (
+        <button
+          key={o.value}
+          onClick={() => onChange(o.value)}
+          className={`px-3 h-7 rounded-[calc(var(--radius-md)-2px)] text-xs font-medium transition-all duration-[var(--dur-fast)] cursor-pointer ${
+            value === o.value
+              ? "bg-[var(--color-card)] text-[var(--color-text)] shadow-[var(--shadow-xs)]"
+              : "text-[var(--color-text-2)] hover:text-[var(--color-text)]"
+          }`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+const PERIOD_LABEL: Record<Period, string> = { month: "CA ce mois", quarter: "CA ce trimestre", year: "CA cette année" };
+
 export default function DashboardPage() {
   const [aiOpen, setAiOpen] = useState(false);
   const [data, setData] = useState<DashboardData | null>(null);
+  const [period, setPeriod] = useState<Period>("month");
+  /* undefined tant que le marché par défaut du profil n'est pas connu — l'API décide. */
+  const [market, setMarket] = useState<MarketFilter | undefined>(undefined);
 
   useEffect(() => {
-    fetch("/api/dashboard")
+    const params = new URLSearchParams({ period });
+    if (market) params.set("market", market);
+    fetch(apiPath(`/api/dashboard?${params}`))
       .then((r) => r.json())
-      .then(setData)
+      .then((json: DashboardData) => {
+        setData(json);
+        setMarket((prev) => prev ?? (json.market as MarketFilter));
+      })
       .catch(() => setData(null));
-  }, []);
+  }, [period, market]);
 
   const kpis = data?.kpis;
   const currency = data?.currency ?? "EUR";
-  const market = data?.market ?? "france";
   const year = data?.year ?? new Date().getFullYear();
   const today = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
 
@@ -140,12 +231,18 @@ export default function DashboardPage() {
         className="flex-1 p-4 md:p-6 lg:p-7 space-y-5"
       >
         <div className="max-w-[1200px] mx-auto space-y-5">
+        {/* Filtres */}
+        <div data-tour="dashboard-filters" className="flex flex-wrap items-center gap-3">
+          <FilterPills options={PERIOD_OPTIONS} value={period} onChange={setPeriod} />
+          <FilterPills options={MARKET_OPTIONS} value={market ?? "france"} onChange={setMarket} />
+        </div>
+
         {/* KPI row 1 */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <KpiCard
-            label="CA ce mois"
-            value={kpis ? fmt(kpis.revenue_month, currency) : "—"}
-            rawValue={kpis?.revenue_month}
+            label={PERIOD_LABEL[period]}
+            value={kpis ? fmt(kpis.period_revenue, currency) : "—"}
+            rawValue={kpis?.period_revenue}
             formatValue={(n) => fmt(n, currency)}
             icon={<TrendingUp className="w-4 h-4" />}
             accentColor="var(--color-success)"
@@ -221,14 +318,58 @@ export default function DashboardPage() {
           />
         </div>
 
+        {/* KPI row 3 */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <KpiCard
+            label="Taux de conversion"
+            value={kpis ? `${Math.round(kpis.conversion_rate)}%` : "—"}
+            rawValue={kpis?.conversion_rate}
+            formatValue={(n) => `${Math.round(n)}%`}
+            subtitle="Devis acceptés / décidés"
+            icon={<TrendingUp className="w-4 h-4" />}
+            accentColor="var(--color-info)"
+            trend={kpis && kpis.conversion_rate >= 50 ? "up" : "down"}
+            index={8}
+          />
+          <KpiCard
+            label="Échéances à venir"
+            value={kpis?.upcoming_missions_count ?? "—"}
+            rawValue={kpis?.upcoming_missions_count}
+            subtitle="Missions sous 7 jours"
+            icon={<CalendarClock className="w-4 h-4" />}
+            accentColor="var(--color-warning)"
+            trend={kpis && kpis.upcoming_missions_count > 0 ? "down" : "neutral"}
+            index={9}
+          />
+        </div>
+
         {/* Content */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
           <div className="xl:col-span-2 space-y-5">
             {data ? (
-              <RevenueChart data={revenuePoints} year={year} currency={currency} />
+              <RevenueChart data={revenuePoints} year={year} currency={currency} market={market ?? "france"} />
             ) : (
-              <div className="bg-[var(--color-card)] rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-sm)] p-4 h-[280px] animate-pulse" />
+              <div className="bg-[var(--color-card)] rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-sm)] p-4 h-[280px] space-y-3">
+                <div className="skeleton h-4 w-40" />
+                <div className="skeleton h-3 w-24" />
+                <div className="skeleton h-[190px] w-full" />
+              </div>
             )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <InvoiceStatusChart
+                data={data?.invoiceStatusBreakdown ?? []}
+                currency={currency}
+                title="Factures par statut"
+              />
+              <InvoiceStatusChart
+                data={data?.quoteStatusBreakdown ?? []}
+                currency={currency}
+                title="Devis par statut"
+              />
+            </div>
+
+            <UpcomingMissions items={data?.upcomingMissions ?? []} />
           </div>
 
           <div className="space-y-4">
@@ -239,7 +380,7 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
-      <AiPanel open={aiOpen} onClose={() => setAiOpen(false)} market={market} />
+      <AiPanel open={aiOpen} onClose={() => setAiOpen(false)} market={data?.market === "all" ? "france" : data?.market} />
     </>
   );
 }

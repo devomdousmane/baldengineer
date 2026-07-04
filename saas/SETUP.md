@@ -6,7 +6,7 @@
 2. Copier les clés dans `.env.local` :
    ```
    NEXT_PUBLIC_SUPABASE_URL=https://XXXX.supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJXXXX...
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_XXXX...
    NEXT_PUBLIC_APP_URL=http://localhost:3001
    ```
 
@@ -33,6 +33,20 @@ npm run dev -- --port 3001
 ```bash
 npx supabase gen types typescript --project-id VOTRE_PROJECT_ID > types/supabase-gen.ts
 ```
+
+## 6. Configurer l'envoi d'emails (Resend)
+
+L'envoi de devis, factures, relances et notifications par email passe par [Resend](https://resend.com).
+
+1. Créer un compte sur [resend.com](https://resend.com) et vérifier votre domaine d'envoi (SPF/DKIM)
+2. Récupérer la clé API : **API Keys** → [resend.com/api-keys](https://resend.com/api-keys)
+3. Ajouter dans `.env.local` :
+   ```
+   RESEND_API_KEY=re_XXXX...
+   EMAIL_FROM=BaldPro <noreply@votredomaine.com>
+   ```
+
+`EMAIL_FROM` doit utiliser une adresse du domaine vérifié dans Resend. En développement, `onboarding@resend.dev` peut être utilisé pour tester sans domaine vérifié.
 
 ## Architecture
 

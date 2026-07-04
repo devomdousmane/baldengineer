@@ -27,10 +27,10 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <Image
-              src="/logo.jpg"
+              src="/logo.png"
               alt="BaldEngineer"
               width={140}
-              height={40}
+              height={83}
               className="mb-4"
               style={{ filter: "none" }}
               unoptimized

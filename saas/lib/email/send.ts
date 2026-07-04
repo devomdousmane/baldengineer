@@ -1,9 +1,9 @@
-import { resend, EMAIL_FROM } from "./client";
+import { getResend, EMAIL_FROM } from "./client";
 import type { CreateEmailOptions } from "resend";
 
 export interface SendResult {
   success: boolean;
-  resendId?: string;
+  messageId?: string;
   error?: string;
 }
 
@@ -27,9 +27,9 @@ export async function sendEmail(opts: SendEmailOpts): Promise<SendResult> {
   };
 
   try {
-    const { data, error } = await resend.emails.send(payload);
+    const { data, error } = await getResend().emails.send(payload);
     if (error) return { success: false, error: error.message };
-    return { success: true, resendId: data?.id };
+    return { success: true, messageId: data?.id };
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : "Erreur inconnue" };
   }

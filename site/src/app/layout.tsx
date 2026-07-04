@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, DM_Sans, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+import CustomCursor from "@/components/CustomCursor";
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -59,6 +60,7 @@ export default function RootLayout({
           themes={["dark", "light"]}
           enableSystem={false}
         >
+          <CustomCursor />
           {children}
         </ThemeProvider>
       </body>

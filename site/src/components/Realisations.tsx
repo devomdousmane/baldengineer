@@ -5,6 +5,7 @@ import { motion, useInView, useScroll, useTransform } from "framer-motion";
 import Image from "next/image";
 import { CheckCircle2 } from "lucide-react";
 import SectionHeader from "./SectionHeader";
+import { SectionTexture } from "./SectionTexture";
 
 const projects = [
   {
@@ -151,10 +152,11 @@ export default function Realisations() {
   return (
     <section
       id="realisations"
-      className="py-28 sm:py-36 px-6 sm:px-10"
+      className="relative py-28 sm:py-36 px-6 sm:px-10"
       style={{ backgroundColor: "var(--color-deep)" }}
     >
-      <div className="max-w-7xl mx-auto">
+      <SectionTexture glow="top-left" />
+      <div className="relative z-10 max-w-7xl mx-auto">
         <SectionHeader
           label="Réalisations"
           title="Projets réalisés"

@@ -1,0 +1,7 @@
+[build]
+  base = "/"
+  command = "npm install && npm run build --workspace=saas"
+  publish = "saas/.next"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

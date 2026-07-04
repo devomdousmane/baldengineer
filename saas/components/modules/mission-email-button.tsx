@@ -48,14 +48,14 @@ export function MissionEmailButton({ mission }: MissionEmailButtonProps) {
         {showMenu && (
           <>
             <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
-            <div className="absolute right-0 top-full mt-1 z-20 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl shadow-xl overflow-hidden min-w-[200px]">
+            <div className="absolute right-0 top-full mt-1 z-20 bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] overflow-hidden min-w-[200px]">
               {(Object.entries(TYPE_CONFIG) as [EmailType, typeof TYPE_CONFIG[EmailType]][]).map(([type, cfg]) => (
                 <button key={type} onClick={() => open(type)}
-                  className="flex items-center gap-2.5 w-full px-3 py-2.5 text-xs text-left text-[var(--color-text)] hover:bg-[var(--color-hover)] transition-colors">
-                  <Mail className="w-3.5 h-3.5 text-[var(--color-accent)]" />
+                  className="flex items-center gap-2.5 w-full px-3 py-2.5 text-xs text-left text-[var(--color-text)] hover:bg-[var(--color-bg-2)] transition-colors duration-[var(--dur-fast)] cursor-pointer">
+                  <Mail className="w-3.5 h-3.5 text-[var(--color-accent)] shrink-0" />
                   <div>
                     <p className="font-medium">{cfg.label}</p>
-                    <p className="text-[10px] text-[var(--color-muted)]">{cfg.subject(mission.title).slice(0, 40)}…</p>
+                    <p className="text-[10px] text-[var(--color-text-3)]">{cfg.subject(mission.title).slice(0, 40)}…</p>
                   </div>
                 </button>
               ))}

@@ -87,7 +87,7 @@ export function FactureActions({ invoice, canPay, remaining }: FactureActionsPro
             {showRelanceMenu && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowRelanceMenu(false)} />
-                <div className="absolute right-0 top-full mt-1 flex flex-col bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl shadow-xl z-20 min-w-[190px] overflow-hidden">
+                <div className="absolute right-0 top-full mt-1 flex flex-col bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] z-20 min-w-[190px] overflow-hidden">
                   {([
                     { label: "1ère relance", level: 1 as const },
                     { label: "2ème relance", level: 2 as const },
@@ -96,11 +96,11 @@ export function FactureActions({ invoice, canPay, remaining }: FactureActionsPro
                     <button
                       key={level}
                       onClick={() => { setShowRelanceMenu(false); setEmailDialog({ type: "relance_paiement", level }); }}
-                      className={`flex items-center gap-2 px-3 py-2.5 text-xs text-left transition-colors hover:bg-[var(--color-hover)] ${danger ? "text-[var(--color-danger)]" : "text-[var(--color-text)]"}`}
+                      className={`flex items-center gap-2 px-3 py-2.5 text-xs text-left transition-colors duration-[var(--dur-fast)] cursor-pointer hover:bg-[var(--color-bg-2)] ${danger ? "text-[var(--color-danger)]" : "text-[var(--color-text)]"}`}
                     >
                       {danger
-                        ? <AlertTriangle className="w-3.5 h-3.5 text-[var(--color-danger)]" />
-                        : <Mail className="w-3.5 h-3.5 text-[var(--color-muted)]" />}
+                        ? <AlertTriangle className="w-3.5 h-3.5 text-[var(--color-danger)] shrink-0" />
+                        : <Mail className="w-3.5 h-3.5 text-[var(--color-text-3)] shrink-0" />}
                       {label}
                     </button>
                   ))}

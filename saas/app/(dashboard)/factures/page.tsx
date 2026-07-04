@@ -4,27 +4,24 @@ import { Header } from "@/components/layout/header";
 import { FacturesTable } from "@/components/tables/factures-table";
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { PageAside } from "@/components/layout/page-aside";
+import { KpiCard } from "@/components/ui/card";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Receipt, Wallet, AlertTriangle, FileStack } from "lucide-react";
 import type { Market } from "@/types/database";
 
 const ASIDE_TIPS = [
   {
     title: "Créer une facture",
-    body: "Cliquez sur « Nouvelle facture » ou convertissez directement un devis accepté. Les lignes sont préremplies automatiquement.",
+    body: "Depuis un devis accepté ou directement via « Nouvelle facture ».",
   },
   {
-    title: "Enregistrer un paiement",
-    body: "Ouvrez une facture envoyée et cliquez sur « Enregistrer paiement ». Indiquez le montant reçu et le mode de paiement. L'écriture comptable est créée automatiquement.",
+    title: "Paiement",
+    body: "Ouvrez la facture → « Enregistrer paiement ». L'écriture comptable est créée automatiquement.",
   },
   {
-    title: "Factures en retard",
-    body: "Les factures dont la date d'échéance est dépassée passent en statut « En retard » et apparaissent en rouge. Pensez à relancer vos clients.",
-  },
-  {
-    title: "Factur-X (France)",
-    body: "Pour les clients France, soumettez vos factures au format Factur-X via le bouton dédié sur la page de détail. Nécessite les credentials Chorus Pro.",
+    title: "Factur-X",
+    body: "Clients France : soumission Chorus Pro depuis la page de détail.",
   },
 ];
 
@@ -37,6 +34,20 @@ export default async function FacturesPage() {
   const market = (profile?.default_market ?? "france") as Market;
   const currency = market === "france" ? (profile?.currency_fr ?? "EUR") : (profile?.currency_gn ?? "GNF");
   const invoices = await getInvoices(market);
+
+  const fmt = (n: number) =>
+    new Intl.NumberFormat("fr-FR", { style: "currency", currency, maximumFractionDigits: 0 }).format(n);
+
+  const totalFacture = invoices
+    .filter((i) => i.status !== "cancelled")
+    .reduce((s, i) => s + i.total_ttc, 0);
+
+  const totalEncaisse = invoices.reduce((s, i) => s + i.paid_amount, 0);
+
+  const enRetard = invoices
+    .filter((i) => i.status === "overdue")
+    .reduce((s, i) => s + (i.total_ttc - i.paid_amount), 0);
+  const overdueCount = invoices.filter((i) => i.status === "overdue").length;
 
   return (
     <>
@@ -55,11 +66,44 @@ export default async function FacturesPage() {
         aside={
           <PageAside
             title="Facturation"
-            description="Gérez tout votre cycle de facturation : de l'émission au paiement, en passant par les relances."
+            description="Du devis au paiement, avec relances."
             tips={ASIDE_TIPS}
           />
         }
       >
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <KpiCard
+            label="Total facturé"
+            value={fmt(totalFacture)}
+            subtitle="Hors annulées"
+            icon={<FileStack className="w-4 h-4" />}
+            accentColor="var(--color-primary)"
+            index={0}
+          />
+          <KpiCard
+            label="Encaissé"
+            value={fmt(totalEncaisse)}
+            icon={<Wallet className="w-4 h-4" />}
+            accentColor="var(--color-success)"
+            index={1}
+          />
+          <KpiCard
+            label="En retard"
+            value={fmt(enRetard)}
+            subtitle={`${overdueCount} facture${overdueCount !== 1 ? "s" : ""}`}
+            icon={<AlertTriangle className="w-4 h-4" />}
+            accentColor="var(--color-danger)"
+            trend={overdueCount > 0 ? "down" : "neutral"}
+            index={2}
+          />
+          <KpiCard
+            label="Total factures"
+            value={String(invoices.length)}
+            icon={<Receipt className="w-4 h-4" />}
+            accentColor="var(--color-accent)"
+            index={3}
+          />
+        </div>
         <FacturesTable invoices={invoices} currency={currency} />
       </PageWrapper>
     </>

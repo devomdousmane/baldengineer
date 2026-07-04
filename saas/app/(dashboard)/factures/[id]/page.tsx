@@ -6,6 +6,7 @@ import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { PageWrapper } from "@/components/layout/page-wrapper";
 import { FactureActions } from "@/components/modules/facture-actions";
 import { FacturXDownloadButton } from "@/components/modules/facturx-download-button";
 import { ArrowLeft, Printer, Building2, User, Calendar, Hash, CreditCard } from "lucide-react";
@@ -98,7 +99,7 @@ export default async function FactureDetailPage({ params }: { params: Promise<{ 
         }
       />
 
-      <div className="flex-1 p-5 space-y-4 max-w-4xl">
+      <PageWrapper className="max-w-4xl">
         {/* Status bar */}
         <div className="flex items-center justify-between bg-[var(--color-card)] rounded-[var(--radius-lg)] border border-[var(--color-border)] px-4 py-3 flex-wrap gap-3">
           <div className="flex items-center gap-3 flex-wrap">
@@ -133,14 +134,14 @@ export default async function FactureDetailPage({ params }: { params: Promise<{ 
 
         {/* Meta grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <Card padding="sm">
+          <Card padding="sm" hover>
             <div className="flex items-center gap-2 mb-1">
               <Hash className="w-3.5 h-3.5 text-[var(--color-text-3)]" />
               <p className="text-xs text-[var(--color-text-3)]">Numéro</p>
             </div>
             <p className="font-mono text-sm font-medium text-[var(--color-accent)]">{invoice.number}</p>
           </Card>
-          <Card padding="sm">
+          <Card padding="sm" hover>
             <div className="flex items-center gap-2 mb-1">
               {invoice.client?.type === "company"
                 ? <Building2 className="w-3.5 h-3.5 text-[var(--color-text-3)]" />
@@ -149,7 +150,7 @@ export default async function FactureDetailPage({ params }: { params: Promise<{ 
             </div>
             <p className="text-sm font-medium text-[var(--color-text)] truncate">{invoice.client?.name ?? "—"}</p>
           </Card>
-          <Card padding="sm">
+          <Card padding="sm" hover>
             <div className="flex items-center gap-2 mb-1">
               <Calendar className="w-3.5 h-3.5 text-[var(--color-text-3)]" />
               <p className="text-xs text-[var(--color-text-3)]">Émission</p>
@@ -158,7 +159,7 @@ export default async function FactureDetailPage({ params }: { params: Promise<{ 
               {new Date(invoice.date).toLocaleDateString("fr-FR")}
             </p>
           </Card>
-          <Card padding="sm">
+          <Card padding="sm" hover>
             <div className="flex items-center gap-2 mb-1">
               <Calendar className="w-3.5 h-3.5 text-[var(--color-text-3)]" />
               <p className="text-xs text-[var(--color-text-3)]">Échéance</p>
@@ -268,7 +269,7 @@ export default async function FactureDetailPage({ params }: { params: Promise<{ 
             )}
           </div>
         )}
-      </div>
+      </PageWrapper>
     </>
   );
 }

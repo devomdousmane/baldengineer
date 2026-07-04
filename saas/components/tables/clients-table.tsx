@@ -1,12 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { ViewToggle, type ViewMode } from "@/components/ui/view-toggle";
+import { ListToolbar } from "@/components/ui/list-toolbar";
 import { Badge } from "@/components/ui/badge";
 import { Building2, User, Mail, Phone, MapPin } from "lucide-react";
 import type { Client } from "@/types/database";
+
+const TYPE_FILTERS = [
+  { value: "", label: "Tous" },
+  { value: "company", label: "Entreprises" },
+  { value: "individual", label: "Particuliers" },
+];
 
 const columns: Column<Client>[] = [
   {
@@ -42,7 +50,7 @@ const columns: Column<Client>[] = [
   { key: "city", label: "Ville", sortable: true },
 ];
 
-function ClientGrid({ clients }: { clients: Client[] }) {
+function ClientGrid({ clients, onOpen }: { clients: Client[]; onOpen: (c: Client) => void }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
       {clients.map((c, i) => (
@@ -51,6 +59,7 @@ function ClientGrid({ clients }: { clients: Client[] }) {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: i * 0.04, ease: [0.22, 1, 0.36, 1] }}
+          onClick={() => onOpen(c)}
           className="bg-[var(--color-card)] rounded-[var(--radius-lg)] border border-[var(--color-border)] p-4 hover:shadow-[var(--shadow-md)] hover:border-[var(--color-border-2)] transition-all cursor-pointer group"
         >
           <div className="flex items-start gap-3 mb-3">
@@ -91,7 +100,7 @@ function ClientGrid({ clients }: { clients: Client[] }) {
   );
 }
 
-function ClientList({ clients }: { clients: Client[] }) {
+function ClientList({ clients, onOpen }: { clients: Client[]; onOpen: (c: Client) => void }) {
   return (
     <div className="space-y-1.5">
       {clients.map((c, i) => (
@@ -100,6 +109,7 @@ function ClientList({ clients }: { clients: Client[] }) {
           initial={{ opacity: 0, x: -8 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.25, delay: i * 0.03 }}
+          onClick={() => onOpen(c)}
           className="flex items-center gap-3 px-4 py-3 bg-[var(--color-card)] rounded-[var(--radius-md)] border border-[var(--color-border)] hover:border-[var(--color-border-2)] hover:shadow-[var(--shadow-sm)] transition-all cursor-pointer"
         >
           <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 font-semibold text-xs"
@@ -123,29 +133,51 @@ function ClientList({ clients }: { clients: Client[] }) {
 }
 
 export function ClientsTable({ clients }: { clients: Client[] }) {
+  const router = useRouter();
   const [view, setView] = useState<ViewMode>("table");
+  const [search, setSearch] = useState("");
+  const [type, setType] = useState("");
+  const openClient = (c: Client) => router.push(`/clients/${c.id}/edit`);
+
+  const filtered = useMemo(() => {
+    return clients.filter((c) => {
+      if (type && c.type !== type) return false;
+      if (search.trim()) {
+        const q = search.toLowerCase();
+        const hay = `${c.name} ${c.email ?? ""} ${c.city ?? ""} ${c.siren ?? ""} ${c.nif ?? ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [clients, search, type]);
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-[var(--color-text-3)]">{clients.length} client{clients.length !== 1 ? "s" : ""}</p>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs text-[var(--color-text-3)]">{filtered.length} client{filtered.length !== 1 ? "s" : ""}</p>
         <ViewToggle value={view} onChange={setView} />
       </div>
+      <ListToolbar
+        search={search}
+        onSearch={setSearch}
+        placeholder="Rechercher un client…"
+        filters={TYPE_FILTERS}
+        active={type}
+        onFilter={setType}
+      />
 
       <AnimatePresence mode="wait">
         <motion.div key={view} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
           {view === "table" && (
             <DataTable<Client>
-              data={clients}
+              data={filtered}
               columns={columns}
-              searchable
-              searchPlaceholder="Rechercher un client…"
-              searchKeys={["name", "email", "city", "siren", "nif"]}
               emptyMessage="Aucun client — ajoutez votre premier client"
+              onRowClick={openClient}
             />
           )}
-          {view === "grid" && <ClientGrid clients={clients} />}
-          {view === "list" && <ClientList clients={clients} />}
+          {view === "grid" && <ClientGrid clients={filtered} onOpen={openClient} />}
+          {view === "list" && <ClientList clients={filtered} onOpen={openClient} />}
         </motion.div>
       </AnimatePresence>
     </div>

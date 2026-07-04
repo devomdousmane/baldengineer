@@ -4,9 +4,10 @@ import { Header } from "@/components/layout/header";
 import { DevisTable } from "@/components/tables/devis-table";
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { PageAside } from "@/components/layout/page-aside";
+import { KpiCard } from "@/components/ui/card";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, FileText, Banknote, Clock, TrendingUp } from "lucide-react";
 import type { Market } from "@/types/database";
 
 const ASIDE_TIPS = [
@@ -38,6 +39,16 @@ export default async function DevisPage() {
   const currency = market === "france" ? (profile?.currency_fr ?? "EUR") : (profile?.currency_gn ?? "GNF");
   const quotes = await getQuotes(market);
 
+  const fmt = (n: number) =>
+    new Intl.NumberFormat("fr-FR", { style: "currency", currency, maximumFractionDigits: 0 }).format(n);
+
+  const acceptedAmount = quotes.filter((q) => q.status === "accepted").reduce((s, q) => s + q.total_ttc, 0);
+  const pendingCount = quotes.filter((q) => q.status === "draft" || q.status === "sent").length;
+  const decidedCount = quotes.filter((q) => q.status === "accepted" || q.status === "refused" || q.status === "expired").length;
+  const conversionRate = decidedCount > 0
+    ? Math.round((quotes.filter((q) => q.status === "accepted").length / decidedCount) * 100)
+    : 0;
+
   return (
     <>
       <Header
@@ -60,6 +71,39 @@ export default async function DevisPage() {
           />
         }
       >
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <KpiCard
+            label="Total devis"
+            value={String(quotes.length)}
+            icon={<FileText className="w-4 h-4" />}
+            accentColor="var(--color-accent)"
+            index={0}
+          />
+          <KpiCard
+            label="Montant accepté"
+            value={fmt(acceptedAmount)}
+            icon={<Banknote className="w-4 h-4" />}
+            accentColor="var(--color-success)"
+            index={1}
+          />
+          <KpiCard
+            label="En cours"
+            value={String(pendingCount)}
+            subtitle="Brouillons + envoyés"
+            icon={<Clock className="w-4 h-4" />}
+            accentColor="var(--color-warning)"
+            index={2}
+          />
+          <KpiCard
+            label="Taux de conversion"
+            value={`${conversionRate}%`}
+            subtitle="Sur devis décidés"
+            icon={<TrendingUp className="w-4 h-4" />}
+            accentColor="var(--color-info)"
+            trend={conversionRate >= 50 ? "up" : "down"}
+            index={3}
+          />
+        </div>
         <DevisTable quotes={quotes} currency={currency} />
       </PageWrapper>
     </>

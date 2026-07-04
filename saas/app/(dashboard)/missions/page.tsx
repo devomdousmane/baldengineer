@@ -12,19 +12,15 @@ import type { Market } from "@/types/database";
 const ASIDE_TIPS = [
   {
     title: "Créer une mission",
-    body: "Cliquez sur « Nouvelle mission ». Associez-la à un client, définissez un taux journalier et un nombre de jours estimés pour calculer le budget automatiquement.",
+    body: "Client + taux journalier × jours estimés = budget calculé.",
   },
   {
-    title: "Suivre l'avancement",
-    body: "Changez le statut de la mission : En attente → Active → Terminée. Cela vous permet de suivre ce qui est en cours et ce qui est livré.",
-  },
-  {
-    title: "Budget estimé",
-    body: "Le champ « Jours estimés × Taux journalier » calcule le montant prévisionnel. Utilisez-le pour préparer vos devis.",
+    title: "Suivi",
+    body: "Statut : En attente → Active → Terminée.",
   },
   {
     title: "Mission → Facture",
-    body: "Une fois la mission terminée, créez une facture directement depuis la page Factures en y liant la mission via le champ client.",
+    body: "Facturez depuis la page Factures en liant le client de la mission.",
   },
 ];
 
@@ -55,7 +51,7 @@ export default async function MissionsPage() {
         aside={
           <PageAside
             title="Missions"
-            description="Suivez vos missions en régie ou forfait. Associez chaque mission à un client et calculez votre budget prévisionnel."
+            description="Missions en régie ou forfait, liées à un client."
             tips={ASIDE_TIPS}
           />
         }

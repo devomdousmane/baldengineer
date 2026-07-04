@@ -108,7 +108,7 @@ export function DocPreview({ type, title, date, extraDate, extraDateLabel, marke
           {/* Logo + company */}
           <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="Logo" style={{ width: 36, height: 36, objectFit: "contain", borderRadius: 4 }} />
+            <img src="/logo.png" alt="Logo" style={{ width: 56, height: 33, objectFit: "contain" }} />
             <div>
               <p style={{ fontWeight: 700, fontSize: 12, color: text, margin: 0 }}>{companyName}</p>
               {profile?.company_address && <p style={{ color: muted, margin: "1px 0 0", fontSize: 10 }}>{profile.company_address}</p>}

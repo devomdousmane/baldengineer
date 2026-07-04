@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { ViewToggle, type ViewMode } from "@/components/ui/view-toggle";
+import { ListToolbar } from "@/components/ui/list-toolbar";
 import { Badge } from "@/components/ui/badge";
 import { Receipt, Calendar, AlertTriangle } from "lucide-react";
 import type { Invoice, InvoiceStatus } from "@/types/database";
@@ -17,6 +18,11 @@ const statusConfig: Record<InvoiceStatus, { label: string; variant: "default" | 
   overdue:   { label: "En retard", variant: "danger"  },
   cancelled: { label: "Annulée",   variant: "outline" },
 };
+
+const STATUS_FILTERS = [
+  { value: "", label: "Toutes" },
+  ...(Object.keys(statusConfig) as InvoiceStatus[]).map((s) => ({ value: s, label: statusConfig[s].label })),
+];
 
 function makeColumns(fmt: (n: number) => string): Column<Invoice>[] {
   return [
@@ -149,31 +155,50 @@ function FactureList({ invoices, fmt, onRowClick }: { invoices: Invoice[]; fmt: 
 
 export function FacturesTable({ invoices, currency }: { invoices: Invoice[]; currency: string }) {
   const [view, setView] = useState<ViewMode>("table");
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("");
   const router = useRouter();
   const fmt = (n: number) =>
     new Intl.NumberFormat("fr-FR", { style: "currency", currency, maximumFractionDigits: 2 }).format(n);
 
+  const filtered = useMemo(() => {
+    return invoices.filter((inv) => {
+      if (status && inv.status !== status) return false;
+      if (search.trim()) {
+        const q = search.toLowerCase();
+        const hay = `${inv.number} ${inv.title} ${(inv.client as { name?: string })?.name ?? ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [invoices, search, status]);
+
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-[var(--color-text-3)]">{invoices.length} facture{invoices.length !== 1 ? "s" : ""}</p>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs text-[var(--color-text-3)]">{filtered.length} facture{filtered.length !== 1 ? "s" : ""}</p>
         <ViewToggle value={view} onChange={setView} />
       </div>
+      <ListToolbar
+        search={search}
+        onSearch={setSearch}
+        placeholder="Rechercher une facture…"
+        filters={STATUS_FILTERS}
+        active={status}
+        onFilter={setStatus}
+      />
       <AnimatePresence mode="wait">
         <motion.div key={view} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
           {view === "table" && (
             <DataTable<Invoice>
-              data={invoices}
+              data={filtered}
               columns={makeColumns(fmt)}
-              searchable
-              searchPlaceholder="Rechercher une facture…"
-              searchKeys={["number", "title"]}
               emptyMessage="Aucune facture"
               onRowClick={(inv) => router.push(`/factures/${inv.id}`)}
             />
           )}
-          {view === "grid" && <FactureGrid invoices={invoices} fmt={fmt} onRowClick={(inv) => router.push(`/factures/${inv.id}`)} />}
-          {view === "list" && <FactureList invoices={invoices} fmt={fmt} onRowClick={(inv) => router.push(`/factures/${inv.id}`)} />}
+          {view === "grid" && <FactureGrid invoices={filtered} fmt={fmt} onRowClick={(inv) => router.push(`/factures/${inv.id}`)} />}
+          {view === "list" && <FactureList invoices={filtered} fmt={fmt} onRowClick={(inv) => router.push(`/factures/${inv.id}`)} />}
         </motion.div>
       </AnimatePresence>
     </div>

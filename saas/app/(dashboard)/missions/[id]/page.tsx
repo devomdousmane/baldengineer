@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Select, Textarea } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { getMission, updateMissionAction, updateMissionStatusAction, deleteMissionAction } from "@/lib/actions/missions";
 import { getClients } from "@/lib/actions/clients";
@@ -22,10 +23,10 @@ const card = (i: number) => ({
 });
 
 const STATUS_FLOW: { status: MissionStatus; label: string; icon: React.ElementType; color: string; bg: string }[] = [
-  { status: "pending",   label: "À démarrer", icon: Clock,         color: "#64748B", bg: "#F1F5F9" },
-  { status: "active",    label: "En cours",   icon: PlayCircle,    color: "#2D8A3E", bg: "#F0FFF4" },
-  { status: "completed", label: "Terminée",   icon: CheckCircle2,  color: "#059669", bg: "#ECFDF5" },
-  { status: "cancelled", label: "Annulée",    icon: XCircle,       color: "#DC2626", bg: "#FEF2F2" },
+  { status: "pending",   label: "À démarrer", icon: Clock,         color: "var(--color-text-2)",  bg: "var(--color-bg-2)"        },
+  { status: "active",    label: "En cours",   icon: PlayCircle,    color: "var(--color-accent)",  bg: "var(--color-accent-dim)"  },
+  { status: "completed", label: "Terminée",   icon: CheckCircle2,  color: "var(--color-success)", bg: "var(--color-success-dim)" },
+  { status: "cancelled", label: "Annulée",    icon: XCircle,       color: "var(--color-danger)",  bg: "var(--color-danger-dim)"  },
 ];
 
 const BADGE_VARIANTS: Record<MissionStatus, "default" | "info" | "success" | "danger"> = {
@@ -275,28 +276,23 @@ export default function EditMissionPage() {
             {/* Danger zone */}
             <Card padding="lg">
               <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--color-danger)" }}>Zone dangereuse</p>
-              <AnimatePresence mode="wait">
-                {!confirmDelete ? (
-                  <motion.div key="confirm-btn" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                    <Button
-                      type="button" variant="danger" size="sm"
-                      iconLeft={<Trash2 className="w-3.5 h-3.5" />}
-                      onClick={() => setConfirmDelete(true)}
-                      className="w-full"
-                    >
-                      Supprimer la mission
-                    </Button>
-                  </motion.div>
-                ) : (
-                  <motion.div key="confirm-yes" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-2">
-                    <p className="text-xs text-[var(--color-text-2)]">Cette action est irréversible.</p>
-                    <div className="flex gap-2">
-                      <Button type="button" variant="danger" size="sm" loading={isDeleting} onClick={handleDelete} className="flex-1">Confirmer</Button>
-                      <Button type="button" variant="secondary" size="sm" onClick={() => setConfirmDelete(false)}>Annuler</Button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <Button
+                type="button" variant="danger" size="sm"
+                iconLeft={<Trash2 className="w-3.5 h-3.5" />}
+                onClick={() => setConfirmDelete(true)}
+                className="w-full"
+              >
+                Supprimer la mission
+              </Button>
+              <ConfirmModal
+                open={confirmDelete}
+                onCancel={() => setConfirmDelete(false)}
+                onConfirm={handleDelete}
+                title="Supprimer la mission ?"
+                description="Cette action est irréversible. La mission et son historique seront définitivement supprimés."
+                confirmLabel="Supprimer"
+                loading={isDeleting}
+              />
             </Card>
           </motion.div>
         </form>

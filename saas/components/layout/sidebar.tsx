@@ -1,13 +1,15 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  LayoutDashboard, Users, FileText, Receipt, Briefcase,
-  BookOpen, Settings, LogOut,
+  LayoutDashboard, Users, FileText, Receipt, Wallet, Briefcase,
+  BookOpen, Settings, LogOut, X, HelpCircle, Sparkles, Send, ArrowLeft,
 } from "lucide-react";
 import { MarketSwitcher } from "./market-switcher";
+import { useSidebar } from "./sidebar-context";
 import type { Market } from "@/types/database";
 
 const ease = [0.22, 1, 0.36, 1] as [number, number, number, number];
@@ -18,11 +20,17 @@ interface NavItem {
   icon: React.ElementType;
 }
 
-const navItems: NavItem[] = [
+interface NavItemWithTour extends NavItem {
+  tourId?: string;
+}
+
+const navItems: NavItemWithTour[] = [
   { href: "/",             label: "Tableau de bord", icon: LayoutDashboard },
-  { href: "/clients",      label: "Clients",          icon: Users           },
-  { href: "/devis",        label: "Devis",            icon: FileText        },
-  { href: "/factures",     label: "Factures",         icon: Receipt         },
+  { href: "/clients",      label: "Clients",          icon: Users,     tourId: "nav-clients"  },
+  { href: "/devis",        label: "Devis",            icon: FileText,  tourId: "nav-devis"    },
+  { href: "/factures",     label: "Factures",         icon: Receipt,   tourId: "nav-factures" },
+  { href: "/paiements",    label: "Paiements",        icon: Wallet          },
+  { href: "/emails",       label: "Suivi emails",     icon: Send            },
   { href: "/missions",     label: "Missions",         icon: Briefcase       },
   { href: "/comptabilite", label: "Comptabilité",     icon: BookOpen        },
 ];
@@ -42,44 +50,55 @@ interface SidebarProps {
   market: Market;
   onSignOut?: () => void;
   onAiOpen?: () => void;
+  onTourStart?: () => void;
 }
 
-export function Sidebar({ userName, userAvatar, market, onSignOut, onAiOpen }: SidebarProps) {
+export function Sidebar({ userName, userAvatar, market, onSignOut, onTourStart }: SidebarProps) {
   const pathname = usePathname();
+  const { mobileOpen, closeMobile } = useSidebar();
   const isActive = (href: string) => href === "/" ? pathname === "/" : pathname.startsWith(href);
 
-  return (
-    <motion.aside
-      initial={{ opacity: 0, x: -16 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.35, ease }}
-      className="fixed left-0 top-0 bottom-0 flex flex-col border-r border-[var(--color-border)] bg-[var(--color-card)] z-[var(--z-sidebar)]"
-      style={{ width: "var(--sidebar-width)" }}
-      aria-label="Navigation principale"
-    >
+  /* Fermer le drawer mobile à chaque navigation */
+  const handleNavigate = () => closeMobile();
+
+  const content = (
+    <>
       {/* Logo */}
       <motion.div
+        data-tour="logo"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3, delay: 0.05, ease }}
-        className="flex items-center gap-3 px-4 border-b border-[var(--color-border)]"
+        className="flex items-center justify-between px-4 border-b border-[var(--color-border)]"
         style={{ height: "var(--header-height)" }}
       >
-        <div
-          className="w-7 h-7 rounded-[var(--radius-sm)] flex items-center justify-center text-white text-xs font-bold shrink-0"
-          style={{ backgroundColor: "var(--color-primary)" }}
-          aria-hidden="true"
+        <a
+          href={process.env.NEXT_PUBLIC_SITE_URL ?? "/"}
+          className="flex items-center"
+          aria-label="Retour au site BaldEngineer"
         >
-          BP
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-heading font-semibold text-sm text-[var(--color-text)] leading-none truncate">BaldPro</p>
-          <p className="text-[10px] text-[var(--color-text-3)] mt-0.5 uppercase tracking-widest">v1.0</p>
-        </div>
+          <Image
+            src="/logo.png"
+            alt="BaldEngineer"
+            width={206}
+            height={121}
+            priority
+            unoptimized
+            className="w-auto h-10 object-contain brightness-0 invert"
+          />
+        </a>
+        <button
+          onClick={closeMobile}
+          className="lg:hidden w-8 h-8 rounded-[var(--radius-md)] flex items-center justify-center text-[var(--color-text-2)] hover:bg-[var(--color-bg-2)] transition-colors shrink-0"
+          aria-label="Fermer le menu"
+        >
+          <X className="w-4 h-4" />
+        </button>
       </motion.div>
 
       {/* Market switcher */}
       <motion.div
+        data-tour="market-switcher"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3, delay: 0.1, ease }}
@@ -96,12 +115,14 @@ export function Sidebar({ userName, userAvatar, market, onSignOut, onAiOpen }: S
           className="space-y-0.5"
           role="list"
         >
-          {navItems.map(({ href, label, icon: Icon }) => {
+          {navItems.map(({ href, label, icon: Icon, tourId }) => {
             const active = isActive(href);
             return (
               <motion.li key={href} variants={navItem}>
                 <Link
                   href={href}
+                  onClick={handleNavigate}
+                  data-tour={tourId}
                   className={`
                     flex items-center gap-2.5 px-3 py-2 rounded-[var(--radius-md)] text-sm transition-all duration-[var(--dur-fast)]
                     ${active
@@ -135,8 +156,41 @@ export function Sidebar({ userName, userAvatar, market, onSignOut, onAiOpen }: S
         transition={{ duration: 0.3, delay: 0.3, ease }}
         className="border-t border-[var(--color-border)] p-2 space-y-0.5"
       >
+        <a
+          href={process.env.NEXT_PUBLIC_SITE_URL ?? "/"}
+          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-[var(--radius-md)] text-sm text-[var(--color-text-2)] hover:bg-[var(--color-bg-2)] hover:text-[var(--color-text)] transition-colors duration-[var(--dur-fast)] cursor-pointer"
+        >
+          <ArrowLeft className="w-4 h-4 shrink-0" strokeWidth={1.75} />
+          <span>Retour au site</span>
+        </a>
+
+        {onTourStart && (
+          <button
+            onClick={() => { handleNavigate(); onTourStart(); }}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-[var(--radius-md)] text-sm text-[var(--color-text-2)] hover:bg-[var(--color-bg-2)] hover:text-[var(--color-text)] transition-colors duration-[var(--dur-fast)] cursor-pointer"
+          >
+            <Sparkles className="w-4 h-4 shrink-0" strokeWidth={1.75} />
+            <span>Visite guidée</span>
+          </button>
+        )}
+
+        <Link
+          href="/aide"
+          onClick={handleNavigate}
+          data-tour="nav-aide"
+          className={`flex items-center gap-2.5 px-3 py-2 rounded-[var(--radius-md)] text-sm transition-colors duration-[var(--dur-fast)] ${
+            pathname.startsWith("/aide")
+              ? "bg-[var(--color-accent-dim)] text-[var(--color-accent)]"
+              : "text-[var(--color-text-2)] hover:bg-[var(--color-bg-2)] hover:text-[var(--color-text)]"
+          }`}
+        >
+          <HelpCircle className="w-4 h-4 shrink-0" strokeWidth={1.75} />
+          <span>Aide</span>
+        </Link>
+
         <Link
           href="/settings"
+          onClick={handleNavigate}
           className={`flex items-center gap-2.5 px-3 py-2 rounded-[var(--radius-md)] text-sm transition-colors duration-[var(--dur-fast)] ${
             pathname.startsWith("/settings")
               ? "bg-[var(--color-accent-dim)] text-[var(--color-accent)]"
@@ -171,6 +225,49 @@ export function Sidebar({ userName, userAvatar, market, onSignOut, onAiOpen }: S
           </button>
         </div>
       </motion.div>
-    </motion.aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop — toujours visible */}
+      <aside
+        className="sidebar-surface hidden lg:flex flex-col fixed left-0 top-0 bottom-0 border-r border-[var(--color-border)] z-[var(--z-sidebar)]"
+        style={{ width: "var(--sidebar-width)" }}
+        aria-label="Navigation principale"
+      >
+        {content}
+      </aside>
+
+      {/* Mobile/tablette — drawer */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            <motion.div
+              key="sidebar-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="lg:hidden fixed inset-0 z-[var(--z-overlay)] bg-black/40 backdrop-blur-sm"
+              onClick={closeMobile}
+            />
+            <motion.aside
+              key="sidebar-drawer"
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              className="sidebar-surface lg:hidden flex flex-col fixed left-0 top-0 bottom-0 z-[var(--z-modal)] border-r border-[var(--color-border)] w-72 max-w-[85vw]"
+              aria-label="Navigation principale"
+              role="dialog"
+              aria-modal="true"
+            >
+              {content}
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

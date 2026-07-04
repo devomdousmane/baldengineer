@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { Zap, Wifi, Shield, Cpu, Building2, CheckCircle2, MonitorSmartphone, Network } from "lucide-react";
 import SectionHeader from "./SectionHeader";
+import { SectionTexture } from "./SectionTexture";
 
 const services = [
   {
@@ -126,10 +127,11 @@ export default function Services() {
   return (
     <section
       id="services"
-      className="py-28 sm:py-36 px-6 sm:px-10"
+      className="relative py-28 sm:py-36 px-6 sm:px-10"
       style={{ backgroundColor: "var(--color-void)" }}
     >
-      <div className="max-w-7xl mx-auto">
+      <SectionTexture glow="bottom-right" />
+      <div className="relative z-10 max-w-7xl mx-auto">
         <SectionHeader
           label="Services"
           title="Expertise CFO & CFA"

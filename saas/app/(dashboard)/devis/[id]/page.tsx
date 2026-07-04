@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { PageWrapper } from "@/components/layout/page-wrapper";
 import { DevisActions } from "@/components/modules/devis-actions";
 import { ArrowLeft, Printer, Building2, User, Calendar, Hash } from "lucide-react";
 import type { QuoteStatus, QuoteLine } from "@/types/database";
@@ -70,7 +71,7 @@ export default async function DevisDetailPage({ params }: { params: Promise<{ id
         }
       />
 
-      <div className="flex-1 p-5 space-y-4 max-w-4xl">
+      <PageWrapper className="max-w-4xl">
         {/* Status bar */}
         <div className="flex items-center justify-between bg-[var(--color-card)] rounded-[var(--radius-lg)] border border-[var(--color-border)] px-4 py-3">
           <div className="flex items-center gap-3">
@@ -86,14 +87,14 @@ export default async function DevisDetailPage({ params }: { params: Promise<{ id
 
         {/* Meta */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <Card padding="sm">
+          <Card padding="sm" hover>
             <div className="flex items-center gap-2 mb-1">
               <Hash className="w-3.5 h-3.5 text-[var(--color-text-3)]" />
               <p className="text-xs text-[var(--color-text-3)]">Numéro</p>
             </div>
             <p className="font-mono text-sm font-medium text-[var(--color-accent)]">{quote.number}</p>
           </Card>
-          <Card padding="sm">
+          <Card padding="sm" hover>
             <div className="flex items-center gap-2 mb-1">
               {quote.client?.type === "company"
                 ? <Building2 className="w-3.5 h-3.5 text-[var(--color-text-3)]" />
@@ -102,7 +103,7 @@ export default async function DevisDetailPage({ params }: { params: Promise<{ id
             </div>
             <p className="text-sm font-medium text-[var(--color-text)] truncate">{quote.client?.name ?? "—"}</p>
           </Card>
-          <Card padding="sm">
+          <Card padding="sm" hover>
             <div className="flex items-center gap-2 mb-1">
               <Calendar className="w-3.5 h-3.5 text-[var(--color-text-3)]" />
               <p className="text-xs text-[var(--color-text-3)]">Date</p>
@@ -111,7 +112,7 @@ export default async function DevisDetailPage({ params }: { params: Promise<{ id
               {new Date(quote.date).toLocaleDateString("fr-FR")}
             </p>
           </Card>
-          <Card padding="sm">
+          <Card padding="sm" hover>
             <div className="flex items-center gap-2 mb-1">
               <Calendar className="w-3.5 h-3.5 text-[var(--color-text-3)]" />
               <p className="text-xs text-[var(--color-text-3)]">Validité</p>
@@ -185,7 +186,7 @@ export default async function DevisDetailPage({ params }: { params: Promise<{ id
             )}
           </div>
         )}
-      </div>
+      </PageWrapper>
     </>
   );
 }

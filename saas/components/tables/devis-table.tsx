@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { ViewToggle, type ViewMode } from "@/components/ui/view-toggle";
+import { ListToolbar } from "@/components/ui/list-toolbar";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Calendar, Euro } from "lucide-react";
 import type { Quote, QuoteStatus } from "@/types/database";
@@ -16,6 +17,11 @@ const statusConfig: Record<QuoteStatus, { label: string; variant: "default" | "i
   refused:  { label: "Refusé",    variant: "danger"  },
   expired:  { label: "Expiré",    variant: "outline" },
 };
+
+const STATUS_FILTERS = [
+  { value: "", label: "Tous" },
+  ...(Object.keys(statusConfig) as QuoteStatus[]).map((s) => ({ value: s, label: statusConfig[s].label })),
+];
 
 function makeColumns(fmt: (n: number) => string): Column<Quote>[] {
   return [
@@ -117,31 +123,50 @@ function DevisList({ quotes, fmt, onRowClick }: { quotes: Quote[]; fmt: (n: numb
 
 export function DevisTable({ quotes, currency }: { quotes: Quote[]; currency: string }) {
   const [view, setView] = useState<ViewMode>("table");
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("");
   const router = useRouter();
   const fmt = (n: number) =>
     new Intl.NumberFormat("fr-FR", { style: "currency", currency, maximumFractionDigits: 2 }).format(n);
 
+  const filtered = useMemo(() => {
+    return quotes.filter((q) => {
+      if (status && q.status !== status) return false;
+      if (search.trim()) {
+        const query = search.toLowerCase();
+        const hay = `${q.number} ${q.title} ${(q.client as { name?: string })?.name ?? ""}`.toLowerCase();
+        if (!hay.includes(query)) return false;
+      }
+      return true;
+    });
+  }, [quotes, search, status]);
+
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-[var(--color-text-3)]">{quotes.length} devis</p>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs text-[var(--color-text-3)]">{filtered.length} devis</p>
         <ViewToggle value={view} onChange={setView} />
       </div>
+      <ListToolbar
+        search={search}
+        onSearch={setSearch}
+        placeholder="Rechercher un devis…"
+        filters={STATUS_FILTERS}
+        active={status}
+        onFilter={setStatus}
+      />
       <AnimatePresence mode="wait">
         <motion.div key={view} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
           {view === "table" && (
             <DataTable<Quote>
-              data={quotes}
+              data={filtered}
               columns={makeColumns(fmt)}
-              searchable
-              searchPlaceholder="Rechercher un devis…"
-              searchKeys={["number", "title"]}
               emptyMessage="Aucun devis"
               onRowClick={(q) => router.push(`/devis/${q.id}`)}
             />
           )}
-          {view === "grid" && <DevisGrid quotes={quotes} fmt={fmt} onRowClick={(q) => router.push(`/devis/${q.id}`)} />}
-          {view === "list" && <DevisList quotes={quotes} fmt={fmt} onRowClick={(q) => router.push(`/devis/${q.id}`)} />}
+          {view === "grid" && <DevisGrid quotes={filtered} fmt={fmt} onRowClick={(q) => router.push(`/devis/${q.id}`)} />}
+          {view === "list" && <DevisList quotes={filtered} fmt={fmt} onRowClick={(q) => router.push(`/devis/${q.id}`)} />}
         </motion.div>
       </AnimatePresence>
     </div>

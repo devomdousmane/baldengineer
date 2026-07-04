@@ -82,6 +82,18 @@ export default function Hero() {
       style={{ backgroundColor: "var(--color-hero-bg)" }}
       aria-label="BaldEngineer — Ingénierie électrique"
     >
+      {/* Depth gradient — visible immediately, before/behind Three.js canvas */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: `
+            radial-gradient(ellipse 80% 60% at 70% 20%, rgba(45,138,62,0.16), transparent 60%),
+            radial-gradient(ellipse 60% 50% at 15% 85%, rgba(45,138,62,0.10), transparent 55%)
+          `,
+        }}
+      />
+
       {/* Three.js background */}
       <ElecField />
 
@@ -91,10 +103,12 @@ export default function Hero() {
         className="absolute inset-0 pointer-events-none"
         style={{
           backgroundImage: `
-            linear-gradient(rgba(45,138,62,0.06) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(45,138,62,0.06) 1px, transparent 1px)
+            linear-gradient(rgba(45,138,62,0.08) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(45,138,62,0.08) 1px, transparent 1px)
           `,
           backgroundSize: "72px 72px",
+          maskImage: "radial-gradient(ellipse 90% 70% at 50% 40%, black 40%, transparent 90%)",
+          WebkitMaskImage: "radial-gradient(ellipse 90% 70% at 50% 40%, black 40%, transparent 90%)",
         }}
       />
 

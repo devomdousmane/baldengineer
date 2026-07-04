@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Send, Sparkles, RotateCcw, Bot, User } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { apiPath } from "@/lib/api-path";
 
 interface Message { role: "user" | "assistant"; content: string }
 
@@ -48,7 +49,7 @@ export function AiPanel({ open, onClose, market }: AiPanelProps) {
     setMessages((prev) => [...prev, assistantMsg]);
 
     try {
-      const res = await fetch("/api/ai/chat", {
+      const res = await fetch(apiPath("/api/ai/chat"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

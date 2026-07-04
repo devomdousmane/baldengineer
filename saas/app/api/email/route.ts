@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
   let subject = body.subject ?? "";
   let toEmail = body.to ?? "";
   let resourceType = "";
-  let ccEmail = body.cc;
+  const ccEmail = body.cc;
 
   /* ═══════════════════════════════════════════════════════════════════
      DEVIS types
@@ -335,7 +335,7 @@ export async function POST(req: NextRequest) {
     resource_id: resourceId,
     resource_type: resourceType,
     status: result.success ? "sent" : "failed",
-    resend_id: result.resendId ?? null,
+    provider_message_id: result.messageId ?? null,
     error_message: result.error ?? null,
   });
 
@@ -346,5 +346,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: result.error }, { status: 502 });
   }
 
-  return NextResponse.json({ ok: true, resendId: result.resendId });
+  return NextResponse.json({ ok: true, messageId: result.messageId });
 }

@@ -241,7 +241,7 @@ export function PrintDocument({ type, document: doc, client, profile }: PrintDoc
             {/* Left: company info */}
             <div style={{ display: "flex", alignItems: "flex-start", gap: 14, maxWidth: "52%" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.png" alt="Logo" style={{ width: 52, height: 52, objectFit: "contain", borderRadius: 6, flexShrink: 0 }} />
+              <img src="/logo.png" alt="Logo" style={{ width: 82, height: 48, objectFit: "contain", flexShrink: 0 }} />
               <div>
                 {companyName && <h2 style={{ marginBottom: 3 }}>{companyName}</h2>}
                 {profile?.company_address && <p style={{ color: "#475569", fontSize: 10 }}>{profile.company_address}</p>}

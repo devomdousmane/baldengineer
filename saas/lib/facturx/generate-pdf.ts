@@ -191,12 +191,34 @@ function buildHtml(data: FacturXData): string {
 </html>`;
 }
 
-export async function generatePdf(data: FacturXData): Promise<Buffer> {
+/**
+ * En local (npm run dev / build classique) on utilise puppeteer complet,
+ * qui embarque son propre Chromium. En production sur Netlify Functions,
+ * ce Chromium dépasse la limite de taille du bundle : on bascule alors sur
+ * puppeteer-core + @sparticuz/chromium (binaire compressé, serverless-friendly).
+ */
+async function launchBrowser() {
+  if (process.env.NETLIFY || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    const [{ default: chromium }, { default: puppeteerCore }] = await Promise.all([
+      import("@sparticuz/chromium"),
+      import("puppeteer-core"),
+    ]);
+    return puppeteerCore.launch({
+      headless: true,
+      args: chromium.args,
+      executablePath: await chromium.executablePath(),
+    });
+  }
+
   const puppeteer = await import("puppeteer");
-  const browser = await puppeteer.default.launch({
+  return puppeteer.default.launch({
     headless: true,
     args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
   });
+}
+
+export async function generatePdf(data: FacturXData): Promise<Buffer> {
+  const browser = await launchBrowser();
   try {
     const page = await browser.newPage();
     await page.setContent(buildHtml(data), { waitUntil: "load" });

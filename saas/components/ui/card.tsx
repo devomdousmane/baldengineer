@@ -8,6 +8,7 @@ interface CardProps {
   children: ReactNode;
   className?: string;
   padding?: "none" | "sm" | "md" | "lg";
+  hover?: boolean;
 }
 
 const padMap: Record<NonNullable<CardProps["padding"]>, string> = {
@@ -17,9 +18,13 @@ const padMap: Record<NonNullable<CardProps["padding"]>, string> = {
   lg:   "p-5 sm:p-6",
 };
 
-export function Card({ children, className = "", padding = "md" }: CardProps) {
+export function Card({ children, className = "", padding = "md", hover = false }: CardProps) {
   return (
-    <div className={`rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] shadow-[var(--shadow-sm)] ${padMap[padding]} ${className}`}>
+    <div
+      className={`rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] shadow-[var(--shadow-sm)] transition-shadow duration-[var(--dur-normal)] ${
+        hover ? "hover:shadow-[var(--shadow-md)] hover:border-[var(--color-border-2)]" : ""
+      } ${padMap[padding]} ${className}`}
+    >
       {children}
     </div>
   );
@@ -101,12 +106,12 @@ export function KpiCard({
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.07, ease: [0.22, 1, 0.36, 1] }}
-      className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] shadow-[var(--shadow-sm)] p-4 sm:p-5 overflow-hidden relative"
+      className="group rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] shadow-[var(--shadow-sm)] p-4 sm:p-5 overflow-hidden relative transition-shadow duration-[var(--dur-normal)] hover:shadow-[var(--shadow-md)]"
     >
-      {/* Accent bar */}
+      {/* Accent bar — dégradé qui s'estompe vers la droite */}
       <div
-        className="absolute top-0 left-0 right-0 h-0.5 rounded-t-[var(--radius-lg)]"
-        style={{ backgroundColor: accentColor }}
+        className="absolute top-0 left-0 right-0 h-0.5 rounded-t-[var(--radius-lg)] transition-opacity duration-[var(--dur-normal)] opacity-80 group-hover:opacity-100"
+        style={{ background: `linear-gradient(90deg, ${accentColor}, transparent)` }}
       />
 
       <div className="flex items-start justify-between gap-3">

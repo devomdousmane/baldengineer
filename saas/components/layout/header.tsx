@@ -1,10 +1,11 @@
 "use client";
 
-import { Plus, Sparkles } from "lucide-react";
+import { Plus, Sparkles, Menu } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { NotificationsPanel } from "./notifications-panel";
+import { useSidebar } from "./sidebar-context";
 import type { ReactNode } from "react";
 
 const ease = [0.22, 1, 0.36, 1] as [number, number, number, number];
@@ -17,14 +18,25 @@ interface HeaderProps {
 }
 
 export function Header({ title, subtitle, actions, onAiOpen }: HeaderProps) {
+  const { openMobile } = useSidebar();
+
   return (
     <motion.header
       initial={{ opacity: 0, y: -6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28, ease }}
-      className="sticky top-0 z-[var(--z-header)] border-b border-[var(--color-border)] bg-[var(--color-card)]/90 backdrop-blur-sm px-5 flex items-center gap-4"
+      className="sticky top-0 z-[var(--z-header)] border-b border-[var(--color-border)] bg-[var(--color-card)]/90 backdrop-blur-sm px-3 sm:px-5 flex items-center gap-3 sm:gap-4"
       style={{ height: "var(--header-height)" }}
     >
+      {/* Bouton hamburger — mobile/tablette uniquement */}
+      <button
+        onClick={openMobile}
+        className="lg:hidden w-8 h-8 rounded-[var(--radius-md)] flex items-center justify-center text-[var(--color-text-2)] hover:bg-[var(--color-bg-2)] transition-colors shrink-0"
+        aria-label="Ouvrir le menu"
+      >
+        <Menu className="w-4.5 h-4.5" />
+      </button>
+
       {/* Title area */}
       <div className="flex-1 min-w-0">
         <AnimatePresence mode="wait">
@@ -55,6 +67,7 @@ export function Header({ title, subtitle, actions, onAiOpen }: HeaderProps) {
         <ThemeToggle />
         {onAiOpen && (
           <motion.button
+            data-tour="ai-panel-button"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={onAiOpen}

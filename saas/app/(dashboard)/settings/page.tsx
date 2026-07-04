@@ -8,24 +8,16 @@ import type { Profile } from "@/types/database";
 
 const ASIDE_TIPS = [
   {
-    title: "Informations entreprise",
-    body: "Renseignez votre raison sociale, SIREN (France) ou NIF (Guinée), adresse et coordonnées. Ces informations apparaissent sur tous vos documents.",
-  },
-  {
-    title: "Numérotation",
-    body: "Définissez vos préfixes de numérotation (ex. FAC-FR- / FAC-GN-). Les compteurs s'incrémentent automatiquement à chaque création.",
+    title: "Marché par défaut",
+    body: "Les champs fiscaux et la numérotation s'adaptent automatiquement au marché sélectionné.",
   },
   {
     title: "Coordonnées bancaires",
-    body: "Ajoutez votre IBAN et BIC. Ils apparaissent au bas de chaque facture imprimée pour faciliter le paiement par virement.",
+    body: "IBAN/BIC apparaissent en pied de facture.",
   },
   {
-    title: "Mentions légales",
-    body: "Saisissez vos mentions obligatoires (ex. « TVA non applicable, article 293B du CGI »). Elles s'ajoutent automatiquement à vos documents.",
-  },
-  {
-    title: "Marché par défaut",
-    body: "Choisissez France ou Guinée comme marché de départ. Vous pouvez le changer à tout moment depuis la barre latérale.",
+    title: "Numérotation",
+    body: "Préfixes appliqués automatiquement à chaque nouveau devis/facture.",
   },
 ];
 
@@ -42,13 +34,23 @@ export default async function SettingsPage() {
         aside={
           <PageAside
             title="Configuration"
-            description="Ces paramètres s'appliquent à tous vos documents (devis, factures) et définissent votre identité professionnelle."
+            description="S'applique à tous vos devis et factures."
             tips={ASIDE_TIPS}
           />
         }
       >
         <SettingsForm profile={profile as Profile | null} />
-        <DemoDataPanel />
+
+        <div className="max-w-3xl pt-2">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-px flex-1 bg-[var(--color-border)]" />
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--color-text-3)]">
+              Zone développeur
+            </p>
+            <div className="h-px flex-1 bg-[var(--color-border)]" />
+          </div>
+          <DemoDataPanel />
+        </div>
       </PageWrapper>
     </>
   );

@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { motion, useInView, useScroll, useTransform } from "framer-motion";
 import SectionHeader from "./SectionHeader";
+import { SectionTexture } from "./SectionTexture";
 
 const experiences = [
   {
@@ -232,10 +233,11 @@ export default function Timeline() {
   return (
     <section
       id="experience"
-      className="py-28 sm:py-36 px-6 sm:px-10"
+      className="relative py-28 sm:py-36 px-6 sm:px-10"
       style={{ backgroundColor: "var(--color-void)" }}
     >
-      <div className="max-w-7xl mx-auto">
+      <SectionTexture glow="bottom-left" />
+      <div className="relative z-10 max-w-7xl mx-auto">
         <SectionHeader
           label="Expérience"
           title="Parcours professionnel"

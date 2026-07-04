@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { ViewToggle, type ViewMode } from "@/components/ui/view-toggle";
+import { ListToolbar } from "@/components/ui/list-toolbar";
 import { Badge } from "@/components/ui/badge";
 import { updateMissionStatusAction } from "@/lib/actions/missions";
 import { Briefcase, Calendar, TrendingUp, ArrowRight, CheckCircle2, Clock, XCircle, PlayCircle, Edit2 } from "lucide-react";
@@ -17,13 +18,18 @@ const statusConfig: Record<MissionStatus, {
   bg: string;
   icon: React.ElementType;
 }> = {
-  pending:   { label: "À démarrer", variant: "default", color: "#64748B", bg: "#F1F5F9", icon: Clock        },
-  active:    { label: "En cours",   variant: "info",    color: "#2D8A3E", bg: "#F0FFF4", icon: PlayCircle   },
-  completed: { label: "Terminée",   variant: "success", color: "#059669", bg: "#ECFDF5", icon: CheckCircle2 },
-  cancelled: { label: "Annulée",    variant: "outline", color: "#94A3B8", bg: "#F8FAFC", icon: XCircle      },
+  pending:   { label: "À démarrer", variant: "default", color: "var(--color-text-2)",  bg: "var(--color-bg-2)",       icon: Clock        },
+  active:    { label: "En cours",   variant: "info",    color: "var(--color-accent)",  bg: "var(--color-accent-dim)", icon: PlayCircle   },
+  completed: { label: "Terminée",   variant: "success", color: "var(--color-success)", bg: "var(--color-success-dim)", icon: CheckCircle2 },
+  cancelled: { label: "Annulée",    variant: "outline", color: "var(--color-text-3)",  bg: "var(--color-bg-2)",       icon: XCircle      },
 };
 
 const KANBAN_COLS: MissionStatus[] = ["pending", "active", "completed", "cancelled"];
+
+const STATUS_FILTERS = [
+  { value: "", label: "Toutes" },
+  ...KANBAN_COLS.map((s) => ({ value: s, label: statusConfig[s].label })),
+];
 
 /* ── Columns ── */
 function makeColumns(fmt: (n: number) => string, onEdit: (id: string) => void): Column<Mission>[] {
@@ -180,7 +186,7 @@ function KanbanBoard({ missions, fmt, onEdit }: { missions: Mission[]; fmt: (n: 
   };
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 items-start">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-start">
       {KANBAN_COLS.map((colStatus) => {
         const cfg = statusConfig[colStatus];
         const colMissions = byStatus[colStatus];
@@ -254,20 +260,45 @@ function KanbanBoard({ missions, fmt, onEdit }: { missions: Mission[]; fmt: (n: 
 export function MissionsTable({ missions, currency }: { missions: Mission[]; currency: string }) {
   const router = useRouter();
   const [view, setView] = useState<ViewMode>("kanban");
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("");
 
   const fmt = (n: number) =>
     new Intl.NumberFormat("fr-FR", { style: "currency", currency, maximumFractionDigits: 0 }).format(n);
 
   const onEdit = (id: string) => router.push(`/missions/${id}`);
 
+  const searched = useMemo(() => {
+    if (!search.trim()) return missions;
+    const q = search.toLowerCase();
+    return missions.filter((m) => {
+      const hay = `${m.title} ${(m.client as { name?: string })?.name ?? ""}`.toLowerCase();
+      return hay.includes(q);
+    });
+  }, [missions, search]);
+
+  /* Le kanban groupe déjà par statut — le filtre de statut ne s'applique qu'aux autres vues. */
+  const filtered = useMemo(() => {
+    if (view === "kanban" || !status) return searched;
+    return searched.filter((m) => m.status === status);
+  }, [searched, status, view]);
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <p className="text-xs text-[var(--color-text-3)]">
-          {missions.length} mission{missions.length !== 1 ? "s" : ""}
+          {filtered.length} mission{filtered.length !== 1 ? "s" : ""}
         </p>
         <ViewToggle value={view} onChange={setView} modes={["table", "grid", "list", "kanban"]} />
       </div>
+      <ListToolbar
+        search={search}
+        onSearch={setSearch}
+        placeholder="Rechercher une mission…"
+        filters={view === "kanban" ? undefined : STATUS_FILTERS}
+        active={status}
+        onFilter={view === "kanban" ? undefined : setStatus}
+      />
       <AnimatePresence mode="wait">
         <motion.div
           key={view}
@@ -276,17 +307,14 @@ export function MissionsTable({ missions, currency }: { missions: Mission[]; cur
         >
           {view === "table"  && (
             <DataTable<Mission>
-              data={missions}
+              data={filtered}
               columns={makeColumns(fmt, onEdit)}
-              searchable
-              searchPlaceholder="Rechercher une mission…"
-              searchKeys={["title"]}
               emptyMessage="Aucune mission"
             />
           )}
-          {view === "grid"   && <MissionGrid   missions={missions} fmt={fmt} onEdit={onEdit} />}
-          {view === "list"   && <MissionList   missions={missions} fmt={fmt} onEdit={onEdit} />}
-          {view === "kanban" && <KanbanBoard   missions={missions} fmt={fmt} onEdit={onEdit} />}
+          {view === "grid"   && <MissionGrid   missions={filtered} fmt={fmt} onEdit={onEdit} />}
+          {view === "list"   && <MissionList   missions={filtered} fmt={fmt} onEdit={onEdit} />}
+          {view === "kanban" && <KanbanBoard   missions={searched} fmt={fmt} onEdit={onEdit} />}
         </motion.div>
       </AnimatePresence>
     </div>

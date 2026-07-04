@@ -4,9 +4,9 @@ import { useRef, useMemo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
-const NODE_COUNT = 180;
-const MAX_LINK_DIST = 2.2;
-const FIELD_SPREAD = 7;
+const NODE_COUNT = 260;
+const MAX_LINK_DIST = 2.4;
+const FIELD_SPREAD = 7.5;
 
 function Field() {
   const groupRef = useRef<THREE.Group>(null);
@@ -62,14 +62,14 @@ function Field() {
   return (
     <group ref={groupRef}>
       <lineSegments geometry={lineGeo}>
-        <lineBasicMaterial color="#2D8A3E" transparent opacity={0.18} />
+        <lineBasicMaterial color="#2D8A3E" transparent opacity={0.32} />
       </lineSegments>
       <points geometry={pointGeo}>
         <pointsMaterial
           color="#4DB85C"
-          size={0.06}
+          size={0.075}
           transparent
-          opacity={0.55}
+          opacity={0.85}
           sizeAttenuation
         />
       </points>
@@ -85,6 +85,7 @@ export default function ElecField() {
       dpr={[1, 1.5]}
       style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
     >
+      <ambientLight intensity={0.6} />
       <Field />
     </Canvas>
   );

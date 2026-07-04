@@ -1,20 +1,23 @@
+import Image from "next/image";
 import { signInWithGoogle } from "@/lib/actions/auth";
 
 export default function LoginPage() {
   return (
-    <div className="min-h-dvh flex items-center justify-center bg-[var(--color-bg)] px-4">
-      <div className="w-full max-w-sm">
+    <div className="min-h-dvh flex items-center justify-center bg-[var(--color-bg)] bg-mesh px-4">
+      <div className="w-full max-w-sm animate-slide-up">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div
-            className="w-12 h-12 rounded-[var(--radius-lg)] flex items-center justify-center text-white text-lg font-bold mx-auto mb-4 shadow-[var(--shadow-md)]"
-            style={{ backgroundColor: "var(--color-primary)" }}
-          >
-            BP
-          </div>
-          <h1 className="text-2xl font-bold text-[var(--color-text)]">BaldPro</h1>
-          <p className="text-sm text-[var(--color-text-2)] mt-1">
-            Devis · Factures · Comptabilité
+          <Image
+            src="/logo.png"
+            alt="BaldEngineer"
+            width={206}
+            height={121}
+            priority
+            unoptimized
+            className="w-auto h-24 object-contain mx-auto mb-4 drop-shadow-[0_8px_24px_rgb(45_138_62_/_0.25)]"
+          />
+          <p className="text-sm text-[var(--color-text-2)]">
+            BaldPro — Devis · Factures · Comptabilité
           </p>
         </div>
 

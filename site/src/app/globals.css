@@ -224,3 +224,11 @@ a, button, [role="button"], [tabindex="0"] {
   }
   html { scroll-behavior: auto; }
 }
+
+/* ── Custom cursor — hide native cursor only where it renders ──
+   (fine pointer + motion allowed; matches CustomCursor.tsx logic) */
+@media (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  html.has-custom-cursor, html.has-custom-cursor * {
+    cursor: none !important;
+  }
+}

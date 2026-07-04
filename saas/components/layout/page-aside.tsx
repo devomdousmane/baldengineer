@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { HelpCircle, X, ChevronRight } from "lucide-react";
+import { HelpCircle, X, ChevronRight, PanelRightClose, PanelRightOpen } from "lucide-react";
 import type { ReactNode } from "react";
 
 interface AsideTip {
@@ -17,8 +17,32 @@ interface PageAsideProps {
   tips: AsideTip[];
 }
 
+const STORAGE_KEY = "baldpro:aside-collapsed";
+
+/* Lecture de localStorage safe pour l'hydratation : le serveur "voit" toujours
+   false (identique au premier rendu client), la vraie valeur n'arrive qu'après. */
+function subscribe(callback: () => void) {
+  window.addEventListener("storage", callback);
+  return () => window.removeEventListener("storage", callback);
+}
+function getSnapshot() {
+  return localStorage.getItem(STORAGE_KEY) === "1";
+}
+function getServerSnapshot() {
+  return false;
+}
+
 export function PageAside({ title = "Comment ça marche ?", description, tips }: PageAsideProps) {
   const [open, setOpen] = useState(false);
+  const storedCollapsed = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const [overrideCollapsed, setOverrideCollapsed] = useState<boolean | null>(null);
+  const collapsed = overrideCollapsed ?? storedCollapsed;
+
+  const toggleCollapsed = () => {
+    const next = !collapsed;
+    localStorage.setItem(STORAGE_KEY, next ? "1" : "0");
+    setOverrideCollapsed(next);
+  };
 
   return (
     <>
@@ -61,24 +85,35 @@ export function PageAside({ title = "Comment ça marche ?", description, tips }:
         )}
       </AnimatePresence>
 
-      {/* Desktop always-visible aside */}
+      {/* Desktop aside — repliable */}
       <motion.aside
         initial={{ opacity: 0, x: 16 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.35, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-        className="hidden xl:flex flex-col w-72 shrink-0 self-start sticky top-[calc(var(--header-height)+1.5rem)]"
+        className="hidden xl:flex flex-col shrink-0 self-start sticky top-[calc(var(--header-height)+1.5rem)]"
       >
-        <div className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-card)] shadow-[var(--shadow-sm)] overflow-hidden">
-          <AsideContent title={title} description={description} tips={tips} />
-        </div>
+        {collapsed ? (
+          <button
+            onClick={toggleCollapsed}
+            className="w-9 h-9 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-card)] shadow-[var(--shadow-sm)] flex items-center justify-center text-[var(--color-text-3)] hover:text-[var(--color-accent)] hover:border-[var(--color-accent)] transition-colors duration-[var(--dur-fast)]"
+            aria-label="Afficher l'aide"
+            title="Afficher l'aide"
+          >
+            <PanelRightOpen className="w-4 h-4" />
+          </button>
+        ) : (
+          <div className="w-60 rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-card)] shadow-[var(--shadow-sm)] overflow-hidden">
+            <AsideContent title={title} description={description} tips={tips} onCollapse={toggleCollapsed} />
+          </div>
+        )}
       </motion.aside>
     </>
   );
 }
 
 function AsideContent({
-  title, description, tips, onClose,
-}: { title: string; description?: string; tips: AsideTip[]; onClose?: () => void }) {
+  title, description, tips, onClose, onCollapse,
+}: { title: string; description?: string; tips: AsideTip[]; onClose?: () => void; onCollapse?: () => void }) {
   return (
     <>
       <div className="flex items-center justify-between px-4 py-3.5 border-b border-[var(--color-border)]">
@@ -100,11 +135,21 @@ function AsideContent({
             <X className="w-4 h-4" />
           </button>
         )}
+        {onCollapse && (
+          <button
+            onClick={onCollapse}
+            className="w-7 h-7 rounded-[var(--radius-md)] flex items-center justify-center text-[var(--color-text-3)] hover:bg-[var(--color-bg-2)] hover:text-[var(--color-text)] transition-colors"
+            aria-label="Replier l'aide"
+            title="Replier l'aide"
+          >
+            <PanelRightClose className="w-3.5 h-3.5" />
+          </button>
+        )}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div className="flex-1 overflow-y-auto p-3 space-y-2">
         {description && (
-          <p className="text-xs text-[var(--color-text-2)] leading-relaxed">{description}</p>
+          <p className="text-xs text-[var(--color-text-2)] leading-snug">{description}</p>
         )}
         {tips.map((tip, i) => (
           <motion.div
@@ -112,13 +157,13 @@ function AsideContent({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25, delay: 0.1 + i * 0.06, ease: [0.22, 1, 0.36, 1] }}
-            className="group rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg)] p-3 space-y-1 hover:border-[var(--color-accent)] hover:bg-[var(--color-accent-dim)] transition-colors duration-200"
+            className="group rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg)] p-2.5 space-y-0.5 hover:border-[var(--color-accent)] hover:bg-[var(--color-accent-dim)] transition-colors duration-200"
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <ChevronRight className="w-3 h-3 shrink-0 text-[var(--color-accent)]" />
               <p className="text-xs font-semibold text-[var(--color-text)] font-heading">{tip.title}</p>
             </div>
-            <p className="text-xs text-[var(--color-text-2)] leading-relaxed pl-5">{tip.body}</p>
+            <p className="text-[11px] text-[var(--color-text-2)] leading-snug pl-[18px]">{tip.body}</p>
           </motion.div>
         ))}
       </div>

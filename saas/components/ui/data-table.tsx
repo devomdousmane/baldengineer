@@ -31,7 +31,7 @@ function SkeletonRow({ cols }: { cols: number }) {
     <tr>
       {Array.from({ length: cols }).map((_, i) => (
         <td key={i} className="px-4 py-3">
-          <div className="h-4 rounded bg-[var(--color-bg-2)] animate-pulse" style={{ width: `${60 + Math.random() * 30}%` }} />
+          <div className="h-4 skeleton" style={{ width: `${60 + ((i * 17) % 31)}%` }} />
         </td>
       ))}
     </tr>
@@ -90,7 +90,7 @@ export function DataTable<T extends { id: string }>({
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--color-border)] shadow-[var(--shadow-xs)]">
+      <div className="overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] shadow-[var(--shadow-xs)] animate-fade-in">
         <table className="w-full text-sm border-collapse">
           <thead>
             <tr className="border-b border-[var(--color-border)]" style={{ backgroundColor: "var(--table-header-bg)" }}>

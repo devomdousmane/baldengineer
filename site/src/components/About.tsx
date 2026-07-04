@@ -6,6 +6,7 @@ import Image from "next/image";
 import { MapPin, Phone, Mail, GraduationCap, Briefcase } from "lucide-react";
 import SectionHeader from "./SectionHeader";
 import AnimatedSection from "./AnimatedSection";
+import { SectionTexture } from "./SectionTexture";
 
 const domains = ["Tertiaire", "Industriel", "Ferroviaire", "Pharmaceutique", "Nucléaire"];
 const tools = [
@@ -54,10 +55,11 @@ export default function About() {
   return (
     <section
       id="apropos"
-      className="py-28 sm:py-36 px-6 sm:px-10"
+      className="relative py-28 sm:py-36 px-6 sm:px-10"
       style={{ backgroundColor: "var(--color-void)" }}
     >
-      <div className="max-w-7xl mx-auto">
+      <SectionTexture glow="top-right" />
+      <div className="relative z-10 max-w-7xl mx-auto">
         <SectionHeader
           label="À propos"
           title="Un ingénieur au service de vos performances énergétiques"

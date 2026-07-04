@@ -13,6 +13,7 @@ interface Props {
   data: RevenuePoint[];
   year: number;
   currency: string;
+  market?: "france" | "guinee" | "all";
 }
 
 interface ChartPoint {
@@ -21,7 +22,10 @@ interface ChartPoint {
   guinee: number;
 }
 
-export function RevenueChart({ data, year, currency }: Props) {
+export function RevenueChart({ data, year, currency, market = "all" }: Props) {
+  const showFrance = market === "france" || market === "all";
+  const showGuinee = market === "guinee" || market === "all";
+
   /* Normalize to 12 months */
   const chartData: ChartPoint[] = Array.from({ length: 12 }, (_, i) => {
     const monthStr = `${year}-${String(i + 1).padStart(2, "0")}`;
@@ -37,7 +41,7 @@ export function RevenueChart({ data, year, currency }: Props) {
     <Card padding="md">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-sm font-semibold text-[var(--color-text)]">Chiffre d'affaires {year}</h2>
+          <h2 className="text-sm font-semibold text-[var(--color-text)]">Chiffre d&apos;affaires {year}</h2>
           <p className="text-xs text-[var(--color-text-3)] mt-0.5">Encaissements par mois</p>
         </div>
       </div>
@@ -79,18 +83,24 @@ export function RevenueChart({ data, year, currency }: Props) {
             formatter={(value, name) => [fmt(Number(value ?? 0)), String(name) === "france" ? "🇫🇷 France" : "🇬🇳 Guinée"]}
             labelFormatter={(label) => `${label} ${year}`}
           />
-          <Legend
-            formatter={(v) => v === "france" ? "🇫🇷 France" : "🇬🇳 Guinée"}
-            wrapperStyle={{ fontSize: "12px", color: "var(--color-text-2)" }}
-          />
-          <Area
-            type="monotone" dataKey="france" stroke="var(--color-accent)"
-            fill="url(#gradFR)" strokeWidth={2} dot={false} activeDot={{ r: 4 }}
-          />
-          <Area
-            type="monotone" dataKey="guinee" stroke="var(--color-gn)"
-            fill="url(#gradGN)" strokeWidth={2} dot={false} activeDot={{ r: 4 }}
-          />
+          {showFrance && showGuinee && (
+            <Legend
+              formatter={(v) => v === "france" ? "🇫🇷 France" : "🇬🇳 Guinée"}
+              wrapperStyle={{ fontSize: "12px", color: "var(--color-text-2)" }}
+            />
+          )}
+          {showFrance && (
+            <Area
+              type="monotone" dataKey="france" stroke="var(--color-accent)"
+              fill="url(#gradFR)" strokeWidth={2} dot={false} activeDot={{ r: 4 }}
+            />
+          )}
+          {showGuinee && (
+            <Area
+              type="monotone" dataKey="guinee" stroke="var(--color-gn)"
+              fill="url(#gradGN)" strokeWidth={2} dot={false} activeDot={{ r: 4 }}
+            />
+          )}
         </AreaChart>
       </ResponsiveContainer>
     </Card>
