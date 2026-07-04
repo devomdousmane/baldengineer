@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Send, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { apiPath } from "@/lib/api-path";
 
 export interface EmailDialogConfig {
   type: string;
@@ -47,7 +46,7 @@ export function EmailDialog({ open, onClose, config, onSent }: EmailDialogProps)
     setError(null);
     startTransition(async () => {
       try {
-        const res = await fetch(apiPath("/api/email"), {
+        const res = await fetch("/api/email", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

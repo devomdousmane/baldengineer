@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FileCode2, FileDown, ChevronDown, Loader2, CheckCircle2 } from "lucide-react";
-import { apiPath } from "@/lib/api-path";
 
 interface Props {
   invoiceId: string;
@@ -22,7 +21,7 @@ export function FacturXDownloadButton({ invoiceId, invoiceNumber }: Props) {
     setOpen(false);
     setStatus("loading");
     try {
-      const res = await fetch(apiPath(`/api/factures/${invoiceId}/facturx?format=${format}`));
+      const res = await fetch(`/api/factures/${invoiceId}/facturx?format=${format}`);
       if (!res.ok) throw new Error(await res.text());
 
       const blob = await res.blob();

@@ -130,7 +130,7 @@ export default function Navbar() {
           <ThemeToggle />
 
           <a
-            href="/app"
+            href={process.env.NEXT_PUBLIC_SAAS_URL ?? "https://app.baldengineer.fr"}
             className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[11px] font-medium min-h-[44px] transition-all duration-200 hover:bg-white/5 active:scale-95"
             style={{
               color: scrolled ? "var(--color-text-2)" : "rgba(255,255,255,0.85)",
@@ -273,7 +273,7 @@ export default function Navbar() {
                   <ArrowUpRight className="w-4 h-4 shrink-0" />
                 </a>
                 <a
-                  href="/app"
+                  href={process.env.NEXT_PUBLIC_SAAS_URL ?? "https://app.baldengineer.fr"}
                   onClick={() => setMobileOpen(false)}
                   className="flex items-center justify-center gap-2 py-3.5 rounded-full border text-sm font-medium min-h-[52px] transition-opacity duration-200 hover:opacity-70"
                   style={{ color: "var(--color-text-2)", borderColor: "var(--color-border)" }}

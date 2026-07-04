@@ -8,7 +8,6 @@ import { AiPanel } from "@/components/ai/ai-panel";
 import { RevenueChart } from "@/components/modules/revenue-chart";
 import { InvoiceStatusChart, type StatusBreakdownItem } from "@/components/modules/invoice-status-chart";
 import type { RevenuePoint } from "@/lib/actions/dashboard";
-import { apiPath } from "@/lib/api-path";
 import {
   TrendingUp, Receipt, FileText, Briefcase,
   AlertTriangle, Users, Wallet, BarChart3, CalendarClock,
@@ -196,7 +195,7 @@ export default function DashboardPage() {
   useEffect(() => {
     const params = new URLSearchParams({ period });
     if (market) params.set("market", market);
-    fetch(apiPath(`/api/dashboard?${params}`))
+    fetch(`/api/dashboard?${params}`)
       .then((r) => r.json())
       .then((json: DashboardData) => {
         setData(json);
