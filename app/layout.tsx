@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme/theme-provider";
+import { AppSplash } from "@/components/ui/app-splash";
 import "./globals.css";
 
 const inter = Inter({
@@ -37,7 +38,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
     >
       <body className="h-full">
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <AppSplash />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

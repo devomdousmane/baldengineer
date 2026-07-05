@@ -193,7 +193,7 @@ export function PrintDocument({ type, document: doc, client, profile }: PrintDoc
 
   const status = STATUS_LABELS[doc.status] ?? { label: doc.status, color: "#64748B", bg: "#F1F5F9" };
   const watermark = WATERMARKS[doc.status];
-  const companyName = profile?.company_name || profile?.full_name || "";
+  const companyName = profile?.company_name || "BaldEngineer";
   const now = new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
   const hasDiscount = doc.lines.some((l) => l.discount_pct > 0);
   const allZeroVat = doc.lines.every((l) => l.vat_rate === 0);

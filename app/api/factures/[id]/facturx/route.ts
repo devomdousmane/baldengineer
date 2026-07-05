@@ -71,7 +71,7 @@ export async function GET(
       lines,
     },
     seller: {
-      name: p?.company_name ?? p?.full_name ?? "Prestataire",
+      name: p?.company_name ?? "BaldEngineer",
       address: p?.company_address ?? null,
       city: p?.company_city ?? null,
       zip: p?.company_zip ?? null,

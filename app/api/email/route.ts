@@ -59,7 +59,7 @@ async function handlePost(req: NextRequest) {
   if (!profile) return NextResponse.json({ error: "Profil introuvable" }, { status: 404 });
 
   const baseData = {
-    companyName: profile.company_name || profile.full_name || "BaldPro",
+    companyName: profile.company_name || "BaldEngineer",
     companyEmail: profile.company_email,
     companyPhone: profile.company_phone,
     companyCity: profile.company_city,

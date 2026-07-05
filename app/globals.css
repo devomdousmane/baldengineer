@@ -221,6 +221,11 @@
 /* ── Base reset ─────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
 
+/* ── Transition douce lors du changement de thème (dark/light) ── */
+*, *::before, *::after {
+  transition: background-color 0.35s ease, border-color 0.35s ease, color 0.35s ease, fill 0.35s ease, stroke 0.35s ease;
+}
+
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

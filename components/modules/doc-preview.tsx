@@ -82,7 +82,7 @@ const text = "#0F172A";
 export function DocPreview({ type, title, date, extraDate, extraDateLabel, market, currency, lines, notes, terms, client, profile }: DocPreviewProps) {
   const totals = calcTotals(lines);
   const hasContent = lines.some((l) => l.description || l.unit_price > 0);
-  const companyName = profile?.company_name || profile?.full_name || "Votre entreprise";
+  const companyName = profile?.company_name || "BaldEngineer";
   const hasDiscount = lines.some((l) => l.discount_pct > 0);
 
   return (
