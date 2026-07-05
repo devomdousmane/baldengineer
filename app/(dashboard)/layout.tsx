@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { SidebarWrapper } from "@/components/layout/sidebar-wrapper";
 import { SidebarProvider } from "@/components/layout/sidebar-context";
+import { MainContent } from "@/components/layout/main-content";
 import type { ReactNode } from "react";
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
@@ -23,11 +24,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
           userAvatar={profile?.avatar_url ?? null}
           market={profile?.default_market ?? "france"}
         />
-        <main
-          className="flex-1 flex flex-col min-h-full overflow-y-auto min-w-0 lg:ml-[var(--sidebar-width)]"
-        >
-          {children}
-        </main>
+        <MainContent>{children}</MainContent>
       </div>
     </SidebarProvider>
   );

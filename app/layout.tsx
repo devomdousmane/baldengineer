@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { AppSplash } from "@/components/ui/app-splash";
+import { ToastProvider } from "@/components/ui/toast";
 import "./globals.css";
 
 const inter = Inter({
@@ -43,8 +44,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body className="h-full">
         <ThemeProvider>
-          <AppSplash />
-          {children}
+          <ToastProvider>
+            <AppSplash />
+            {children}
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>

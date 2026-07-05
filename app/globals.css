@@ -88,9 +88,9 @@
   /* ── Brand / Primary ── */
   --color-primary:     #0F172A;
   --color-primary-2:   #334155;
-  --color-accent:      #2D8A3E;   /* BaldEngineer logo green */
-  --color-accent-hi:   #3EA34F;
-  --color-accent-dim:  rgba(45, 138, 62, 0.08);
+  --color-accent:      #1F6B3A;   /* BaldEngineer green — désaturé, mat */
+  --color-accent-hi:   #2B7A46;
+  --color-accent-dim:  rgba(31, 107, 58, 0.08);
 
   /* ── Semantic ── */
   --color-success:     #059669;
@@ -111,20 +111,20 @@
   /* ── Market badges ── */
   --color-fr:          #1D4ED8;    /* France — bleu */
   --color-fr-dim:      rgba(29, 78, 216, 0.10);
-  --color-gn:          #DC2626;    /* Guinée — rouge */
-  --color-gn-dim:      rgba(220, 38, 38, 0.10);
+  --color-gn:          #B45309;    /* Guinée — ambre, distinct de --color-danger */
+  --color-gn-dim:      rgba(180, 83, 9, 0.10);
 
-  /* ── Elevation shadows ── */
-  --shadow-xs: 0 1px 2px rgba(15,23,42,0.05);
-  --shadow-sm: 0 1px 3px rgba(15,23,42,0.10), 0 1px 2px rgba(15,23,42,0.06);
-  --shadow-md: 0 4px 6px rgba(15,23,42,0.07), 0 2px 4px rgba(15,23,42,0.06);
-  --shadow-lg: 0 10px 15px rgba(15,23,42,0.10), 0 4px 6px rgba(15,23,42,0.05);
-  --shadow-xl: 0 20px 25px rgba(15,23,42,0.10), 0 8px 10px rgba(15,23,42,0.04);
+  /* ── Elevation shadows — plus douces, blur superposé ── */
+  --shadow-xs: 0 1px 2px rgba(15,23,42,0.04);
+  --shadow-sm: 0 2px 4px rgba(15,23,42,0.05), 0 1px 2px rgba(15,23,42,0.04);
+  --shadow-md: 0 6px 12px -2px rgba(15,23,42,0.06), 0 3px 6px -2px rgba(15,23,42,0.04);
+  --shadow-lg: 0 16px 28px -6px rgba(15,23,42,0.09), 0 6px 12px -4px rgba(15,23,42,0.05);
+  --shadow-xl: 0 28px 44px -10px rgba(15,23,42,0.12), 0 10px 20px -6px rgba(15,23,42,0.06);
 
   /* ── Glow (suit l'accent / le primary du mode courant) ── */
   --shadow-glow:
-    0 0 0 1px color-mix(in srgb, var(--color-accent) 20%, transparent),
-    0 12px 32px -8px color-mix(in srgb, var(--color-accent) 35%, transparent);
+    0 0 0 1px color-mix(in srgb, var(--color-accent) 16%, transparent),
+    0 12px 32px -8px color-mix(in srgb, var(--color-accent) 26%, transparent);
   --shadow-glow-primary:
     0 0 0 1px color-mix(in srgb, var(--color-primary) 18%, transparent),
     0 12px 32px -8px color-mix(in srgb, var(--color-primary) 32%, transparent);
@@ -186,9 +186,9 @@
 
   --color-primary:     #E2E8F0;
   --color-primary-2:   #94A3B8;
-  --color-accent:      #3D9A4C;   /* logo green — dark mode, assombri */
-  --color-accent-hi:   #4DB85C;
-  --color-accent-dim:  rgba(61,154,76,0.15);
+  --color-accent:      #2F8049;   /* logo green — dark mode, désaturé */
+  --color-accent-hi:   #3D9455;
+  --color-accent-dim:  rgba(47,128,73,0.16);
 
   --color-success:     #34D399;
   --color-success-dim: rgba(52,211,153,0.13);
@@ -206,14 +206,14 @@
 
   --color-fr:          #60A5FA;
   --color-fr-dim:      rgba(96,165,250,0.13);
-  --color-gn:          #F87171;
-  --color-gn-dim:      rgba(248,113,113,0.13);
+  --color-gn:          #F0A560;
+  --color-gn-dim:      rgba(240,165,96,0.13);
 
-  --shadow-xs: 0 1px 2px rgba(0,0,0,0.4);
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.35);
-  --shadow-md: 0 4px 6px rgba(0,0,0,0.45), 0 2px 4px rgba(0,0,0,0.3);
-  --shadow-lg: 0 10px 15px rgba(0,0,0,0.5), 0 4px 6px rgba(0,0,0,0.25);
-  --shadow-xl: 0 20px 25px rgba(0,0,0,0.55), 0 8px 10px rgba(0,0,0,0.25);
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.35);
+  --shadow-sm: 0 2px 5px rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.28);
+  --shadow-md: 0 8px 16px -3px rgba(0,0,0,0.42), 0 3px 8px -2px rgba(0,0,0,0.3);
+  --shadow-lg: 0 18px 32px -8px rgba(0,0,0,0.48), 0 6px 14px -4px rgba(0,0,0,0.28);
+  --shadow-xl: 0 30px 50px -12px rgba(0,0,0,0.55), 0 10px 22px -6px rgba(0,0,0,0.3);
 
   --table-header-bg:   #1C2128;
 }
@@ -307,15 +307,15 @@ select {
   --color-border: rgba(255, 255, 255, 0.08);
   --color-border-2: rgba(255, 255, 255, 0.16);
   --color-primary: #334155;
-  --color-accent: #4DB85C;
-  --color-accent-hi: #6DC97A;
-  --color-accent-dim: rgba(77, 184, 92, 0.15);
+  --color-accent: #3D9455;
+  --color-accent-hi: #4CA863;
+  --color-accent-dim: rgba(61, 148, 85, 0.16);
   --color-danger: #F87171;
   --color-text: #F1F5F9;
   --color-text-2: #94A3B8;
   --color-text-3: #64748B;
   --color-fr: #60A5FA;
-  --color-gn: #F87171;
+  --color-gn: #F0A560;
 }
 
 /* ── Keyframes ── */

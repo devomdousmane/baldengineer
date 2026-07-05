@@ -28,8 +28,9 @@ export function ViewToggle({ value, onChange, modes }: ViewToggleProps) {
           key={id}
           onClick={() => onChange(id)}
           aria-label={label}
+          aria-pressed={value === id}
           title={label}
-          className="relative w-7 h-7 flex items-center justify-center rounded-[var(--radius-sm)] transition-colors"
+          className="relative w-7 h-7 flex items-center justify-center rounded-[var(--radius-sm)] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
           style={{ color: value === id ? "var(--color-accent)" : "var(--color-text-3)" }}
         >
           {value === id && (

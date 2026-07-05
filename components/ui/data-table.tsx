@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, type ReactNode } from "react";
-import { ChevronUp, ChevronDown, ChevronsUpDown, Search } from "lucide-react";
+import { ChevronUp, ChevronDown, ChevronsUpDown, ChevronRight, Search } from "lucide-react";
 
 export interface Column<T> {
   key: keyof T | string;
@@ -138,18 +138,23 @@ export function DataTable<T extends { id: string }>({
               sorted.map((row) => (
                 <tr
                   key={row.id}
-                  className={`border-b border-[var(--color-border)] last:border-0 transition-colors duration-[var(--dur-fast)] hover:bg-[var(--color-bg-2)] ${onRowClick ? "cursor-pointer" : ""}`}
+                  className={`group border-b border-[var(--color-border)] last:border-0 transition-colors duration-[var(--dur-fast)] hover:bg-[var(--color-bg-2)] ${onRowClick ? "cursor-pointer" : ""}`}
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
                   style={{ height: "var(--table-row-height)" }}
                 >
-                  {columns.map((col) => {
+                  {columns.map((col, i) => {
                     const raw = (row as Record<string, unknown>)[String(col.key)];
                     return (
                       <td
                         key={String(col.key)}
                         className={`px-4 py-2 text-[var(--color-text)] whitespace-nowrap ${col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : ""}`}
                       >
-                        {col.render ? col.render(raw, row) : (raw != null ? String(raw) : "—")}
+                        <span className="inline-flex items-center gap-1.5">
+                          {col.render ? col.render(raw, row) : (raw != null ? String(raw) : "—")}
+                          {onRowClick && i === columns.length - 1 && !actions && (
+                            <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-0 -translate-x-1 group-hover:opacity-40 group-hover:translate-x-0 transition-all duration-[var(--dur-fast)]" style={{ color: "var(--color-text-3)" }} />
+                          )}
+                        </span>
                       </td>
                     );
                   })}

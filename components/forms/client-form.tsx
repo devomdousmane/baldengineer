@@ -42,7 +42,7 @@ function ClientPreview({ form }: { form: {
         boxShadow: "0 4px 16px rgba(0,0,0,0.06)",
       }}>
         {/* Accent bar */}
-        <div style={{ height: 3, background: "linear-gradient(90deg, #2D8A3E, #4DB85C)" }} />
+        <div style={{ height: 3, background: "linear-gradient(90deg, var(--color-accent), var(--color-accent-hi))" }} />
 
         <div style={{ padding: "16px 18px" }}>
           {/* Header */}
@@ -50,16 +50,16 @@ function ClientPreview({ form }: { form: {
             <div style={{
               width: 40, height: 40,
               borderRadius: 10,
-              background: "rgba(45,138,62,0.08)",
+              background: "var(--color-accent-dim)",
               display: "flex", alignItems: "center", justifyContent: "center",
               flexShrink: 0,
             }}>
               {isCompany
-                ? <Building2 size={18} color="#2D8A3E" />
-                : <User size={18} color="#2D8A3E" />}
+                ? <Building2 size={18} color="var(--color-accent)" />
+                : <User size={18} color="var(--color-accent)" />}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ fontSize: 13, fontWeight: 700, color: "#0F172A", marginBottom: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <p style={{ fontSize: 13, fontWeight: 700, color: "var(--color-text)", marginBottom: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {displayName}
               </p>
               <div style={{ display: "flex", gap: 5 }}>
@@ -67,8 +67,8 @@ function ClientPreview({ form }: { form: {
                   display: "inline-flex", alignItems: "center",
                   padding: "1px 7px", borderRadius: 999,
                   fontSize: 9, fontWeight: 600,
-                  background: isCompany ? "#F0FFF4" : "#F8FAFC",
-                  color: isCompany ? "#2D8A3E" : "#475569",
+                  background: isCompany ? "var(--color-accent-dim)" : "var(--color-bg-2)",
+                  color: isCompany ? "var(--color-accent)" : "var(--color-text-2)",
                 }}>
                   {isCompany ? "Entreprise" : "Particulier"}
                 </span>
@@ -76,8 +76,8 @@ function ClientPreview({ form }: { form: {
                   display: "inline-flex", alignItems: "center",
                   padding: "1px 7px", borderRadius: 999,
                   fontSize: 9, fontWeight: 600,
-                  background: isFrance ? "rgba(29,78,216,0.08)" : "rgba(220,38,38,0.08)",
-                  color: isFrance ? "#1D4ED8" : "#DC2626",
+                  background: isFrance ? "var(--color-fr-dim)" : "var(--color-gn-dim)",
+                  color: isFrance ? "var(--color-fr)" : "var(--color-gn)",
                 }}>
                   {isFrance ? "🇫🇷 France" : "🇬🇳 Guinée"}
                 </span>
@@ -277,9 +277,9 @@ export function ClientForm({ client }: Props) {
                       onClick={() => setForm((p) => ({ ...p, market: m }))}
                       className="flex items-center gap-2 px-3 py-2.5 rounded-[var(--radius-md)] border text-sm font-medium transition-all"
                       style={{
-                        background: form.market === m ? (m === "france" ? "rgba(29,78,216,0.07)" : "rgba(220,38,38,0.07)") : "var(--color-bg-2)",
-                        borderColor: form.market === m ? (m === "france" ? "#1D4ED8" : "#DC2626") : "var(--color-border)",
-                        color: form.market === m ? (m === "france" ? "#1D4ED8" : "#DC2626") : "var(--color-text-2)",
+                        background: form.market === m ? (m === "france" ? "var(--color-fr-dim)" : "var(--color-gn-dim)") : "var(--color-bg-2)",
+                        borderColor: form.market === m ? (m === "france" ? "var(--color-fr)" : "var(--color-gn)") : "var(--color-border)",
+                        color: form.market === m ? (m === "france" ? "var(--color-fr)" : "var(--color-gn)") : "var(--color-text-2)",
                       }}
                     >
                       <span>{m === "france" ? "🇫🇷" : "🇬🇳"}</span>

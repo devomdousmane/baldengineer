@@ -57,7 +57,7 @@ export function ListToolbar({
             <button
               key={f.value}
               onClick={() => onFilter(f.value)}
-              className={`px-3 h-9 rounded-[var(--radius-md)] text-xs font-medium border transition-colors duration-[var(--dur-fast)] cursor-pointer ${
+              className={`px-3 h-9 rounded-[var(--radius-md)] text-xs font-medium border transition-colors duration-[var(--dur-fast)] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] ${
                 active === f.value
                   ? "bg-[var(--color-accent-dim)] text-[var(--color-accent)] border-[var(--color-accent)]/30"
                   : "bg-[var(--color-card)] text-[var(--color-text-2)] border-[var(--color-border)] hover:border-[var(--color-border-2)]"

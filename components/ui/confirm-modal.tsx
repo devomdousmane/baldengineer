@@ -1,7 +1,8 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertTriangle, Trash2, type LucideIcon } from "lucide-react";
+import { AlertTriangle, Trash2, CheckCircle2, Info, type LucideIcon } from "lucide-react";
 
 const ease = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
@@ -13,9 +14,11 @@ interface ConfirmModalProps {
   description?: string;
   confirmLabel?: string;
   cancelLabel?: string;
-  variant?: "danger" | "warning" | "default";
+  variant?: "danger" | "warning" | "default" | "info" | "success";
   icon?: LucideIcon;
   loading?: boolean;
+  /** Masque le bouton Annuler — pour une simple confirmation d'information (un seul bouton). */
+  singleAction?: boolean;
 }
 
 const variantStyles = {
@@ -34,6 +37,16 @@ const variantStyles = {
     btn: "bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hi)]",
     defaultIcon: AlertTriangle,
   },
+  info: {
+    iconWrap: "bg-[var(--color-info-dim)] text-[var(--color-info)]",
+    btn: "bg-[var(--color-info)] text-white hover:brightness-110",
+    defaultIcon: Info,
+  },
+  success: {
+    iconWrap: "bg-[var(--color-success-dim)] text-[var(--color-success)]",
+    btn: "bg-[var(--color-success)] text-white hover:brightness-110",
+    defaultIcon: CheckCircle2,
+  },
 };
 
 export function ConfirmModal({
@@ -47,9 +60,21 @@ export function ConfirmModal({
   variant = "danger",
   icon,
   loading = false,
+  singleAction = false,
 }: ConfirmModalProps) {
   const styles = variantStyles[variant];
   const Icon = icon ?? styles.defaultIcon;
+  const confirmRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    confirmRef.current?.focus();
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !loading) onCancel();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, loading, onCancel]);
 
   return (
     <AnimatePresence>
@@ -60,7 +85,7 @@ export function ConfirmModal({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.15 }}
           className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-          onClick={onCancel}
+          onClick={singleAction ? undefined : onCancel}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 8 }}
@@ -86,17 +111,20 @@ export function ConfirmModal({
             </div>
 
             <div className="flex gap-2">
+              {!singleAction && (
+                <button
+                  onClick={onCancel}
+                  disabled={loading}
+                  className="flex-1 h-9 rounded-[var(--radius-md)] border border-[var(--color-border)] text-sm text-[var(--color-text-2)] hover:bg-[var(--color-bg-2)] transition-colors duration-[var(--dur-fast)] cursor-pointer disabled:opacity-50"
+                >
+                  {cancelLabel}
+                </button>
+              )}
               <button
-                onClick={onCancel}
-                disabled={loading}
-                className="flex-1 h-9 rounded-[var(--radius-md)] border border-[var(--color-border)] text-sm text-[var(--color-text-2)] hover:bg-[var(--color-bg-2)] transition-colors duration-[var(--dur-fast)] cursor-pointer disabled:opacity-50"
-              >
-                {cancelLabel}
-              </button>
-              <button
+                ref={confirmRef}
                 onClick={onConfirm}
                 disabled={loading}
-                className={`flex-1 h-9 rounded-[var(--radius-md)] text-sm font-medium transition-all duration-[var(--dur-fast)] cursor-pointer disabled:opacity-50 ${styles.btn}`}
+                className={`flex-1 h-9 rounded-[var(--radius-md)] text-sm font-medium transition-all duration-[var(--dur-fast)] cursor-pointer disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)] ${styles.btn}`}
               >
                 {loading ? "…" : confirmLabel}
               </button>
