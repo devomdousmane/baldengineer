@@ -5,10 +5,10 @@ import { GoogleSignInButton } from "@/components/forms/google-signin-button";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 const highlights = [
-  { icon: FileText,    label: "Devis & factures" },
-  { icon: Receipt,     label: "Factur-X" },
-  { icon: Calculator,  label: "Comptabilité" },
-  { icon: ShieldCheck, label: "France & Guinée" },
+  { icon: FileText,    label: "Devis & factures",  desc: "Créez et suivez vos documents commerciaux en quelques clics" },
+  { icon: Receipt,     label: "Factur-X",          desc: "Facturation électronique conforme pour la France" },
+  { icon: Calculator,  label: "Comptabilité",      desc: "Écritures et suivi de trésorerie centralisés" },
+  { icon: ShieldCheck, label: "France & Guinée",   desc: "Numérotation et fiscalité adaptées à chaque marché" },
 ];
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://baldengineer.fr";
@@ -21,27 +21,46 @@ const legalLinks = [
 
 export default function LoginPage() {
   return (
-    <div className="relative min-h-dvh flex flex-col">
-      {/* ── Bandeau de marque horizontal ── */}
-      <div
-        className="relative flex items-center justify-between overflow-hidden px-4 sm:px-8 shrink-0"
-        style={{ backgroundColor: "var(--color-primary)", height: "96px" }}
-      >
-        {/* Texture grille statique */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            backgroundImage: `
-              linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)
-            `,
-            backgroundSize: "40px 40px",
-            maskImage: "radial-gradient(ellipse 90% 100% at 30% 50%, black 20%, transparent 90%)",
-            WebkitMaskImage: "radial-gradient(ellipse 90% 100% at 30% 50%, black 20%, transparent 90%)",
-          }}
-        />
+    <div className="relative min-h-dvh grid grid-cols-1 lg:grid-cols-2">
+      {/* Theme toggle */}
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20">
+        <ThemeToggle />
+      </div>
 
+      {/* ── Panneau gauche — identité de marque ──
+          Fond --color-accent : vert de marque dans les DEUX thèmes
+          (foncé/mat en light, modéré en dark) — jamais de token qui s'inverse ici. */}
+      <div
+        className="relative hidden lg:flex flex-col justify-between overflow-hidden px-12 py-12 xl:px-16"
+        style={{ background: "linear-gradient(160deg, var(--color-accent-hi), var(--color-accent))" }}
+      >
+        {/* Texture de fond */}
+        <div aria-hidden="true" className="absolute inset-0 pointer-events-none">
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `
+                radial-gradient(ellipse 60% 50% at 20% 15%, rgba(255,255,255,0.10), transparent 60%),
+                radial-gradient(ellipse 50% 45% at 90% 85%, rgba(255,255,255,0.06), transparent 60%)
+              `,
+              animation: "mesh-drift 18s ease-in-out infinite",
+            }}
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `
+                linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)
+              `,
+              backgroundSize: "48px 48px",
+              maskImage: "radial-gradient(ellipse 80% 70% at 50% 40%, black 30%, transparent 90%)",
+              WebkitMaskImage: "radial-gradient(ellipse 80% 70% at 50% 40%, black 30%, transparent 90%)",
+            }}
+          />
+        </div>
+
+        {/* Logo — blanc fixe, jamais --color-text-inv (ce token s'inverse entre thèmes) */}
         <div className="relative z-10">
           <Image
             src="/logo.png"
@@ -50,62 +69,76 @@ export default function LoginPage() {
             height={121}
             priority
             unoptimized
-            className="w-auto h-7 sm:h-8 object-contain brightness-0 invert"
+            className="w-auto h-9 object-contain brightness-0 invert"
           />
         </div>
 
-        <div className="relative z-10 hidden md:flex items-center gap-5">
-          {highlights.map(({ icon: Icon, label }, i) => (
-            <div key={label} className="flex items-center gap-2">
-              {i > 0 && <span className="w-px h-4" style={{ backgroundColor: "rgba(255,255,255,0.12)" }} />}
-              <Icon className="w-3.5 h-3.5 shrink-0" style={{ color: "var(--color-accent-hi)" }} strokeWidth={1.75} />
-              <span className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.8)" }}>{label}</span>
-            </div>
-          ))}
+        {/* Message + highlights */}
+        <div className="relative z-10 max-w-md">
+          <h1
+            className="font-heading text-3xl xl:text-4xl font-semibold leading-tight mb-4"
+            style={{ color: "#FFFFFF" }}
+          >
+            Pilotez votre activité, où que vous soyez.
+          </h1>
+          <p className="text-sm leading-relaxed mb-10" style={{ color: "rgba(255,255,255,0.75)" }}>
+            BaldPro centralise devis, factures et comptabilité pour les professionnels
+            opérant en France et en Guinée.
+          </p>
+
+          <div className="space-y-5">
+            {highlights.map(({ icon: Icon, label, desc }) => (
+              <div key={label} className="flex items-start gap-3.5">
+                <div
+                  className="w-9 h-9 rounded-[var(--radius-md)] flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: "rgba(255,255,255,0.14)" }}
+                >
+                  <Icon className="w-4 h-4" style={{ color: "#FFFFFF" }} strokeWidth={1.75} />
+                </div>
+                <div>
+                  <p className="text-sm font-medium" style={{ color: "#FFFFFF" }}>{label}</p>
+                  <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.65)" }}>{desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
+
+        {/* Footer panneau gauche */}
+        <p className="relative z-10 text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
+          © {new Date().getFullYear()} BaldEngineer — Tous droits réservés
+        </p>
       </div>
 
-      {/* Theme toggle */}
-      <div className="absolute top-3 right-3 sm:top-5 sm:right-6 z-20">
-        <ThemeToggle />
-      </div>
-
-      {/* ── Zone centrale ── */}
-      <div className="relative flex-1 flex items-center justify-center bg-[var(--color-bg)] px-4 py-10 overflow-hidden">
-        <div aria-hidden="true" className="absolute inset-0 pointer-events-none">
+      {/* ── Panneau droit — formulaire ── */}
+      <div className="relative flex items-center justify-center bg-[var(--color-bg)] px-4 py-10 sm:py-16">
+        {/* Texture légère, visible dans les deux thèmes */}
+        <div aria-hidden="true" className="absolute inset-0 pointer-events-none lg:hidden">
           <div className="absolute inset-0 bg-mesh" style={{ animation: "mesh-drift 18s ease-in-out infinite" }} />
         </div>
 
-        <div className="relative z-10 w-full max-w-sm">
-          {/* Strip marché */}
-          <div
-            className="flex items-center justify-center gap-2 mb-5 animate-slide-up"
-            style={{ animationDelay: "0ms" }}
-          >
-            <span
-              className="px-2.5 py-1 rounded-[var(--radius-full)] text-xs font-medium"
-              style={{ backgroundColor: "var(--color-fr-dim)", color: "var(--color-fr)" }}
-            >
-              🇫🇷 France
-            </span>
-            <span
-              className="px-2.5 py-1 rounded-[var(--radius-full)] text-xs font-medium"
-              style={{ backgroundColor: "var(--color-gn-dim)", color: "var(--color-gn)" }}
-            >
-              🇬🇳 Guinée
-            </span>
+        <div className="relative z-10 w-full max-w-sm animate-slide-up">
+          {/* Logo mobile uniquement (le panneau gauche le montre déjà sur desktop) */}
+          <div className="text-center mb-8 lg:hidden">
+            <Image
+              src="/logo.png"
+              alt="BaldEngineer"
+              width={206}
+              height={121}
+              priority
+              unoptimized
+              className="w-auto h-20 sm:h-24 object-contain mx-auto mb-4"
+            />
+            <p className="text-sm text-[var(--color-text-2)]">
+              BaldPro — Devis · Factures · Comptabilité
+            </p>
           </div>
 
           {/* Card */}
-          <div
-            className="bg-[var(--color-card)] rounded-[var(--radius-xl)] border border-[var(--color-border)] shadow-[var(--shadow-xl)] p-6 sm:p-7 animate-slide-up"
-            style={{ animationDelay: "60ms" }}
-          >
-            <h1 className="font-heading text-lg font-semibold text-[var(--color-text)] mb-1">
-              Pilotez votre activité
-            </h1>
-            <p className="text-xs text-[var(--color-text-2)] mb-6 leading-relaxed">
-              Connectez-vous avec votre compte Google pour accéder à vos devis, factures et comptabilité.
+          <div className="bg-[var(--color-card)] rounded-[var(--radius-xl)] border border-[var(--color-border)] shadow-[var(--shadow-lg)] p-6 sm:p-7">
+            <h2 className="text-base font-semibold text-[var(--color-text)] mb-1">Connexion</h2>
+            <p className="text-xs text-[var(--color-text-2)] mb-6">
+              Connectez-vous avec votre compte Google pour accéder à votre espace.
             </p>
 
             <form action={signInWithGoogle}>
@@ -113,28 +146,16 @@ export default function LoginPage() {
             </form>
           </div>
 
-          {/* Mini-badges highlights (mobile + desktop) */}
-          <div
-            className="grid grid-cols-2 gap-2 mt-5 animate-slide-up"
-            style={{ animationDelay: "120ms" }}
-          >
-            {highlights.map(({ icon: Icon, label }) => (
-              <div
-                key={label}
-                className="flex items-center gap-2 px-3 py-2 rounded-[var(--radius-md)]"
-                style={{ backgroundColor: "var(--color-accent-dim)" }}
-              >
-                <Icon className="w-3.5 h-3.5 shrink-0" style={{ color: "var(--color-accent)" }} strokeWidth={1.75} />
-                <span className="text-xs font-medium text-[var(--color-text-2)] truncate">{label}</span>
-              </div>
-            ))}
+          {/* Markets */}
+          <div className="flex items-center justify-center gap-4 mt-5">
+            <span className="text-xs text-[var(--color-text-3)]">Disponible pour :</span>
+            <span className="text-xs font-medium text-[var(--color-fr)]">🇫🇷 France</span>
+            <span className="text-xs text-[var(--color-text-3)]">·</span>
+            <span className="text-xs font-medium text-[var(--color-gn)]">🇬🇳 Guinée</span>
           </div>
 
           {/* Footer légal RGPD */}
-          <div
-            className="mt-7 flex flex-col items-center gap-2 animate-slide-up"
-            style={{ animationDelay: "180ms" }}
-          >
+          <div className="mt-6 flex flex-col items-center gap-1.5">
             <div className="flex items-center gap-3 text-xs text-[var(--color-text-3)]">
               {legalLinks.map((l, i) => (
                 <span key={l.href} className="flex items-center gap-3">
@@ -148,9 +169,6 @@ export default function LoginPage() {
                 </span>
               ))}
             </div>
-            <p className="text-[11px] text-[var(--color-text-3)]">
-              © {new Date().getFullYear()} BaldEngineer — Tous droits réservés
-            </p>
           </div>
         </div>
       </div>
