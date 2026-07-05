@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Users, FileText, Receipt, Wallet, Briefcase,
   BookOpen, Settings, LogOut, X, HelpCircle, Sparkles, Send, ArrowLeft,
-  PanelLeftClose, PanelLeftOpen,
+  PanelLeftClose, PanelLeftOpen, Globe,
 } from "lucide-react";
 import { MarketSwitcher } from "./market-switcher";
 import { Tooltip } from "@/components/ui/tooltip";
@@ -35,6 +35,7 @@ const navItems: NavItemWithTour[] = [
   { href: "/emails",       label: "Suivi emails",     icon: Send            },
   { href: "/missions",     label: "Missions",         icon: Briefcase       },
   { href: "/comptabilite", label: "Comptabilité",     icon: BookOpen        },
+  { href: "/analytics",    label: "Visites",          icon: Globe           },
 ];
 
 const navContainer = {

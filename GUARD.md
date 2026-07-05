@@ -31,6 +31,11 @@ Layer 5 â Migration SQL supabase/migrations/20260629000000_audit_logs.sql
 
 Layer 6 â Audit logging sur : logout Â· invoice.created Â· quote.created Â· settings.updated Â· facturx.generated Â· ai.chat
 
+
+Layer 7 - Tracking de visites site vitrine (mesure d audience anonyme)
+- supabase/functions/track-visit/index.ts - insere dans site_visits via service role, secret VISIT_TRACKING_SECRET
+- Migration supabase/migrations/20260705000001_site_visits.sql - table site_visits, RLS sans policy publique (lecture via createAdminClient cote SaaS)
+- Le site vitrine ne recoit jamais SUPABASE_SERVICE_ROLE_KEY, seulement VISIT_TRACKING_SECRET
 ---
 Ãtapes manuelles restantes :
 
@@ -39,6 +44,9 @@ Layer 6 â Audit logging sur : logout Â· invoice.created Â· quote.create
 3. DÃ©ployer les Edge Functions :
 npx supabase functions deploy audit-log --project-ref nmophdkhtkeftwjbzdxt
 4. Supabase Dashboard â Edge Functions â Secrets : ajouter AUDIT_LOG_SECRET=b576c61f... et SUPABASE_SERVICE_ROLE_KEY=...
+5. Supabase Dashboard - SQL Editor : executer supabase/migrations/20260705000001_site_visits.sql
+6. Deployer : npx supabase functions deploy track-visit --project-ref nmophdkhtkeftwjbzdxt
+7. Supabase Dashboard - Edge Functions - Secrets : ajouter VISIT_TRACKING_SECRET=... (meme valeur cote Netlify du site vitrine)
 
 â» Cogitated for 11m 18s
 

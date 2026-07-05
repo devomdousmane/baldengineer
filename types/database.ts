@@ -189,6 +189,17 @@ export interface AccountingEntry {
   created_at: string;
 }
 
+export interface SiteVisit {
+  id: string;
+  created_at: string;
+  path: string;
+  referrer: string | null;
+  country: string | null;
+  region: string | null;
+  city: string | null;
+  user_agent: string | null;
+}
+
 /* ── Supabase Database shape (for typed client) ── */
 export interface Database {
   public: {
@@ -201,6 +212,7 @@ export interface Database {
       invoice_lines: { Row: InvoiceLine; Insert: Partial<InvoiceLine>; Update: Partial<InvoiceLine> };
       missions: { Row: Mission; Insert: Partial<Mission>; Update: Partial<Mission> };
       accounting_entries: { Row: AccountingEntry; Insert: Partial<AccountingEntry>; Update: Partial<AccountingEntry> };
+      site_visits: { Row: SiteVisit; Insert: Partial<SiteVisit>; Update: Partial<SiteVisit> };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
