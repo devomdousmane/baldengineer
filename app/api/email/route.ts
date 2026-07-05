@@ -21,6 +21,18 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
    logs to email_logs, updates resource sent_at when relevant.
 ────────────────────────────────────────────────────────────────────────── */
 export async function POST(req: NextRequest) {
+  try {
+    return await handlePost(req);
+  } catch (err) {
+    console.error("[api/email] Erreur inattendue:", err);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Erreur interne inattendue" },
+      { status: 500 }
+    );
+  }
+}
+
+async function handlePost(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });

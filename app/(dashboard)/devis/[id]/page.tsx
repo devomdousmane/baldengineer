@@ -26,7 +26,7 @@ function LineRow({ line, currency }: { line: QuoteLine; currency: string }) {
   const ht = Math.round(line.quantity * line.unit_price * (1 - line.discount_pct / 100) * 100) / 100;
   return (
     <tr className="border-b border-[var(--color-border)] last:border-0">
-      <td className="py-3 pr-4 text-sm text-[var(--color-text)]">{line.description}</td>
+      <td className="py-3 pl-4 pr-4 text-sm text-[var(--color-text)]">{line.description}</td>
       <td className="py-3 px-4 text-sm text-center tabular-nums text-[var(--color-text-2)]">{line.quantity}</td>
       <td className="py-3 px-4 text-sm text-center text-[var(--color-text-2)]">{line.unit}</td>
       <td className="py-3 px-4 text-sm text-right tabular-nums text-[var(--color-text-2)]">{fmt(line.unit_price, currency)}</td>
@@ -34,7 +34,7 @@ function LineRow({ line, currency }: { line: QuoteLine; currency: string }) {
         <td className="py-3 px-4 text-sm text-right tabular-nums text-[var(--color-warning)]">-{line.discount_pct}%</td>
       )}
       <td className="py-3 pl-4 text-sm text-right tabular-nums font-medium text-[var(--color-text)]">{fmt(ht, currency)}</td>
-      <td className="py-3 pl-4 text-sm text-right tabular-nums text-[var(--color-text-2)]">{line.vat_rate}%</td>
+      <td className="py-3 pl-4 pr-4 text-sm text-right tabular-nums text-[var(--color-text-2)]">{line.vat_rate}%</td>
     </tr>
   );
 }
@@ -98,13 +98,13 @@ export default async function DevisDetailPage({ params }: { params: Promise<{ id
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-[var(--color-border)]">
-                      <th className="py-2.5 pr-4 text-left text-xs font-medium text-[var(--color-text-3)]">Description</th>
+                      <th className="py-2.5 pl-4 pr-4 text-left text-xs font-medium text-[var(--color-text-3)]">Description</th>
                       <th className="py-2.5 px-4 text-center text-xs font-medium text-[var(--color-text-3)]">Qté</th>
                       <th className="py-2.5 px-4 text-center text-xs font-medium text-[var(--color-text-3)]">Unité</th>
                       <th className="py-2.5 px-4 text-right text-xs font-medium text-[var(--color-text-3)]">P.U.</th>
                       {hasDiscount && <th className="py-2.5 px-4 text-right text-xs font-medium text-[var(--color-text-3)]">Remise</th>}
                       <th className="py-2.5 pl-4 text-right text-xs font-medium text-[var(--color-text-3)]">Total HT</th>
-                      <th className="py-2.5 pl-4 text-right text-xs font-medium text-[var(--color-text-3)]">TVA</th>
+                      <th className="py-2.5 pl-4 pr-4 text-right text-xs font-medium text-[var(--color-text-3)]">TVA</th>
                     </tr>
                   </thead>
                   <tbody>
