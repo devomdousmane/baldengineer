@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { sendEmail } from "@/lib/email/send";
 import { auditLog } from "@/lib/audit";
 import { markdownToSafeHtml } from "@/lib/markdown";
+
+const bodySchema = z.object({
+  type: z.string().min(1),
+  resourceId: z.string().uuid(),
+  to: z.string().email().optional(),
+  cc: z.string().email().optional(),
+  subject: z.string().max(300).optional(),
+  customMessage: z.string().max(5000).optional(),
+  extra: z.record(z.string(), z.unknown()).optional(),
+});
 import {
   devisEnvoye, devisRelance,
   factureEnvoyee, relancePaiement, paiementRecu, paiementNotifAdmin,
@@ -37,20 +48,12 @@ async function handlePost(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
 
-  const body: {
-    type: string;
-    resourceId: string;
-    to?: string;
-    cc?: string;
-    subject?: string;
-    customMessage?: string;
-    extra?: Record<string, unknown>;  // e.g. { level, daysLate, progressPct, progressNote }
-  } = await req.json();
-
-  const { type, resourceId, customMessage, extra = {} } = body;
-  if (!type || !resourceId) {
-    return NextResponse.json({ error: "type et resourceId requis" }, { status: 400 });
+  const parsed = bodySchema.safeParse(await req.json());
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Requête invalide", details: parsed.error.flatten() }, { status: 400 });
   }
+  const body = parsed.data;
+  const { type, resourceId, customMessage, extra = {} } = body;
 
   /* ── Load profile ─────────────────────────────────────────────────── */
   const { data: profile } = await supabase
@@ -103,7 +106,7 @@ async function handlePost(req: NextRequest) {
       totalVat: quote.total_vat,
       totalTtc: quote.total_ttc,
       currency: quote.currency,
-      quoteId: quote.id,
+      quoteId: quote.public_token,
       title: quote.title,
     };
 
@@ -155,7 +158,7 @@ async function handlePost(req: NextRequest) {
         totalVat: invoice.total_vat,
         totalTtc: invoice.total_ttc,
         currency: invoice.currency,
-        invoiceId: invoice.id,
+        invoiceId: invoice.public_token,
         title: invoice.title,
         bankName: profile.bank_name,
         bankIban: profile.bank_iban,
@@ -188,7 +191,7 @@ async function handlePost(req: NextRequest) {
         totalTtc: invoice.total_ttc,
         remaining,
         currency: invoice.currency,
-        invoiceId: invoice.id,
+        invoiceId: invoice.public_token,
         level,
         daysLate,
       };
@@ -212,13 +215,13 @@ async function handlePost(req: NextRequest) {
         currency: invoice.currency,
         paymentMethod: invoice.payment_method,
         paidAt: invoice.paid_at,
-        invoiceId: invoice.id,
+        invoiceId: invoice.public_token,
       };
       html = paiementRecu(tplData);
     }
 
     else if (type === "paiement_notif_admin") {
-      /* Send to self */
+      /* Send to self — lien vers le dashboard authentifié, donc l'UUID réel (pas le token public) */
       toEmail = profile.company_email ?? user.email ?? "";
       if (!toEmail) return NextResponse.json({ error: "Email de profil manquant" }, { status: 400 });
       subject ||= `💰 Paiement reçu — ${invoice.number}`;
@@ -316,7 +319,7 @@ async function handlePost(req: NextRequest) {
       totalTtc: invoice.total_ttc,
       currency: invoice.currency,
       reason: (extra.reason as string) ?? null,
-      invoiceId: invoice.id,
+      invoiceId: invoice.public_token,
     };
     html = avoirEmis(tplData);
   }

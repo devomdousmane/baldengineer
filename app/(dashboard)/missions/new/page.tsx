@@ -9,8 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input, Select, Textarea } from "@/components/ui/input";
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { createMissionAction } from "@/lib/actions/missions";
-import { getClients } from "@/lib/actions/clients";
-import { ArrowLeft, Briefcase, Calculator } from "lucide-react";
+import { getClients, createClientAction } from "@/lib/actions/clients";
+import { ArrowLeft, Briefcase, Calculator, UserPlus, Users } from "lucide-react";
 import Link from "next/link";
 import type { Client, Market } from "@/types/database";
 
@@ -28,7 +28,10 @@ export default function NewMissionPage() {
   const [clients, setClients] = useState<Client[]>([]);
 
   const [market, setMarket] = useState<Market>("france");
+  const [clientMode, setClientMode] = useState<"existing" | "external">("existing");
   const [clientId, setClientId] = useState("");
+  const [externalName, setExternalName] = useState("");
+  const [externalEmail, setExternalEmail] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [startDate, setStartDate] = useState(today);
@@ -54,12 +57,39 @@ export default function NewMissionPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!clientId) { setError("Veuillez sélectionner un client"); return; }
+    if (clientMode === "existing" && !clientId) {
+      setError("Veuillez sélectionner un client");
+      return;
+    }
+    if (clientMode === "external" && !externalName.trim()) {
+      setError("Veuillez saisir le nom du client externe");
+      return;
+    }
     setError(null);
     startTransition(async () => {
       try {
+        let finalClientId = clientId;
+        if (clientMode === "external") {
+          const created = await createClientAction({
+            name: externalName.trim(),
+            market,
+            type: "individual",
+            email: externalEmail.trim() || null,
+            phone: null,
+            address: null,
+            city: null,
+            zip: null,
+            country: market === "france" ? "France" : "Guinée",
+            siren: null,
+            nif: null,
+            vat_number: null,
+            notes: "Client externe créé depuis une mission",
+          });
+          finalClientId = created.id;
+        }
+
         await createMissionAction({
-          client_id: clientId, market, title,
+          client_id: finalClientId, market, title,
           description: description || null,
           start_date: startDate || null,
           end_date: endDate || null,
@@ -101,23 +131,75 @@ export default function NewMissionPage() {
                 <h2 className="font-heading text-sm font-semibold text-[var(--color-text)]">Informations générales</h2>
               </div>
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <Select
-                    label="Marché"
-                    value={market}
-                    onChange={(e) => { setMarket(e.target.value as Market); setClientId(""); }}
-                    required
+                <Select
+                  label="Marché"
+                  value={market}
+                  onChange={(e) => { setMarket(e.target.value as Market); setClientId(""); }}
+                  required
+                >
+                  <option value="france">🇫🇷 France</option>
+                  <option value="guinee">🇬🇳 Guinée</option>
+                </Select>
+
+                {/* Bascule client existant / externe */}
+                <div className="flex gap-1 p-1 rounded-[var(--radius-md)] bg-[var(--color-bg-2)] border border-[var(--color-border)]">
+                  <button
+                    type="button"
+                    onClick={() => setClientMode("existing")}
+                    className={`flex-1 flex items-center justify-center gap-1.5 h-9 rounded-[calc(var(--radius-md)-2px)] text-xs font-medium transition-all duration-[var(--dur-fast)] cursor-pointer ${
+                      clientMode === "existing"
+                        ? "bg-[var(--color-card)] text-[var(--color-text)] shadow-[var(--shadow-xs)]"
+                        : "text-[var(--color-text-2)] hover:text-[var(--color-text)]"
+                    }`}
                   >
-                    <option value="france">🇫🇷 France</option>
-                    <option value="guinee">🇬🇳 Guinée</option>
-                  </Select>
+                    <Users className="w-3.5 h-3.5" />
+                    Client existant
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setClientMode("external")}
+                    className={`flex-1 flex items-center justify-center gap-1.5 h-9 rounded-[calc(var(--radius-md)-2px)] text-xs font-medium transition-all duration-[var(--dur-fast)] cursor-pointer ${
+                      clientMode === "external"
+                        ? "bg-[var(--color-card)] text-[var(--color-text)] shadow-[var(--shadow-xs)]"
+                        : "text-[var(--color-text-2)] hover:text-[var(--color-text)]"
+                    }`}
+                  >
+                    <UserPlus className="w-3.5 h-3.5" />
+                    Client externe
+                  </button>
+                </div>
+
+                {clientMode === "existing" ? (
                   <Select label="Client" value={clientId} onChange={(e) => setClientId(e.target.value)} required>
                     <option value="">Sélectionner…</option>
                     {filteredClients.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
                   </Select>
-                </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Input
+                      label="Nom du client"
+                      value={externalName}
+                      onChange={(e) => setExternalName(e.target.value)}
+                      placeholder="Nom ou société"
+                      required
+                    />
+                    <Input
+                      label="Email (optionnel)"
+                      type="email"
+                      value={externalEmail}
+                      onChange={(e) => setExternalEmail(e.target.value)}
+                      placeholder="client@exemple.com"
+                    />
+                  </div>
+                )}
+                {clientMode === "external" && (
+                  <p className="text-[11px] text-[var(--color-text-3)] -mt-2">
+                    Une fiche client sera créée automatiquement, réutilisable ensuite pour des devis/factures.
+                  </p>
+                )}
+
                 <Input
                   label="Titre de la mission"
                   value={title}

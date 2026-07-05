@@ -23,8 +23,16 @@ export async function updateSession(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  /* Protect dashboard routes */
-  if (!user && !request.nextUrl.pathname.startsWith("/login") && !request.nextUrl.pathname.startsWith("/auth/")) {
+  /* Protect dashboard routes — exceptions :
+     - /api/* gère son propre 401 JSON, ne pas rediriger en HTML
+     - /view/* est la consultation publique d'un document par token, sans auth */
+  const isApi = request.nextUrl.pathname.startsWith("/api/");
+  const isPublicView = request.nextUrl.pathname.startsWith("/view/");
+  if (
+    !user && !isApi && !isPublicView &&
+    !request.nextUrl.pathname.startsWith("/login") &&
+    !request.nextUrl.pathname.startsWith("/auth/")
+  ) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);

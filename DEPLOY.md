@@ -18,7 +18,6 @@ aucun rewrite, aucune configuration croisée — deux apps totalement autonomes.
    |---|---|
    | `NEXT_PUBLIC_SUPABASE_URL` | `https://nmophdkhtkeftwjbzdxt.supabase.co` |
    | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | (voir `.env.local`) |
-   | `ACCESS_TOKEN_SECRET` | (voir `.env.local`) |
    | `AUDIT_LOG_SECRET` | (voir `.env.local`) |
    | `SUPABASE_SERVICE_ROLE_KEY` | (voir `.env.local`) |
    | `RESEND_API_KEY` | (voir `.env.local`) |

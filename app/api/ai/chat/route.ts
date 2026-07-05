@@ -1,7 +1,19 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest } from "next/server";
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { auditLog } from "@/lib/audit";
+
+const bodySchema = z.object({
+  messages: z.array(z.object({
+    role: z.enum(["user", "assistant"]),
+    content: z.string().min(1).max(8000),
+  })).min(1).max(50),
+  context: z.object({
+    page: z.string().max(200).optional(),
+    market: z.string().max(50).optional(),
+  }).optional(),
+});
 
 export const runtime = "edge";
 
@@ -14,10 +26,11 @@ export async function POST(req: NextRequest) {
 
   auditLog({ action: "ai.chat", user_id: user.id });
 
-  const { messages, context } = await req.json() as {
-    messages: { role: "user" | "assistant"; content: string }[];
-    context?: { page?: string; market?: string };
-  };
+  const parsed = bodySchema.safeParse(await req.json());
+  if (!parsed.success) {
+    return new Response("Requête invalide", { status: 400 });
+  }
+  const { messages, context } = parsed.data;
 
   const systemPrompt = `Tu es BaldPro AI, l'assistant intelligent intégré au SaaS BaldPro de gestion d'activité de Thierno Baldé, ingénieur indépendant.
 

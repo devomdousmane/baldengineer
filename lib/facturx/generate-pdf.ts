@@ -1,5 +1,16 @@
 import type { FacturXData } from "./types";
 
+/** Échappe le HTML pour tout champ provenant de l'utilisateur (client, profil, lignes). */
+function esc(str: string | number | null | undefined): string {
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function fmtDate(iso: string): string {
   return new Date(iso).toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
 }
@@ -21,8 +32,8 @@ function buildHtml(data: FacturXData): string {
     return `
       <tr>
         <td style="padding:8px 12px;border-bottom:1px solid #E2E8F0;color:#475569;font-size:11px;">${l.position}</td>
-        <td style="padding:8px 12px;border-bottom:1px solid #E2E8F0;">${l.description}</td>
-        <td style="padding:8px 12px;border-bottom:1px solid #E2E8F0;text-align:center;">${l.quantity} ${l.unit}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #E2E8F0;">${esc(l.description)}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #E2E8F0;text-align:center;">${esc(l.quantity)} ${esc(l.unit)}</td>
         <td style="padding:8px 12px;border-bottom:1px solid #E2E8F0;text-align:right;">${fmt(l.unit_price, currency)}</td>
         ${l.discount_pct > 0 ? `<td style="padding:8px 12px;border-bottom:1px solid #E2E8F0;text-align:right;color:#D97706;">-${l.discount_pct}%</td>` : ""}
         <td style="padding:8px 12px;border-bottom:1px solid #E2E8F0;text-align:right;">${l.vat_rate}%</td>
@@ -38,7 +49,7 @@ function buildHtml(data: FacturXData): string {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Facture ${invoice.number}</title>
+<title>Facture ${esc(invoice.number)}</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -88,17 +99,17 @@ function buildHtml(data: FacturXData): string {
   <!-- Header -->
   <div class="header">
     <div>
-      <div class="seller-name">${seller.name}</div>
+      <div class="seller-name">${esc(seller.name)}</div>
       <div class="seller-info">
-        ${[seller.address, [seller.zip, seller.city].filter(Boolean).join(" "), seller.country !== "FR" ? seller.country : "France"].filter(Boolean).join("<br>")}
-        ${seller.vat_number ? `<br>N° TVA : ${seller.vat_number}` : ""}
-        ${seller.siren ? `<br>SIREN : ${seller.siren}` : ""}
-        ${seller.email ? `<br>${seller.email}` : ""}
+        ${[esc(seller.address), esc([seller.zip, seller.city].filter(Boolean).join(" ")), seller.country !== "FR" ? esc(seller.country) : "France"].filter(Boolean).join("<br>")}
+        ${seller.vat_number ? `<br>N° TVA : ${esc(seller.vat_number)}` : ""}
+        ${seller.siren ? `<br>SIREN : ${esc(seller.siren)}` : ""}
+        ${seller.email ? `<br>${esc(seller.email)}` : ""}
       </div>
     </div>
     <div class="badge-block">
       <div class="doc-type">FACTURE</div>
-      <div class="doc-number">${invoice.number}</div>
+      <div class="doc-number">${esc(invoice.number)}</div>
       <div><span class="facturx-badge">Factur-X EN 16931</span></div>
     </div>
   </div>
@@ -107,18 +118,18 @@ function buildHtml(data: FacturXData): string {
   <div class="grid-2">
     <div class="card">
       <div class="card-title">Émis par</div>
-      <div class="card-name">${seller.name}</div>
+      <div class="card-name">${esc(seller.name)}</div>
       <div class="card-body">
-        ${seller.address ?? ""}${seller.city ? `<br>${[seller.zip, seller.city].filter(Boolean).join(" ")}` : ""}
+        ${esc(seller.address) || ""}${seller.city ? `<br>${esc([seller.zip, seller.city].filter(Boolean).join(" "))}` : ""}
       </div>
     </div>
     <div class="card">
       <div class="card-title">Facturé à</div>
-      <div class="card-name">${buyer.name}</div>
+      <div class="card-name">${esc(buyer.name)}</div>
       <div class="card-body">
-        ${buyer.address ?? ""}${buyer.city ? `<br>${[buyer.zip, buyer.city].filter(Boolean).join(" ")}` : ""}
-        ${buyer.vat_number ? `<br>N° TVA : ${buyer.vat_number}` : ""}
-        ${buyer.siren ? `<br>SIREN : ${buyer.siren}` : ""}
+        ${esc(buyer.address) || ""}${buyer.city ? `<br>${esc([buyer.zip, buyer.city].filter(Boolean).join(" "))}` : ""}
+        ${buyer.vat_number ? `<br>N° TVA : ${esc(buyer.vat_number)}` : ""}
+        ${buyer.siren ? `<br>SIREN : ${esc(buyer.siren)}` : ""}
       </div>
     </div>
   </div>
@@ -168,9 +179,9 @@ function buildHtml(data: FacturXData): string {
   ${seller.iban ? `
   <div class="iban-box">
     <div class="iban-title">Coordonnées bancaires — Virement SEPA</div>
-    ${seller.bank_name ? `<div style="font-size:11px;color:#475569;margin-bottom:4px;">${seller.bank_name}</div>` : ""}
-    <div class="iban-val">${seller.iban}</div>
-    ${seller.bic ? `<div style="font-size:11px;color:#0369A1;margin-top:2px;">BIC : ${seller.bic}</div>` : ""}
+    ${seller.bank_name ? `<div style="font-size:11px;color:#475569;margin-bottom:4px;">${esc(seller.bank_name)}</div>` : ""}
+    <div class="iban-val">${esc(seller.iban)}</div>
+    ${seller.bic ? `<div style="font-size:11px;color:#0369A1;margin-top:2px;">BIC : ${esc(seller.bic)}</div>` : ""}
   </div>` : ""}
 
   <!-- Notes -->
@@ -178,12 +189,12 @@ function buildHtml(data: FacturXData): string {
   <div class="notes-grid">
     <div class="notes-box">
       <div class="notes-title">Notes</div>
-      <div class="notes-body">${invoice.notes}</div>
+      <div class="notes-body">${esc(invoice.notes)}</div>
     </div>
   </div>` : ""}
 
   <footer>
-    ${seller.name} · ${seller.siren ? `SIREN ${seller.siren} · ` : ""}${seller.vat_number ? `TVA ${seller.vat_number} · ` : ""}Facture n° ${invoice.number} · ${fmtDate(invoice.date)}
+    ${esc(seller.name)} · ${seller.siren ? `SIREN ${esc(seller.siren)} · ` : ""}${seller.vat_number ? `TVA ${esc(seller.vat_number)} · ` : ""}Facture n° ${esc(invoice.number)} · ${fmtDate(invoice.date)}
     <br>Document conforme au standard Factur-X EN 16931
   </footer>
 </div>
@@ -221,6 +232,9 @@ export async function generatePdf(data: FacturXData): Promise<Buffer> {
   const browser = await launchBrowser();
   try {
     const page = await browser.newPage();
+    /* Défense en profondeur : le HTML est échappé (esc()), mais on désactive
+       aussi l'exécution JS puisque le contenu n'en a jamais besoin. */
+    await page.setJavaScriptEnabled(false);
     await page.setContent(buildHtml(data), { waitUntil: "load" });
     const pdf = await page.pdf({
       format: "A4",

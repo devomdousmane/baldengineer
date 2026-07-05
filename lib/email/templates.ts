@@ -61,7 +61,7 @@ export function devisEnvoye(d: DevisEnvoyeData): string {
       { label: "Date", value: fmtDate(d.quoteDate) },
       ...(d.validUntil ? [{ label: "Valable jusqu'au", value: fmtDate(d.validUntil) }] : []),
     ])}
-    ${ctaButton("Consulter & accepter le devis", `${d.appUrl}/print/devis/${d.quoteId}`)}
+    ${ctaButton("Consulter & accepter le devis", `${d.appUrl}/view/devis/${d.quoteId}`)}
     ${d.market === "guinee" ? alertBox("Pour accepter ce devis, veuillez nous retourner ce document signé avec la mention <strong>« Bon pour accord »</strong> et votre cachet.", "info") : ""}
     ${para("Cordialement,<br><strong>" + d.companyName + "</strong>", true)}
   `;
@@ -86,7 +86,7 @@ export function devisRelance(d: DevisEnvoyeData): string {
     ${para(`Nous vous rappelons que votre devis <strong>${d.quoteNumber}</strong> expire le <strong>${d.validUntil ? fmtDate(d.validUntil) : "bientôt"}</strong>.`)}
     ${highlightBox("Montant total", fmt(d.totalTtc, d.currency), true)}
     ${alertBox("Pour ne pas perdre les conditions de ce devis, veuillez le valider avant la date d'expiration.", "warning")}
-    ${ctaButton("Accepter le devis maintenant", `${d.appUrl}/print/devis/${d.quoteId}`)}
+    ${ctaButton("Accepter le devis maintenant", `${d.appUrl}/view/devis/${d.quoteId}`)}
     ${para("Passé cette date, le devis sera marqué expiré et un nouveau devis devra être établi.", true)}
     ${para("Cordialement,<br><strong>" + d.companyName + "</strong>", true)}
   `;
@@ -177,7 +177,7 @@ export function factureEnvoyee(d: FactureEnvoyeeData): string {
       { label: "Date", value: fmtDate(d.invoiceDate) },
       ...(d.dueDate ? [{ label: "Échéance", value: fmtDate(d.dueDate) }] : []),
     ])}
-    ${ctaButton("Voir la facture complète", `${d.appUrl}/print/factures/${d.invoiceId}`)}
+    ${ctaButton("Voir la facture complète", `${d.appUrl}/view/factures/${d.invoiceId}`)}
     ${paymentSection}
     ${d.market === "france" ? alertBox("En cas de retard de paiement, des pénalités seront applicables conformément à l'art. L.441-10 du Code de Commerce.", "info") : ""}
     ${para("Cordialement,<br><strong>" + d.companyName + "</strong>", true)}
@@ -250,7 +250,7 @@ export function relancePaiement(d: RelancePaiementData): string {
       { label: "Retard", value: `${d.daysLate} jours` },
     ])}
     ${alertBox(config.alertText, config.alertType)}
-    ${ctaButton("Voir la facture", `${d.appUrl}/print/factures/${d.invoiceId}`)}
+    ${ctaButton("Voir la facture", `${d.appUrl}/view/factures/${d.invoiceId}`)}
     ${para("Cordialement,<br><strong>" + d.companyName + "</strong>", true)}
   `;
   return layout(content, opts);
@@ -305,7 +305,7 @@ export function paiementRecu(d: PaiementReçuData): string {
       ? ""
       : alertBox(`Il reste <strong>${fmt(d.remaining, d.currency)}</strong> à régler pour solder cette facture.`, "warning")
     }
-    ${ctaButton("Télécharger la facture", `${d.appUrl}/print/factures/${d.invoiceId}`)}
+    ${ctaButton("Télécharger la facture", `${d.appUrl}/view/factures/${d.invoiceId}`)}
     ${para("Cordialement,<br><strong>" + d.companyName + "</strong>", true)}
   `;
   return layout(content, opts);
@@ -486,7 +486,7 @@ export function avoirEmis(d: AvoirData): string {
       { label: "Date", value: fmtDate(d.avoirDate) },
       { label: "Facture d'origine", value: d.invoiceNumber },
     ])}
-    ${ctaButton("Voir l'avoir", `${d.appUrl}/print/factures/${d.invoiceId}`)}
+    ${ctaButton("Voir l'avoir", `${d.appUrl}/view/factures/${d.invoiceId}`)}
     ${para("Cordialement,<br><strong>" + d.companyName + "</strong>", true)}
   `;
   return layout(content, opts);

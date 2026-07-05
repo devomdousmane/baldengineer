@@ -23,7 +23,6 @@ Layer 3 â /api/ai/chat â export const runtime = "edge" â streamin
 
 Layer 4 â Supabase Edge Functions (Deno)
 - supabase/functions/audit-log/index.ts â Enregistre les Ã©vÃ©nements en base via service role
-- supabase/functions/hmac-verify/index.ts â VÃ©rification signatures webhooks (constant-time via crypto.subtle)
 - supabase/functions/_shared/cors.ts â Helper CORS partagÃ©
 
 Layer 5 â Migration SQL supabase/migrations/20260629000000_audit_logs.sql
@@ -39,7 +38,6 @@ Layer 6 â Audit logging sur : logout Â· invoice.created Â· quote.create
 2. Supabase Dashboard â Settings â API â Service Role : copier la clÃ© â SUPABASE_SERVICE_ROLE_KEY= dans .env.local
 3. DÃ©ployer les Edge Functions :
 npx supabase functions deploy audit-log --project-ref nmophdkhtkeftwjbzdxt
-npx supabase functions deploy hmac-verify --project-ref nmophdkhtkeftwjbzdxt
 4. Supabase Dashboard â Edge Functions â Secrets : ajouter AUDIT_LOG_SECRET=b576c61f... et SUPABASE_SERVICE_ROLE_KEY=...
 
 â» Cogitated for 11m 18s

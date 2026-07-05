@@ -98,6 +98,7 @@ export interface Quote {
   accepted_at: string | null;
   refused_at: string | null;
   converted_to_invoice_id: string | null;
+  public_token: string;
   created_at: string;
   updated_at: string;
   /* joins */
@@ -144,6 +145,7 @@ export interface Invoice {
   facturx_status: "none" | "pending" | "submitted" | "acknowledged" | "rejected" | null;
   facturx_id: string | null;
   chorus_pro_id: string | null;
+  public_token: string;
   created_at: string;
   updated_at: string;
   /* joins */
