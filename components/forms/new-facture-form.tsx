@@ -8,9 +8,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Select, Textarea } from "@/components/ui/input";
 import { DocumentPreviewFrame } from "@/components/modules/document-preview-frame";
+import { QuickAddClientDialog } from "@/components/modules/quick-add-client-dialog";
 import { createInvoiceAction } from "@/lib/actions/invoices";
 import { defaultVatRate } from "@/lib/vat";
-import { Plus, Trash2, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Plus, Trash2, Eye, EyeOff, ArrowLeft, UserPlus } from "lucide-react";
 import type { Client, Market, Profile } from "@/types/database";
 
 interface LineItem {
@@ -49,11 +50,13 @@ interface Props {
   profile?: Profile | null;
 }
 
-export function NewFactureForm({ clients, defaultMarket, vatRateDefault, paymentTermsDays, profile }: Props) {
+export function NewFactureForm({ clients: initialClients, defaultMarket, vatRateDefault, paymentTermsDays, profile }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(true);
+  const [clients, setClients] = useState<Client[]>(initialClients);
+  const [addingClient, setAddingClient] = useState(false);
 
   const [market, setMarket] = useState<Market>(defaultMarket);
   const [clientId, setClientId] = useState("");
@@ -180,10 +183,25 @@ export function NewFactureForm({ clients, defaultMarket, vatRateDefault, payment
                 <option value="france">🇫🇷 France</option>
                 <option value="guinee">🇬🇳 Guinée</option>
               </Select>
-              <Select label="Client" value={clientId} onChange={(e) => setClientId(e.target.value)} required>
-                <option value="">Sélectionner un client…</option>
-                {filteredClients.map((c) => (<option key={c.id} value={c.id}>{c.name}</option>))}
-              </Select>
+              <div className="flex items-end gap-2">
+                <div className="flex-1">
+                  <Select label="Client" value={clientId} onChange={(e) => setClientId(e.target.value)} required>
+                    <option value="">Sélectionner un client…</option>
+                    {filteredClients.map((c) => (<option key={c.id} value={c.id}>{c.name}</option>))}
+                  </Select>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="md"
+                  onClick={() => setAddingClient(true)}
+                  aria-label="Nouveau client"
+                  title="Nouveau client"
+                  className="shrink-0 !px-2.5"
+                >
+                  <UserPlus className="w-4 h-4" />
+                </Button>
+              </div>
               <Input label="Titre de la facture" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Étude CFO/CFA — Lot 3" required className="col-span-full" />
               <Input label="Date de facturation" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
               <Input
@@ -346,6 +364,16 @@ export function NewFactureForm({ clients, defaultMarket, vatRateDefault, payment
           )}
         </AnimatePresence>
       </div>
+
+      <QuickAddClientDialog
+        open={addingClient}
+        onClose={() => setAddingClient(false)}
+        market={market}
+        onCreated={(client) => {
+          setClients((prev) => [...prev, client]);
+          setClientId(client.id);
+        }}
+      />
     </div>
   );
 }

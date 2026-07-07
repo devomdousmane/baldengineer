@@ -253,7 +253,7 @@ export function PrintDocument({ type, document: doc, client, profile, hideToolba
               <img
                 src={isGuinee ? "/logo-guinee.png" : "/logo.png"}
                 alt="Logo"
-                style={{ width: isGuinee ? 48 : 82, height: 48, objectFit: "contain", flexShrink: 0 }}
+                style={{ width: isGuinee ? 127 : 82, height: 48, objectFit: "contain", flexShrink: 0 }}
               />
               <div>
                 {companyName && <h2 style={{ marginBottom: 3 }}>{companyName}</h2>}
