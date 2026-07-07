@@ -35,6 +35,33 @@ export async function signQuoteAction(token: string, dataUrl: string, signerName
   revalidatePath("/devis");
 }
 
+export async function refuseQuoteAction(token: string, reason: string): Promise<void> {
+  const supabase = createAdminClient();
+
+  const trimmed = reason.trim();
+  if (!trimmed) throw new Error("Merci de préciser le motif du refus");
+
+  const { data: quote, error: findErr } = await supabase
+    .from("quotes")
+    .select("id")
+    .eq("public_token", token)
+    .single();
+  if (findErr || !quote) throw new Error("Devis introuvable");
+
+  const { error } = await supabase
+    .from("quotes")
+    .update({
+      status: "refused",
+      refused_at: new Date().toISOString(),
+      refusal_reason: trimmed,
+    })
+    .eq("id", quote.id);
+  if (error) throw new Error(error.message);
+
+  revalidatePath(`/view/devis/${token}`);
+  revalidatePath("/devis");
+}
+
 export async function signInvoiceAction(token: string, dataUrl: string, signerName: string): Promise<void> {
   const supabase = createAdminClient();
 

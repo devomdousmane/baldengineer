@@ -98,6 +98,7 @@ export interface Quote {
   sent_at: string | null;
   accepted_at: string | null;
   refused_at: string | null;
+  refusal_reason: string | null;
   converted_to_invoice_id: string | null;
   signed_at: string | null;
   signature_data_url: string | null;

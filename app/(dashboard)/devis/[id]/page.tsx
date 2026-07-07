@@ -85,6 +85,13 @@ export default async function DevisDetailPage({ params }: { params: Promise<{ id
           <DevisActions quote={quote} canConvert={canConvert} />
         </div>
 
+        {quote.status === "refused" && quote.refusal_reason && (
+          <div className="rounded-[var(--radius-lg)] border border-[var(--color-danger)]/30 bg-[var(--color-danger-dim)] px-4 py-3">
+            <p className="text-xs font-semibold text-[var(--color-danger)] mb-1">Motif du refus</p>
+            <p className="text-sm text-[var(--color-text-2)] whitespace-pre-wrap">{quote.refusal_reason}</p>
+          </div>
+        )}
+
         {/* Layout 2 colonnes — remplit la largeur disponible */}
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-4 items-start">
           {/* Colonne principale */}

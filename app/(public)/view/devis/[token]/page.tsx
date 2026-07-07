@@ -63,7 +63,7 @@ export default async function DevisPublicPage({ params }: { params: Promise<{ to
         client={quote.client ?? null}
         profile={profile as Profile | null}
       />
-      <div className="max-w-[820px] mx-auto px-6 pb-10 -mt-4 print:hidden">
+      <div className="max-w-[820px] mx-auto px-4 sm:px-6 pb-10 -mt-4 print:hidden">
         <PublicSignatureBlock
           type="devis"
           token={token}
@@ -72,6 +72,9 @@ export default async function DevisPublicPage({ params }: { params: Promise<{ to
           signerName={quote.signer_name}
           signatureDataUrl={quote.signature_data_url}
           defaultSignerName={quote.client?.name ?? ""}
+          alreadyRefused={quote.status === "refused"}
+          refusedAt={quote.refused_at}
+          refusalReason={quote.refusal_reason}
         />
       </div>
     </div>

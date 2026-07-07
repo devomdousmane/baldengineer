@@ -66,7 +66,7 @@ export default async function FacturePublicPage({ params }: { params: Promise<{ 
         client={invoice.client ?? null}
         profile={profile as Profile | null}
       />
-      <div className="max-w-[820px] mx-auto px-6 pb-10 -mt-4 print:hidden">
+      <div className="max-w-[820px] mx-auto px-4 sm:px-6 pb-10 -mt-4 print:hidden">
         <PublicSignatureBlock
           type="facture"
           token={token}

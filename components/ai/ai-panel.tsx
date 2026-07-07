@@ -99,25 +99,42 @@ interface AiPanelProps {
   market?: string;
 }
 
+const MAX_LENGTH = 4000;
+
 export function AiPanel({ open, onClose, market }: AiPanelProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const historyRef = useRef<string[]>([]);
+  const historyIndexRef = useRef(0);
   const pathname = usePathname();
 
   useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 300);
   }, [open]);
 
+  /* Auto-agrandit le textarea au contenu (jusqu'à max-h-32 en CSS) au lieu de scroller
+     en boîte minuscule dès la deuxième ligne. */
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [input]);
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const send = useCallback(async (text: string) => {
-    if (!text.trim() || loading) return;
-    const userMsg: Message = { role: "user", content: text.trim() };
+    const trimmed = text.trim();
+    if (!trimmed || loading) return;
+    if (trimmed !== historyRef.current[historyRef.current.length - 1]) historyRef.current.push(trimmed);
+    historyIndexRef.current = historyRef.current.length;
+
+    const userMsg: Message = { role: "user", content: trimmed };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setLoading(true);
@@ -172,11 +189,28 @@ export function AiPanel({ open, onClose, market }: AiPanelProps) {
       });
     } finally {
       setLoading(false);
+      inputRef.current?.focus();
     }
   }, [loading, messages, pathname, market]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); }
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); return; }
+
+    /* Rappel du dernier message envoyé (↑) — seulement quand le curseur est au tout début
+       du champ, pour ne pas interférer avec l'édition normale d'un texte multi-ligne. */
+    const el = e.currentTarget;
+    const atStart = el.selectionStart === 0 && el.selectionEnd === 0;
+    const atEnd = el.selectionStart === input.length && el.selectionEnd === input.length;
+
+    if (e.key === "ArrowUp" && atStart && historyIndexRef.current > 0) {
+      e.preventDefault();
+      historyIndexRef.current -= 1;
+      setInput(historyRef.current[historyIndexRef.current] ?? "");
+    } else if (e.key === "ArrowDown" && atEnd && historyIndexRef.current < historyRef.current.length) {
+      e.preventDefault();
+      historyIndexRef.current += 1;
+      setInput(historyRef.current[historyIndexRef.current] ?? "");
+    }
   };
 
   return (
@@ -304,12 +338,13 @@ export function AiPanel({ open, onClose, market }: AiPanelProps) {
                 <textarea
                   ref={inputRef}
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
+                  onChange={(e) => setInput(e.target.value.slice(0, MAX_LENGTH))}
                   onKeyDown={handleKeyDown}
-                  placeholder="Posez votre question…"
+                  placeholder="Posez votre question… (↑ pour rappeler le dernier message)"
                   rows={1}
+                  maxLength={MAX_LENGTH}
                   disabled={loading}
-                  className="flex-1 resize-none text-xs text-[var(--color-text)] bg-transparent placeholder:text-[var(--color-text-3)] focus:outline-none max-h-32 leading-relaxed disabled:opacity-50"
+                  className="flex-1 resize-none text-xs text-[var(--color-text)] bg-transparent placeholder:text-[var(--color-text-3)] focus:outline-none max-h-32 overflow-y-auto leading-relaxed disabled:opacity-50"
                   style={{ lineHeight: "1.6" }}
                 />
                 <motion.button
@@ -323,7 +358,14 @@ export function AiPanel({ open, onClose, market }: AiPanelProps) {
                   <Send className="w-3.5 h-3.5" />
                 </motion.button>
               </div>
-              <p className="text-3xs text-[var(--color-text-3)] text-center mt-2">Claude · Ne pas partager de données sensibles</p>
+              <div className="flex items-center justify-between mt-2">
+                <p className="text-3xs text-[var(--color-text-3)]">Claude · Ne pas partager de données sensibles</p>
+                {input.length > MAX_LENGTH * 0.8 && (
+                  <p className={`text-3xs tabular-nums ${input.length >= MAX_LENGTH ? "text-[var(--color-danger)]" : "text-[var(--color-text-3)]"}`}>
+                    {input.length}/{MAX_LENGTH}
+                  </p>
+                )}
+              </div>
             </div>
           </motion.aside>
         </>
