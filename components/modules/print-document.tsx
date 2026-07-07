@@ -36,6 +36,10 @@ interface DocData {
   signedAt?: string | null;
   signatureDataUrl?: string | null;
   signerName?: string | null;
+  /** URL publique de consultation (/view/devis|factures/[token]) — encodée dans le QR code
+   *  pour qu'un scan ouvre directement la page où consulter/signer le document. Absente en
+   *  aperçu avant création, le document n'ayant pas encore de token. */
+  publicUrl?: string | null;
 }
 
 interface PrintDocumentProps {
@@ -124,6 +128,7 @@ body {
   body { background: #F8FAFC; padding: 32px 24px 64px; }
   .doc-page { max-width: 794px; margin: 0 auto; background: white; border-radius: 10px; box-shadow: 0 4px 24px rgba(0,0,0,.08); position: relative; overflow: hidden; }
   .no-print { display: flex; }
+  .print-only { display: none !important; }
 }
 @media print {
   body { background: white; padding: 0; }
@@ -181,8 +186,12 @@ export function PrintDocument({ type, document: doc, client, profile, hideToolba
 
   useEffect(() => {
     const qrData = `BALDPRO|${doc.number}|${doc.date}|${doc.total_ttc.toFixed(2)}|${currency}`;
+    /* Le QR pointe vers la page de consultation publique quand elle existe (document déjà
+       créé), pour qu'un scan l'ouvre directement — sinon (aperçu avant création) il encode
+       les mêmes données de traçabilité qu'avant, à défaut de lien exploitable. */
+    const qrContent = doc.publicUrl || qrData;
 
-    QRCode.toDataURL(qrData, { width: 88, margin: 1, color: { dark: BRAND, light: "#FFFFFF" } })
+    QRCode.toDataURL(qrContent, { width: 88, margin: 1, color: { dark: BRAND, light: "#FFFFFF" } })
       .then(setQrUrl)
       .catch(() => {});
 
@@ -557,10 +566,10 @@ export function PrintDocument({ type, document: doc, client, profile, hideToolba
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img src={profile.signature_data_url} alt="Signature de l'émetteur" style={{ height: 44, objectFit: "contain", marginTop: 4 }} />
                 ) : (
-                  <>
+                  <div className="print-only">
                     <p style={{ fontSize: 10, color: "#64748B" }}>Cachet et signature :</p>
                     <div className="sign-line" />
-                  </>
+                  </div>
                 )}
               </div>
               {/* Client */}
@@ -578,11 +587,14 @@ export function PrintDocument({ type, document: doc, client, profile, hideToolba
                     <img src={doc.signatureDataUrl} alt="Signature du client" style={{ height: 44, objectFit: "contain", marginTop: 4 }} />
                   </>
                 ) : (
-                  <>
+                  /* Tant que non signé, ces lignes vides ne concernent que la version imprimée :
+                     à l'écran, l'action se fait via le bloc interactif Signer/Refuser plus bas,
+                     pour éviter le doublon visuel entre les deux. */
+                  <div className="print-only">
                     <p style={{ fontSize: 10, color: "#64748B", marginBottom: 4 }}>Lu et approuvé, le ________________</p>
                     <p style={{ fontSize: 10, color: "#64748B" }}>Cachet et signature du client :</p>
                     <div className="sign-line" />
-                  </>
+                  </div>
                 )}
               </div>
             </div>

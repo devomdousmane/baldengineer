@@ -35,6 +35,10 @@ export default async function FacturePrintPage({ params }: { params: Promise<{ i
         paid_at: invoice.paid_at,
         notes: invoice.notes,
         terms: invoice.terms,
+        signedAt: invoice.signed_at,
+        signatureDataUrl: invoice.signature_data_url,
+        signerName: invoice.signer_name,
+        publicUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/view/factures/${invoice.public_token}`,
         lines: (invoice.lines ?? []).map((l) => ({
           position: l.position,
           description: l.description,

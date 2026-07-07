@@ -32,6 +32,10 @@ export default async function DevisPrintPage({ params }: { params: Promise<{ id:
         total_ttc: quote.total_ttc,
         notes: quote.notes,
         terms: quote.terms,
+        signedAt: quote.signed_at,
+        signatureDataUrl: quote.signature_data_url,
+        signerName: quote.signer_name,
+        publicUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/view/devis/${quote.public_token}`,
         lines: (quote.lines ?? []).map((l) => ({
           position: l.position,
           description: l.description,

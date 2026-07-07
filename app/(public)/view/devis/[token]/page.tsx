@@ -50,6 +50,7 @@ export default async function DevisPublicPage({ params }: { params: Promise<{ to
           signedAt: quote.signed_at,
           signatureDataUrl: quote.signature_data_url,
           signerName: quote.signer_name,
+          publicUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/view/devis/${token}`,
           lines: (quote.lines ?? []).map((l: { position: number; description: string; quantity: number; unit: string; unit_price: number; vat_rate: number; discount_pct: number }) => ({
             position: l.position,
             description: l.description,
