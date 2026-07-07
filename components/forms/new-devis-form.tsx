@@ -11,6 +11,7 @@ import { DocumentPreviewFrame } from "@/components/modules/document-preview-fram
 import { QuickAddClientDialog } from "@/components/modules/quick-add-client-dialog";
 import { createQuoteAction } from "@/lib/actions/quotes";
 import { defaultVatRate } from "@/lib/vat";
+import { calcTotals } from "@/lib/totals";
 import { Plus, Trash2, Eye, EyeOff, ArrowLeft, UserPlus } from "lucide-react";
 import type { Client, Market, Profile } from "@/types/database";
 
@@ -22,16 +23,6 @@ interface LineItem {
   unit_price: number;
   vat_rate: number;
   discount_pct: number;
-}
-
-function calcTotals(lines: LineItem[]) {
-  let ht = 0, vat = 0;
-  for (const l of lines) {
-    const lineHt = Math.round(l.quantity * l.unit_price * (1 - l.discount_pct / 100) * 100) / 100;
-    vat += Math.round(lineHt * l.vat_rate / 100 * 100) / 100;
-    ht += lineHt;
-  }
-  return { ht: Math.round(ht * 100) / 100, vat: Math.round(vat * 100) / 100, ttc: Math.round((ht + vat) * 100) / 100 };
 }
 
 let lineIdCounter = 1;

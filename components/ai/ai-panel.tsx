@@ -32,6 +32,7 @@ function ActionCard({ action }: { action: ProposedAction }) {
         body: JSON.stringify({
           type: action.emailType,
           resourceId: action.resourceId,
+          to: action.to ?? undefined,
           subject: action.subject,
           customMessage: action.kind === "custom_email" ? (action.extra?.message as string) : undefined,
           extra: action.extra,
