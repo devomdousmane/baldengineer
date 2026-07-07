@@ -2,10 +2,88 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, Sparkles, RotateCcw, Bot, User } from "lucide-react";
+import { X, Send, Sparkles, RotateCcw, Bot, User, Mail, Check, Loader2 } from "lucide-react";
 import { usePathname } from "next/navigation";
 
-interface Message { role: "user" | "assistant"; content: string }
+interface ProposedAction {
+  kind: "send_quote" | "send_invoice" | "payment_reminder" | "custom_email";
+  label: string;
+  emailType: string;
+  resourceId: string;
+  to: string | null;
+  subject: string;
+  preview: string;
+  extra?: Record<string, unknown>;
+}
+
+interface Message { role: "user" | "assistant"; content: string; action?: ProposedAction }
+
+const ACTION_MARKER = "\n\n<<ACTION>>";
+
+function ActionCard({ action }: { action: ProposedAction }) {
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+
+  const confirm = async () => {
+    setStatus("sending");
+    try {
+      const res = await fetch("/api/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: action.emailType,
+          resourceId: action.resourceId,
+          subject: action.subject,
+          customMessage: action.kind === "custom_email" ? (action.extra?.message as string) : undefined,
+          extra: action.extra,
+        }),
+      });
+      if (!res.ok) throw new Error();
+      setStatus("sent");
+    } catch {
+      setStatus("error");
+    }
+  };
+
+  return (
+    <div className="mt-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-2)] p-3 space-y-2">
+      <div className="flex items-center gap-2 text-xs font-semibold text-[var(--color-text)]">
+        <Mail className="w-3.5 h-3.5 text-[var(--color-accent)]" />
+        {action.label}
+      </div>
+      <p className="text-3xs text-[var(--color-text-3)] leading-relaxed">{action.preview}</p>
+      {status === "idle" && (
+        <button
+          onClick={confirm}
+          className="w-full text-xs font-medium px-3 py-1.5 rounded-[var(--radius-sm)] text-white transition-colors cursor-pointer"
+          style={{ backgroundColor: "var(--color-accent)" }}
+        >
+          Confirmer l&apos;envoi
+        </button>
+      )}
+      {status === "sending" && (
+        <div className="flex items-center justify-center gap-1.5 text-xs text-[var(--color-text-3)] py-1.5">
+          <Loader2 className="w-3.5 h-3.5 animate-spin" /> Envoi en cours…
+        </div>
+      )}
+      {status === "sent" && (
+        <div className="flex items-center justify-center gap-1.5 text-xs font-medium text-[var(--color-success)] py-1.5">
+          <Check className="w-3.5 h-3.5" /> Envoyé
+        </div>
+      )}
+      {status === "error" && (
+        <div className="space-y-1.5">
+          <p className="text-3xs text-[var(--color-danger)]">Échec de l&apos;envoi.</p>
+          <button
+            onClick={confirm}
+            className="w-full text-xs font-medium px-3 py-1.5 rounded-[var(--radius-sm)] border border-[var(--color-border-2)] text-[var(--color-text)] transition-colors cursor-pointer"
+          >
+            Réessayer
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 const QUICK_PROMPTS = [
   "Comment rédiger une relance de paiement ?",
@@ -60,19 +138,30 @@ export function AiPanel({ open, onClose, market }: AiPanelProps) {
       if (!res.ok) throw new Error("Erreur API");
       const reader = res.body!.getReader();
       const decoder = new TextDecoder();
+      let full = "";
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        const chunk = decoder.decode(value);
+        full += decoder.decode(value);
+        const visible = full.includes(ACTION_MARKER) ? full.slice(0, full.indexOf(ACTION_MARKER)) : full;
         setMessages((prev) => {
           const updated = [...prev];
-          updated[updated.length - 1] = {
-            ...updated[updated.length - 1],
-            content: updated[updated.length - 1].content + chunk,
-          };
+          updated[updated.length - 1] = { ...updated[updated.length - 1], content: visible };
           return updated;
         });
+      }
+
+      const markerIdx = full.indexOf(ACTION_MARKER);
+      if (markerIdx !== -1) {
+        try {
+          const action = JSON.parse(full.slice(markerIdx + ACTION_MARKER.length)) as ProposedAction;
+          setMessages((prev) => {
+            const updated = [...prev];
+            updated[updated.length - 1] = { ...updated[updated.length - 1], action };
+            return updated;
+          });
+        } catch { /* action mal formée — ignorée, le texte reste affiché */ }
       }
     } catch {
       setMessages((prev) => {
@@ -201,6 +290,7 @@ export function AiPanel({ open, onClose, market }: AiPanelProps) {
                         ))}
                       </span>
                     )}
+                    {msg.action && <ActionCard action={msg.action} />}
                   </div>
                 </motion.div>
               ))}

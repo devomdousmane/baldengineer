@@ -324,6 +324,35 @@ async function handlePost(req: NextRequest) {
     html = avoirEmis(tplData);
   }
 
+  /* ═══════════════════════════════════════════════════════════════════
+     CUSTOM: email libre à un client (resourceId = client.id)
+  ═══════════════════════════════════════════════════════════════════ */
+  else if (type === "custom") {
+    const { data: client } = await supabase
+      .from("clients")
+      .select("id, name, email")
+      .eq("id", resourceId)
+      .eq("user_id", user.id)
+      .single();
+
+    if (!client) return NextResponse.json({ error: "Client introuvable" }, { status: 404 });
+    if (!client.email && !toEmail) {
+      return NextResponse.json({ error: "Adresse email du client manquante" }, { status: 400 });
+    }
+
+    toEmail ||= client.email!;
+    resourceType = "client";
+    subject ||= "Message de " + baseData.companyName;
+
+    const bodyHtml = markdownToSafeHtml(customMessage ?? "");
+    html = `
+      <div style="font-family:Inter,system-ui,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#1E293B;">
+        <p style="font-size:14px;line-height:1.7;">${bodyHtml}</p>
+        <hr style="border:none;border-top:1px solid #E2E8F0;margin:24px 0;" />
+        <p style="font-size:12px;color:#94A3B8;">${baseData.companyName}${baseData.companyEmail ? ` · ${baseData.companyEmail}` : ""}${baseData.companyPhone ? ` · ${baseData.companyPhone}` : ""}</p>
+      </div>`;
+  }
+
   else {
     return NextResponse.json({ error: `Type d'email inconnu: ${type}` }, { status: 400 });
   }
