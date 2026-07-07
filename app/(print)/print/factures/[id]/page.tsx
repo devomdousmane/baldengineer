@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getInvoice } from "@/lib/actions/invoices";
 import { createClient } from "@/lib/supabase/server";
+import { getWorkspaceProfile } from "@/lib/workspace";
 import { PrintDocument } from "@/components/modules/print-document";
 import type { Profile } from "@/types/database";
 
@@ -11,8 +12,7 @@ export default async function FacturePrintPage({ params }: { params: Promise<{ i
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: profile } = await supabase
-    .from("profiles").select("*").eq("id", user!.id).single();
+  const profile = await getWorkspaceProfile(supabase, user!.id);
 
   return (
     <PrintDocument

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getWorkspaceProfile } from "@/lib/workspace";
 import { getClients } from "@/lib/actions/clients";
 import { NewFactureForm } from "@/components/forms/new-facture-form";
 import type { Market, Profile } from "@/types/database";
@@ -6,11 +7,7 @@ import type { Market, Profile } from "@/types/database";
 export default async function NewFacturePage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user!.id)
-    .single();
+  const profile = await getWorkspaceProfile(supabase, user!.id);
 
   const market = (profile?.default_market ?? "france") as Market;
   const vatRateDefault = profile?.vat_rate_default ?? 20;

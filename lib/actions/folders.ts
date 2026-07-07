@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { getWorkspaceUserId } from "@/lib/workspace";
 import type { Market, CompanyFolder } from "@/types/database";
 
 export async function getCompanyFolders(market: Market): Promise<CompanyFolder[]> {
@@ -12,7 +13,6 @@ export async function getCompanyFolders(market: Market): Promise<CompanyFolder[]
   const { data, error } = await supabase
     .from("company_folders")
     .select("*")
-    .eq("user_id", auth.user.id)
     .eq("market", market)
     .order("name", { ascending: true });
 
@@ -24,13 +24,14 @@ export async function createFolderAction(name: string, market: Market, parentId:
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) throw new Error("Non authentifié");
+  const workspaceUserId = await getWorkspaceUserId(supabase, auth.user.id);
 
   const trimmed = name.trim();
   if (!trimmed) throw new Error("Le nom du dossier est requis");
 
   const { data, error } = await supabase
     .from("company_folders")
-    .insert({ user_id: auth.user.id, market, parent_id: parentId, name: trimmed })
+    .insert({ user_id: workspaceUserId, market, parent_id: parentId, name: trimmed })
     .select("id")
     .single();
 
@@ -50,8 +51,7 @@ export async function renameFolderAction(id: string, name: string): Promise<void
   const { error } = await supabase
     .from("company_folders")
     .update({ name: trimmed })
-    .eq("id", id)
-    .eq("user_id", auth.user.id);
+    .eq("id", id);
 
   if (error) throw new Error(error.message);
   revalidatePath("/fichiers");
@@ -72,8 +72,7 @@ export async function moveFolderAction(id: string, newParentId: string | null): 
   if (newParentId) {
     const { data: allFolders, error: listErr } = await supabase
       .from("company_folders")
-      .select("id, parent_id")
-      .eq("user_id", auth.user.id);
+      .select("id, parent_id");
     if (listErr) throw new Error(listErr.message);
 
     let cursor = allFolders?.find((f) => f.id === newParentId) ?? null;
@@ -86,8 +85,7 @@ export async function moveFolderAction(id: string, newParentId: string | null): 
   const { error } = await supabase
     .from("company_folders")
     .update({ parent_id: newParentId })
-    .eq("id", id)
-    .eq("user_id", auth.user.id);
+    .eq("id", id);
 
   if (error) throw new Error(error.message);
   revalidatePath("/fichiers");
@@ -107,8 +105,7 @@ export async function deleteFolderAction(id: string): Promise<void> {
   const { error } = await supabase
     .from("company_folders")
     .delete()
-    .eq("id", id)
-    .eq("user_id", auth.user.id);
+    .eq("id", id);
 
   if (error) throw new Error(error.message);
   revalidatePath("/fichiers");

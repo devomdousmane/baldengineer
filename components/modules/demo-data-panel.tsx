@@ -4,10 +4,12 @@ import { useState, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { seedDemoDataAction, deleteDemoDataAction } from "@/lib/actions/seed";
 import { Database, Trash2, CheckCircle, AlertTriangle } from "lucide-react";
 
 type Status = "idle" | "success" | "error";
+const CONFIRM_WORD = "SUPPRIMER";
 
 export function DemoDataPanel() {
   const [isPendingSeed, startSeed] = useTransition();
@@ -17,6 +19,7 @@ export function DemoDataPanel() {
   const [seedMsg, setSeedMsg] = useState("");
   const [deleteMsg, setDeleteMsg] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
 
   const handleSeed = () => {
     setSeedStatus("idle");
@@ -34,8 +37,10 @@ export function DemoDataPanel() {
 
   const handleDelete = () => {
     if (!confirmDelete) { setConfirmDelete(true); return; }
+    if (confirmText !== CONFIRM_WORD) return;
     setDeleteStatus("idle");
     setConfirmDelete(false);
+    setConfirmText("");
     startDelete(async () => {
       try {
         await deleteDemoDataAction();
@@ -76,7 +81,14 @@ export function DemoDataPanel() {
           </ul>
         </div>
 
-        <div className="flex gap-3 flex-wrap">
+        <div className="rounded-[var(--radius-md)] border border-[var(--color-danger)]/30 bg-[var(--color-danger-dim)] p-3 text-xs text-[var(--color-danger)]">
+          <p className="font-medium">⚠ Cet espace de travail est partagé.</p>
+          <p className="mt-0.5">
+            « Supprimer toutes les données » efface irréversiblement TOUS les clients, devis, factures, missions et écritures comptables — y compris les données réelles créées par n&apos;importe quel compte, pas seulement des données de démo.
+          </p>
+        </div>
+
+        <div className="flex gap-3 flex-wrap items-start">
           <Button
             size="sm"
             variant="outline"
@@ -95,15 +107,25 @@ export function DemoDataPanel() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.15 }}
-                className="flex items-center gap-2"
+                className="flex flex-col gap-2 w-full sm:w-auto"
               >
-                <p className="text-xs text-[var(--color-danger)] font-medium">Confirmer la suppression ?</p>
-                <Button size="sm" variant="danger" loading={isPendingDelete} onClick={handleDelete}>
-                  Oui, tout supprimer
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => setConfirmDelete(false)}>
-                  Annuler
-                </Button>
+                <p className="text-xs text-[var(--color-danger)] font-medium">
+                  Tapez {CONFIRM_WORD} pour confirmer la suppression définitive de toutes les données.
+                </p>
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={confirmText}
+                    onChange={(e) => setConfirmText(e.target.value)}
+                    placeholder={CONFIRM_WORD}
+                    className="max-w-[160px]"
+                  />
+                  <Button size="sm" variant="danger" loading={isPendingDelete} disabled={confirmText !== CONFIRM_WORD} onClick={handleDelete}>
+                    Confirmer
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => { setConfirmDelete(false); setConfirmText(""); }}>
+                    Annuler
+                  </Button>
+                </div>
               </motion.div>
             ) : (
               <Button

@@ -4,6 +4,7 @@ import { generateCiiXml } from "@/lib/facturx/generate-xml";
 import { generatePdf } from "@/lib/facturx/generate-pdf";
 import { embedFacturX } from "@/lib/facturx/embed";
 import { auditLog } from "@/lib/audit";
+import { getWorkspaceProfile } from "@/lib/workspace";
 import type { FacturXData, FacturXLine } from "@/lib/facturx/types";
 import type { InvoiceLine, Profile } from "@/types/database";
 
@@ -27,7 +28,6 @@ export async function GET(
     .from("invoices")
     .select("*, client:clients(*), lines:invoice_lines(*)")
     .eq("id", id)
-    .eq("user_id", user.id)
     .order("position", { referencedTable: "invoice_lines" })
     .single();
 
@@ -37,13 +37,7 @@ export async function GET(
   }
 
   /* Profil vendeur */
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("company_name, full_name, company_address, company_city, company_zip, company_country, company_email, vat_number, company_siren, bank_iban, bank_bic, bank_name")
-    .eq("id", user.id)
-    .single();
-
-  const p = profile as Profile | null;
+  const p = await getWorkspaceProfile(supabase, user.id) as Profile | null;
   const client = invoice.client as { name: string; address?: string | null; city?: string | null; zip?: string | null; country?: string; vat_number?: string | null; siren?: string | null } | null;
 
   const lines: FacturXLine[] = (invoice.lines as InvoiceLine[]).map((l) => ({

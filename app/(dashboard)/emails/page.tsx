@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getWorkspaceProfile } from "@/lib/workspace";
 import { getEmailLogs } from "@/lib/actions/email-logs";
 import { Header } from "@/components/layout/header";
 import { EmailLogsTable } from "@/components/tables/email-logs-table";
@@ -26,8 +27,7 @@ const ASIDE_TIPS = [
 export default async function EmailsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: profile } = await supabase
-    .from("profiles").select("default_market").eq("id", user!.id).single();
+  const profile = await getWorkspaceProfile(supabase, user!.id);
 
   const market = (profile?.default_market ?? "france") as Market;
   const logs = await getEmailLogs(market);

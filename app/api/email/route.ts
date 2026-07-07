@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { sendEmail } from "@/lib/email/send";
 import { auditLog } from "@/lib/audit";
 import { markdownToSafeHtml } from "@/lib/markdown";
+import { getWorkspaceProfile } from "@/lib/workspace";
 
 const bodySchema = z.object({
   type: z.string().min(1),
@@ -56,8 +57,7 @@ async function handlePost(req: NextRequest) {
   const { type, resourceId, customMessage, extra = {} } = body;
 
   /* ── Load profile ─────────────────────────────────────────────────── */
-  const { data: profile } = await supabase
-    .from("profiles").select("*").eq("id", user.id).single();
+  const profile = await getWorkspaceProfile(supabase, user.id);
 
   if (!profile) return NextResponse.json({ error: "Profil introuvable" }, { status: 404 });
 
@@ -84,7 +84,6 @@ async function handlePost(req: NextRequest) {
       .from("quotes")
       .select("*, client:clients(*)")
       .eq("id", resourceId)
-      .eq("user_id", user.id)
       .single();
 
     if (!quote) return NextResponse.json({ error: "Devis introuvable" }, { status: 404 });
@@ -116,7 +115,7 @@ async function handlePost(req: NextRequest) {
       /* Mark as sent */
       await supabase.from("quotes")
         .update({ status: "sent", sent_at: new Date().toISOString() })
-        .eq("id", resourceId).eq("user_id", user.id);
+        .eq("id", resourceId);
     } else {
       subject ||= `Rappel : votre devis ${quote.number} expire bientôt`;
       html = devisRelance(tplData);
@@ -131,7 +130,6 @@ async function handlePost(req: NextRequest) {
       .from("invoices")
       .select("*, client:clients(*)")
       .eq("id", resourceId)
-      .eq("user_id", user.id)
       .single();
 
     if (!invoice) return NextResponse.json({ error: "Facture introuvable" }, { status: 404 });
@@ -168,7 +166,7 @@ async function handlePost(req: NextRequest) {
 
       await supabase.from("invoices")
         .update({ status: "sent", sent_at: new Date().toISOString() })
-        .eq("id", resourceId).eq("user_id", user.id);
+        .eq("id", resourceId);
     }
 
     else if (type === "relance_paiement") {
@@ -250,7 +248,6 @@ async function handlePost(req: NextRequest) {
       .from("missions")
       .select("*, client:clients(*)")
       .eq("id", resourceId)
-      .eq("user_id", user.id)
       .single();
 
     if (!mission) return NextResponse.json({ error: "Mission introuvable" }, { status: 404 });
@@ -297,7 +294,6 @@ async function handlePost(req: NextRequest) {
       .from("invoices")
       .select("*, client:clients(*)")
       .eq("id", resourceId)
-      .eq("user_id", user.id)
       .single();
 
     if (!invoice) return NextResponse.json({ error: "Facture introuvable" }, { status: 404 });
@@ -332,7 +328,6 @@ async function handlePost(req: NextRequest) {
       .from("clients")
       .select("id, name, email")
       .eq("id", resourceId)
-      .eq("user_id", user.id)
       .single();
 
     if (!client) return NextResponse.json({ error: "Client introuvable" }, { status: 404 });

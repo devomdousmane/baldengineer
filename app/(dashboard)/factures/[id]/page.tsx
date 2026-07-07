@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getInvoice } from "@/lib/actions/invoices";
 import { createClient } from "@/lib/supabase/server";
+import { getWorkspaceProfile } from "@/lib/workspace";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -57,10 +58,7 @@ export default async function FactureDetailPage({ params }: { params: Promise<{ 
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("bank_iban, bank_bic, bank_name, payment_terms_days")
-    .eq("id", user!.id).single();
+  const profile = await getWorkspaceProfile(supabase, user!.id);
 
   const cfg = statusConfig[invoice.status];
   const currency = invoice.currency;

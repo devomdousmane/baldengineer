@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient as createSupabase } from "@/lib/supabase/server";
+import { getWorkspaceUserId } from "@/lib/workspace";
 import type { Mission, MissionStatus, Market } from "@/types/database";
 
 type MissionInput = Pick<Mission,
@@ -17,7 +18,6 @@ export async function getMissions(market?: Market, status?: MissionStatus): Prom
   let q = supabase
     .from("missions")
     .select("*, client:clients(id,name,market)")
-    .eq("user_id", user.user.id)
     .order("created_at", { ascending: false });
 
   if (market) q = q.eq("market", market);
@@ -37,7 +37,6 @@ export async function getMission(id: string): Promise<Mission | null> {
     .from("missions")
     .select("*, client:clients(*)")
     .eq("id", id)
-    .eq("user_id", user.user.id)
     .single();
 
   if (error) return null;
@@ -48,10 +47,11 @@ export async function createMissionAction(payload: Omit<MissionInput, "status">)
   const supabase = await createSupabase();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) throw new Error("Non authentifié");
+  const workspaceUserId = await getWorkspaceUserId(supabase, auth.user.id);
 
   const { data, error } = await supabase
     .from("missions")
-    .insert({ ...payload, status: "pending", user_id: auth.user.id })
+    .insert({ ...payload, status: "pending", user_id: workspaceUserId })
     .select("id")
     .single();
 
@@ -68,8 +68,7 @@ export async function updateMissionStatusAction(id: string, status: MissionStatu
   const { error } = await supabase
     .from("missions")
     .update({ status })
-    .eq("id", id)
-    .eq("user_id", auth.user.id);
+    .eq("id", id);
 
   if (error) throw new Error(error.message);
   revalidatePath("/missions");
@@ -84,8 +83,7 @@ export async function updateMissionAction(id: string, payload: Partial<MissionIn
   const { error } = await supabase
     .from("missions")
     .update({ ...payload, updated_at: new Date().toISOString() })
-    .eq("id", id)
-    .eq("user_id", auth.user.id);
+    .eq("id", id);
 
   if (error) throw new Error(error.message);
   revalidatePath("/missions");
@@ -100,8 +98,7 @@ export async function deleteMissionAction(id: string): Promise<void> {
   const { error } = await supabase
     .from("missions")
     .delete()
-    .eq("id", id)
-    .eq("user_id", auth.user.id);
+    .eq("id", id);
 
   if (error) throw new Error(error.message);
   revalidatePath("/missions");

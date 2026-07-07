@@ -135,7 +135,6 @@ export async function runAiTool(
       const { data } = await supabase
         .from("clients")
         .select("id, name, email, phone, market")
-        .eq("user_id", userId)
         .ilike("name", `%${query}%`)
         .limit(10);
       if (!data || data.length === 0) return { forModel: "Aucun client trouvé." };
@@ -145,7 +144,7 @@ export async function runAiTool(
     }
 
     case "search_quotes": {
-      let q = supabase.from("quotes").select("id, number, title, status, total_ttc, currency, date, valid_until, client:clients(name)").eq("user_id", userId);
+      let q = supabase.from("quotes").select("id, number, title, status, total_ttc, currency, date, valid_until, client:clients(name)");
       if (input.status) q = q.eq("status", String(input.status));
       if (input.query) q = q.or(`number.ilike.%${input.query}%,title.ilike.%${input.query}%`);
       const { data } = await q.order("date", { ascending: false }).limit(15);
@@ -159,7 +158,7 @@ export async function runAiTool(
     }
 
     case "search_invoices": {
-      let q = supabase.from("invoices").select("id, number, title, status, total_ttc, paid_amount, currency, date, due_date, client:clients(name)").eq("user_id", userId);
+      let q = supabase.from("invoices").select("id, number, title, status, total_ttc, paid_amount, currency, date, due_date, client:clients(name)");
       if (input.status) q = q.eq("status", String(input.status));
       if (input.query) q = q.or(`number.ilike.%${input.query}%,title.ilike.%${input.query}%`);
       const { data } = await q.order("date", { ascending: false }).limit(15);
@@ -179,7 +178,6 @@ export async function runAiTool(
       const { data: quote } = await supabase
         .from("quotes")
         .select("id, number, title, total_ttc, currency, client:clients(name, email)")
-        .eq("user_id", userId)
         .or(`number.ilike.%${ref}%,id.eq.${isUuid(ref) ? ref : "00000000-0000-0000-0000-000000000000"}`)
         .limit(1)
         .maybeSingle();
@@ -207,7 +205,6 @@ export async function runAiTool(
       const { data: invoice } = await supabase
         .from("invoices")
         .select("id, number, title, total_ttc, currency, client:clients(name, email)")
-        .eq("user_id", userId)
         .or(`number.ilike.%${ref}%,id.eq.${isUuid(ref) ? ref : "00000000-0000-0000-0000-000000000000"}`)
         .limit(1)
         .maybeSingle();
@@ -236,7 +233,6 @@ export async function runAiTool(
       const { data: invoice } = await supabase
         .from("invoices")
         .select("id, number, title, total_ttc, paid_amount, currency, due_date, client:clients(name, email)")
-        .eq("user_id", userId)
         .or(`number.ilike.%${ref}%,id.eq.${isUuid(ref) ? ref : "00000000-0000-0000-0000-000000000000"}`)
         .limit(1)
         .maybeSingle();
@@ -266,7 +262,6 @@ export async function runAiTool(
       const { data: client } = await supabase
         .from("clients")
         .select("id, name, email")
-        .eq("user_id", userId)
         .ilike("name", `%${clientName}%`)
         .limit(1)
         .maybeSingle();

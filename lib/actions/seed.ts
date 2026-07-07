@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { getWorkspaceUserId } from "@/lib/workspace";
 
 const TODAY = new Date().toISOString().slice(0, 10);
 const d = (offset: number) => {
@@ -15,7 +16,7 @@ export async function seedDemoDataAction(): Promise<{ inserted: number }> {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) throw new Error("Non authentifié");
 
-  const userId = auth.user.id;
+  const userId = await getWorkspaceUserId(supabase, auth.user.id);
 
   /* ─── FRANCE clients ─── */
   const { data: clientsFR, error: cfrErr } = await supabase.from("clients").insert([
@@ -222,27 +223,27 @@ export async function seedDemoDataAction(): Promise<{ inserted: number }> {
   return { inserted: 6 + 5 + 6 + 4 + 4 + 6 };
 }
 
+/**
+ * Supprime TOUTES les données métier du workspace partagé (clients, devis, factures,
+ * missions, écritures comptables) — pas seulement celles du compte qui déclenche
+ * l'action. Il n'existe pas de distinction "démo" vs "réel" en base : dans un espace
+ * de travail partagé entre plusieurs comptes, ce bouton est donc irréversible et
+ * dangereux — l'appelant (UI) doit imposer une confirmation explicite et sans
+ * ambiguïté avant d'invoquer cette action.
+ */
 export async function deleteDemoDataAction(): Promise<void> {
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) throw new Error("Non authentifié");
 
-  const userId = auth.user.id;
-
   /* Delete in order to respect FK constraints */
-  await supabase.from("accounting_entries").delete().eq("user_id", userId);
-  await supabase.from("invoice_lines").delete().in(
-    "invoice_id",
-    (await supabase.from("invoices").select("id").eq("user_id", userId)).data?.map((r) => r.id) ?? []
-  );
-  await supabase.from("invoices").delete().eq("user_id", userId);
-  await supabase.from("quote_lines").delete().in(
-    "quote_id",
-    (await supabase.from("quotes").select("id").eq("user_id", userId)).data?.map((r) => r.id) ?? []
-  );
-  await supabase.from("quotes").delete().eq("user_id", userId);
-  await supabase.from("missions").delete().eq("user_id", userId);
-  await supabase.from("clients").delete().eq("user_id", userId);
+  await supabase.from("accounting_entries").delete().not("id", "is", null);
+  await supabase.from("invoice_lines").delete().not("id", "is", null);
+  await supabase.from("invoices").delete().not("id", "is", null);
+  await supabase.from("quote_lines").delete().not("id", "is", null);
+  await supabase.from("quotes").delete().not("id", "is", null);
+  await supabase.from("missions").delete().not("id", "is", null);
+  await supabase.from("clients").delete().not("id", "is", null);
 
   revalidatePath("/", "layout");
 }

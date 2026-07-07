@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient as createSupabase } from "@/lib/supabase/server";
+import { getWorkspaceProfile } from "@/lib/workspace";
 import type { Market } from "@/types/database";
 
 export type Period = "month" | "quarter" | "year";
@@ -82,11 +83,7 @@ export async function getDashboardData(period: Period = "month", marketParam?: M
     };
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("default_market, currency_fr, currency_gn")
-    .eq("id", user.id)
-    .single();
+  const profile = await getWorkspaceProfile(supabase, user.id);
 
   const defaultMarket = (profile?.default_market ?? "france") as Market;
   const currency = defaultMarket === "france" ? (profile?.currency_fr ?? "EUR") : (profile?.currency_gn ?? "GNF");
@@ -102,41 +99,41 @@ export async function getDashboardData(period: Period = "month", marketParam?: M
   const in7days = new Date(now.getTime() + 7 * 86400000).toISOString().slice(0, 10);
   const today = now.toISOString().slice(0, 10);
 
-  let periodRevenueQ = supabase.from("invoices").select("paid_amount").eq("user_id", user.id).eq("status", "paid").gte("paid_at", start).lte("paid_at", end);
+  let periodRevenueQ = supabase.from("invoices").select("paid_amount").eq("status", "paid").gte("paid_at", start).lte("paid_at", end);
   if (amountsMarket) periodRevenueQ = periodRevenueQ.eq("market", amountsMarket);
 
-  let yearRevenueQ = supabase.from("invoices").select("paid_amount").eq("user_id", user.id).eq("status", "paid").gte("paid_at", `${year}-01-01`);
+  let yearRevenueQ = supabase.from("invoices").select("paid_amount").eq("status", "paid").gte("paid_at", `${year}-01-01`);
   if (amountsMarket) yearRevenueQ = yearRevenueQ.eq("market", amountsMarket);
 
-  let quotesQ = supabase.from("quotes").select("total_ttc").eq("user_id", user.id).in("status", ["draft", "sent"]);
+  let quotesQ = supabase.from("quotes").select("total_ttc").in("status", ["draft", "sent"]);
   if (amountsMarket) quotesQ = quotesQ.eq("market", amountsMarket);
 
-  let unpaidQ = supabase.from("invoices").select("total_ttc, paid_amount").eq("user_id", user.id).in("status", ["sent", "partial"]);
+  let unpaidQ = supabase.from("invoices").select("total_ttc, paid_amount").in("status", ["sent", "partial"]);
   if (amountsMarket) unpaidQ = unpaidQ.eq("market", amountsMarket);
 
-  let overdueQ = supabase.from("invoices").select("total_ttc, paid_amount").eq("user_id", user.id).eq("status", "overdue");
+  let overdueQ = supabase.from("invoices").select("total_ttc, paid_amount").eq("status", "overdue");
   if (amountsMarket) overdueQ = overdueQ.eq("market", amountsMarket);
 
-  let missionsQ = supabase.from("missions").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("status", "active");
+  let missionsQ = supabase.from("missions").select("id", { count: "exact", head: true }).eq("status", "active");
   if (marketFilter) missionsQ = missionsQ.eq("market", marketFilter);
 
-  let clientsQ = supabase.from("clients").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("is_active", true);
+  let clientsQ = supabase.from("clients").select("id", { count: "exact", head: true }).eq("is_active", true);
   if (marketFilter) clientsQ = clientsQ.eq("market", marketFilter);
 
-  let allPaidQ = supabase.from("invoices").select("total_ttc, paid_amount").eq("user_id", user.id).in("status", ["paid", "partial"]);
+  let allPaidQ = supabase.from("invoices").select("total_ttc, paid_amount").in("status", ["paid", "partial"]);
   if (amountsMarket) allPaidQ = allPaidQ.eq("market", amountsMarket);
 
-  let recentQ = supabase.from("invoices").select("id, number, total_ttc, status, date, client_id").eq("user_id", user.id).order("created_at", { ascending: false }).limit(6);
+  let recentQ = supabase.from("invoices").select("id, number, total_ttc, status, date, client_id").order("created_at", { ascending: false }).limit(6);
   if (marketFilter) recentQ = recentQ.eq("market", marketFilter);
 
-  let decidedQuotesQ = supabase.from("quotes").select("id", { count: "exact", head: true }).eq("user_id", user.id).in("status", ["accepted", "refused", "expired"]);
+  let decidedQuotesQ = supabase.from("quotes").select("id", { count: "exact", head: true }).in("status", ["accepted", "refused", "expired"]);
   if (marketFilter) decidedQuotesQ = decidedQuotesQ.eq("market", marketFilter);
 
-  let acceptedQuotesQ = supabase.from("quotes").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("status", "accepted");
+  let acceptedQuotesQ = supabase.from("quotes").select("id", { count: "exact", head: true }).eq("status", "accepted");
   if (marketFilter) acceptedQuotesQ = acceptedQuotesQ.eq("market", marketFilter);
 
   let upcomingMissionsQ = supabase.from("missions").select("id, title, start_date, end_date, client_id")
-    .eq("user_id", user.id).eq("status", "active")
+    .eq("status", "active")
     .or(`and(start_date.gte.${today},start_date.lte.${in7days}),and(end_date.gte.${today},end_date.lte.${in7days})`);
   if (marketFilter) upcomingMissionsQ = upcomingMissionsQ.eq("market", marketFilter);
 
@@ -192,7 +189,6 @@ export async function getDashboardData(period: Period = "month", marketParam?: M
   let chartQ = supabase
     .from("invoices")
     .select("paid_amount, paid_at, market")
-    .eq("user_id", user.id)
     .eq("status", "paid")
     .gte("paid_at", `${year}-01-01`)
     .lte("paid_at", `${year}-12-31`);
@@ -213,7 +209,7 @@ export async function getDashboardData(period: Period = "month", marketParam?: M
     .map(([month, v]) => ({ month, france: v.france, guinee: v.guinee }));
 
   /* Répartition des factures par statut (filtrée par marché) */
-  let statusBreakdownQ = supabase.from("invoices").select("status, total_ttc").eq("user_id", user.id);
+  let statusBreakdownQ = supabase.from("invoices").select("status, total_ttc");
   if (marketFilter) statusBreakdownQ = statusBreakdownQ.eq("market", marketFilter);
   const { data: statusRaw } = await statusBreakdownQ;
 
@@ -227,7 +223,7 @@ export async function getDashboardData(period: Period = "month", marketParam?: M
   const invoiceStatusBreakdown = Array.from(statusMap.entries()).map(([status, v]) => ({ status, ...v }));
 
   /* Répartition des devis par statut (filtrée par marché) */
-  let quoteStatusQ = supabase.from("quotes").select("status, total_ttc").eq("user_id", user.id);
+  let quoteStatusQ = supabase.from("quotes").select("status, total_ttc");
   if (marketFilter) quoteStatusQ = quoteStatusQ.eq("market", marketFilter);
   const { data: quoteStatusRaw } = await quoteStatusQ;
 

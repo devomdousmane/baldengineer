@@ -24,7 +24,6 @@ export async function getNotificationsAction(): Promise<AppNotification[]> {
     supabase
       .from("invoices")
       .select("id, number, client:clients(name), total_ttc, currency, due_date")
-      .eq("user_id", auth.user.id)
       .eq("status", "overdue")
       .order("due_date", { ascending: true })
       .limit(5),
@@ -33,7 +32,6 @@ export async function getNotificationsAction(): Promise<AppNotification[]> {
     supabase
       .from("quotes")
       .select("id, number, client:clients(name), valid_until")
-      .eq("user_id", auth.user.id)
       .eq("status", "sent")
       .gte("valid_until", today)
       .lte("valid_until", in7days)
@@ -44,7 +42,6 @@ export async function getNotificationsAction(): Promise<AppNotification[]> {
     supabase
       .from("invoices")
       .select("id, number, client:clients(name), total_ttc, currency, due_date")
-      .eq("user_id", auth.user.id)
       .eq("status", "sent")
       .lt("due_date", today)
       .order("due_date", { ascending: true })

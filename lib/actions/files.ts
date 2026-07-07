@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { auditLog } from "@/lib/audit";
+import { getWorkspaceUserId } from "@/lib/workspace";
 import type { Market, CompanyFile, FileCategory } from "@/types/database";
 
 const BUCKET = "company-files";
@@ -15,7 +16,6 @@ export async function getCompanyFiles(market?: Market): Promise<CompanyFile[]> {
   let query = supabase
     .from("company_files")
     .select("*")
-    .eq("user_id", auth.user.id)
     .order("created_at", { ascending: false });
   if (market) query = query.eq("market", market);
 
@@ -28,6 +28,7 @@ export async function uploadCompanyFileAction(formData: FormData): Promise<{ id:
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) throw new Error("Non authentifié");
+  const workspaceUserId = await getWorkspaceUserId(supabase, auth.user.id);
 
   const file = formData.get("file") as File | null;
   if (!file) throw new Error("Aucun fichier fourni");
@@ -37,7 +38,7 @@ export async function uploadCompanyFileAction(formData: FormData): Promise<{ id:
   const folderId = (formData.get("folder_id") as string | null) || null;
 
   const ext = file.name.split(".").pop();
-  const storagePath = `${auth.user.id}/${crypto.randomUUID()}${ext ? `.${ext}` : ""}`;
+  const storagePath = `${workspaceUserId}/${crypto.randomUUID()}${ext ? `.${ext}` : ""}`;
 
   const { error: uploadErr } = await supabase.storage
     .from(BUCKET)
@@ -47,7 +48,7 @@ export async function uploadCompanyFileAction(formData: FormData): Promise<{ id:
   const { data, error } = await supabase
     .from("company_files")
     .insert({
-      user_id: auth.user.id,
+      user_id: workspaceUserId,
       market,
       folder_id: folderId,
       storage_path: storagePath,
@@ -79,7 +80,6 @@ export async function getCompanyFileUrlAction(id: string): Promise<string> {
     .from("company_files")
     .select("storage_path")
     .eq("id", id)
-    .eq("user_id", auth.user.id)
     .single();
   if (fileErr || !file) throw new Error("Fichier introuvable");
 
@@ -101,8 +101,7 @@ export async function renameCompanyFileAction(id: string, fileName: string): Pro
   const { error } = await supabase
     .from("company_files")
     .update({ file_name: trimmed })
-    .eq("id", id)
-    .eq("user_id", auth.user.id);
+    .eq("id", id);
 
   if (error) throw new Error(error.message);
   revalidatePath("/fichiers");
@@ -112,17 +111,17 @@ export async function copyCompanyFileAction(id: string, folderId: string | null)
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) throw new Error("Non authentifié");
+  const workspaceUserId = await getWorkspaceUserId(supabase, auth.user.id);
 
   const { data: source, error: sourceErr } = await supabase
     .from("company_files")
     .select("*")
     .eq("id", id)
-    .eq("user_id", auth.user.id)
     .single();
   if (sourceErr || !source) throw new Error("Fichier introuvable");
 
   const ext = source.file_name.split(".").pop();
-  const newStoragePath = `${auth.user.id}/${crypto.randomUUID()}${ext ? `.${ext}` : ""}`;
+  const newStoragePath = `${workspaceUserId}/${crypto.randomUUID()}${ext ? `.${ext}` : ""}`;
 
   const { error: copyErr } = await supabase.storage
     .from(BUCKET)
@@ -132,7 +131,7 @@ export async function copyCompanyFileAction(id: string, folderId: string | null)
   const { data, error } = await supabase
     .from("company_files")
     .insert({
-      user_id: auth.user.id,
+      user_id: workspaceUserId,
       market: source.market,
       folder_id: folderId,
       storage_path: newStoragePath,
@@ -162,8 +161,7 @@ export async function moveCompanyFileAction(id: string, folderId: string | null)
   const { error } = await supabase
     .from("company_files")
     .update({ folder_id: folderId })
-    .eq("id", id)
-    .eq("user_id", auth.user.id);
+    .eq("id", id);
 
   if (error) throw new Error(error.message);
   revalidatePath("/fichiers");
@@ -178,7 +176,6 @@ export async function deleteCompanyFileAction(id: string): Promise<void> {
     .from("company_files")
     .select("storage_path")
     .eq("id", id)
-    .eq("user_id", auth.user.id)
     .single();
   if (fileErr || !file) throw new Error("Fichier introuvable");
 
@@ -187,8 +184,7 @@ export async function deleteCompanyFileAction(id: string): Promise<void> {
   const { error } = await supabase
     .from("company_files")
     .delete()
-    .eq("id", id)
-    .eq("user_id", auth.user.id);
+    .eq("id", id);
   if (error) throw new Error(error.message);
 
   auditLog({ action: "file.deleted", user_id: auth.user.id, resource_id: id, resource_type: "company_file" });

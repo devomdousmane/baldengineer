@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient as createSupabase } from "@/lib/supabase/server";
 import { auditLog } from "@/lib/audit";
+import { getWorkspaceUserId } from "@/lib/workspace";
 import type { Quote, QuoteLine, QuoteStatus, Market } from "@/types/database";
 
 type LineInput = Pick<QuoteLine,
@@ -32,7 +33,6 @@ export async function getQuotes(market?: Market, status?: QuoteStatus): Promise<
   let q = supabase
     .from("quotes")
     .select("*, client:clients(id,name,email,market)")
-    .eq("user_id", user.user.id)
     .order("created_at", { ascending: false });
 
   if (market) q = q.eq("market", market);
@@ -52,7 +52,6 @@ export async function getQuote(id: string): Promise<QuoteWithLines | null> {
     .from("quotes")
     .select("*, client:clients(*), lines:quote_lines(*)")
     .eq("id", id)
-    .eq("user_id", user.user.id)
     .order("position", { referencedTable: "quote_lines" })
     .single();
 
@@ -76,14 +75,17 @@ function calcTotals(lines: LineInput[]): { subtotal_ht: number; total_vat: numbe
   };
 }
 
-async function nextQuoteNumber(supabase: Awaited<ReturnType<typeof createSupabase>>, userId: string, market: Market): Promise<string> {
+/* Le compteur de numérotation vit sur le profil d'entreprise partagé (workspaceUserId),
+   jamais sur le compte du créateur — sinon deux comptes distincts généreraient chacun
+   leur propre séquence et produiraient des numéros de document en double. */
+async function nextQuoteNumber(supabase: Awaited<ReturnType<typeof createSupabase>>, workspaceUserId: string, market: Market): Promise<string> {
   const col = market === "france" ? "quote_counter_fr" : "quote_counter_gn";
   const pfxCol = market === "france" ? "quote_prefix_fr" : "quote_prefix_gn";
 
   const { data } = await supabase
     .from("profiles")
     .select(`${col}, ${pfxCol}`)
-    .eq("id", userId)
+    .eq("id", workspaceUserId)
     .single();
 
   if (!data) throw new Error("Profil introuvable");
@@ -92,7 +94,7 @@ async function nextQuoteNumber(supabase: Awaited<ReturnType<typeof createSupabas
   const prefix: string = (data as Record<string, string>)[pfxCol];
   const number = `${prefix}${String(counter).padStart(4, "0")}`;
 
-  await supabase.from("profiles").update({ [col]: counter + 1 }).eq("id", userId);
+  await supabase.from("profiles").update({ [col]: counter + 1 }).eq("id", workspaceUserId);
   return number;
 }
 
@@ -100,15 +102,16 @@ export async function createQuoteAction(payload: QuoteInput): Promise<{ id: stri
   const supabase = await createSupabase();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) throw new Error("Non authentifié");
+  const workspaceUserId = await getWorkspaceUserId(supabase, auth.user.id);
 
-  const number = await nextQuoteNumber(supabase, auth.user.id, payload.market);
+  const number = await nextQuoteNumber(supabase, workspaceUserId, payload.market);
   const currency = payload.market === "france" ? "EUR" : "GNF";
   const totals = calcTotals(payload.lines);
 
   const { data: quote, error: qErr } = await supabase
     .from("quotes")
     .insert({
-      user_id: auth.user.id,
+      user_id: workspaceUserId,
       client_id: payload.client_id,
       market: payload.market,
       number,
@@ -155,8 +158,7 @@ export async function updateQuoteStatusAction(id: string, status: QuoteStatus): 
   const { error } = await supabase
     .from("quotes")
     .update({ status, ...extra })
-    .eq("id", id)
-    .eq("user_id", auth.user.id);
+    .eq("id", id);
 
   if (error) throw new Error(error.message);
   revalidatePath("/devis");
@@ -196,8 +198,7 @@ export async function convertQuoteToInvoiceAction(quoteId: string): Promise<{ in
   await supabase
     .from("quotes")
     .update({ converted_to_invoice_id: invoiceId, status: "accepted" })
-    .eq("id", quoteId)
-    .eq("user_id", auth.user.id);
+    .eq("id", quoteId);
 
   revalidatePath("/devis");
   revalidatePath("/factures");

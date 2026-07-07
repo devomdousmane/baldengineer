@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient as createSupabase } from "@/lib/supabase/server";
 import { auditLog } from "@/lib/audit";
+import { getWorkspaceUserId } from "@/lib/workspace";
 import type { Invoice, InvoiceLine, InvoiceStatus, Market, PaymentMethod } from "@/types/database";
 
 type LineInput = Pick<InvoiceLine,
@@ -33,7 +34,6 @@ export async function getInvoices(market?: Market, status?: InvoiceStatus): Prom
   let q = supabase
     .from("invoices")
     .select("*, client:clients(id,name,email,market)")
-    .eq("user_id", user.user.id)
     .order("date", { ascending: false });
 
   if (market) q = q.eq("market", market);
@@ -53,7 +53,6 @@ export async function getInvoice(id: string): Promise<InvoiceWithLines | null> {
     .from("invoices")
     .select("*, client:clients(*), lines:invoice_lines(*)")
     .eq("id", id)
-    .eq("user_id", user.user.id)
     .order("position", { referencedTable: "invoice_lines" })
     .single();
 
@@ -77,14 +76,17 @@ function calcTotals(lines: LineInput[]): { subtotal_ht: number; total_vat: numbe
   };
 }
 
-async function nextInvoiceNumber(supabase: Awaited<ReturnType<typeof createSupabase>>, userId: string, market: Market): Promise<string> {
+/* Le compteur de numérotation vit sur le profil d'entreprise partagé (workspaceUserId),
+   jamais sur le compte du créateur — sinon deux comptes distincts généreraient chacun
+   leur propre séquence et produiraient des numéros de document en double. */
+async function nextInvoiceNumber(supabase: Awaited<ReturnType<typeof createSupabase>>, workspaceUserId: string, market: Market): Promise<string> {
   const col = market === "france" ? "invoice_counter_fr" : "invoice_counter_gn";
   const pfxCol = market === "france" ? "invoice_prefix_fr" : "invoice_prefix_gn";
 
   const { data } = await supabase
     .from("profiles")
     .select(`${col}, ${pfxCol}`)
-    .eq("id", userId)
+    .eq("id", workspaceUserId)
     .single();
 
   if (!data) throw new Error("Profil introuvable");
@@ -93,7 +95,7 @@ async function nextInvoiceNumber(supabase: Awaited<ReturnType<typeof createSupab
   const prefix: string = (data as Record<string, string>)[pfxCol];
   const number = `${prefix}${String(counter).padStart(4, "0")}`;
 
-  await supabase.from("profiles").update({ [col]: counter + 1 }).eq("id", userId);
+  await supabase.from("profiles").update({ [col]: counter + 1 }).eq("id", workspaceUserId);
   return number;
 }
 
@@ -101,8 +103,9 @@ export async function createInvoiceAction(payload: InvoiceInput): Promise<{ id: 
   const supabase = await createSupabase();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) throw new Error("Non authentifié");
+  const workspaceUserId = await getWorkspaceUserId(supabase, auth.user.id);
 
-  const number = await nextInvoiceNumber(supabase, auth.user.id, payload.market);
+  const number = await nextInvoiceNumber(supabase, workspaceUserId, payload.market);
   const currency = payload.market === "france" ? "EUR" : "GNF";
   const totals = calcTotals(payload.lines);
 
@@ -114,7 +117,7 @@ export async function createInvoiceAction(payload: InvoiceInput): Promise<{ id: 
   const { data: invoice, error: iErr } = await supabase
     .from("invoices")
     .insert({
-      user_id: auth.user.id,
+      user_id: workspaceUserId,
       client_id: payload.client_id,
       quote_id: payload.quote_id ?? null,
       market: payload.market,
@@ -152,6 +155,7 @@ export async function markInvoicePaidAction(
   const supabase = await createSupabase();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) throw new Error("Non authentifié");
+  const workspaceUserId = await getWorkspaceUserId(supabase, auth.user.id);
 
   const invoice = await getInvoice(id);
   if (!invoice) throw new Error("Facture introuvable");
@@ -167,14 +171,13 @@ export async function markInvoicePaidAction(
       payment_method: method,
       paid_at: status === "paid" ? new Date().toISOString() : null,
     })
-    .eq("id", id)
-    .eq("user_id", auth.user.id);
+    .eq("id", id);
 
   if (error) throw new Error(error.message);
 
   /* Create accounting entry */
   await supabase.from("accounting_entries").insert({
-    user_id: auth.user.id,
+    user_id: workspaceUserId,
     market: invoice.market,
     type: "income",
     category: "facturation",
@@ -201,8 +204,7 @@ export async function updateInvoiceStatusAction(id: string, status: InvoiceStatu
   const { error } = await supabase
     .from("invoices")
     .update({ status, ...extra })
-    .eq("id", id)
-    .eq("user_id", auth.user.id);
+    .eq("id", id);
 
   if (error) throw new Error(error.message);
   revalidatePath("/factures");
@@ -223,8 +225,7 @@ export async function submitFacturXAction(invoiceId: string): Promise<void> {
   const { error } = await supabase
     .from("invoices")
     .update({ facturx_status: "pending" })
-    .eq("id", invoiceId)
-    .eq("user_id", auth.user.id);
+    .eq("id", invoiceId);
 
   if (error) throw new Error(error.message);
   revalidatePath(`/factures/${invoiceId}`);

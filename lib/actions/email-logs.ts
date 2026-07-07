@@ -37,7 +37,6 @@ export async function getEmailLogs(market?: Market): Promise<EmailLogEntry[]> {
   const { data: logs, error } = await supabase
     .from("email_logs")
     .select("*")
-    .eq("user_id", user.user.id)
     .in("type", DOC_TYPES)
     .order("created_at", { ascending: false })
     .limit(200);

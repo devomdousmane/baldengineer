@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { getWorkspaceUserId } from "@/lib/workspace";
 import type { Market } from "@/types/database";
 
 interface AccountingEntryInput {
@@ -20,11 +21,12 @@ export async function createAccountingEntryAction(payload: AccountingEntryInput)
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) throw new Error("Non authentifié");
+  const workspaceUserId = await getWorkspaceUserId(supabase, auth.user.id);
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("currency_fr, currency_gn")
-    .eq("id", auth.user.id)
+    .eq("id", workspaceUserId)
     .single();
 
   const currency = payload.market === "france"
@@ -32,7 +34,7 @@ export async function createAccountingEntryAction(payload: AccountingEntryInput)
     : (profile?.currency_gn ?? "GNF");
 
   const { error } = await supabase.from("accounting_entries").insert({
-    user_id: auth.user.id,
+    user_id: workspaceUserId,
     market: payload.market,
     type: payload.type,
     category: payload.category,
@@ -57,8 +59,7 @@ export async function deleteAccountingEntryAction(id: string): Promise<void> {
   const { error } = await supabase
     .from("accounting_entries")
     .delete()
-    .eq("id", id)
-    .eq("user_id", auth.user.id);
+    .eq("id", id);
 
   if (error) throw new Error(error.message);
   revalidatePath("/comptabilite");

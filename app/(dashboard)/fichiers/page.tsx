@@ -1,6 +1,7 @@
 import { getCompanyFiles } from "@/lib/actions/files";
 import { getCompanyFolders } from "@/lib/actions/folders";
 import { createClient } from "@/lib/supabase/server";
+import { getWorkspaceProfile } from "@/lib/workspace";
 import { Header } from "@/components/layout/header";
 import { FilesTable } from "@/components/tables/files-table";
 import { FilesActions } from "@/components/modules/files-actions";
@@ -33,8 +34,7 @@ function fmtSize(bytes: number): string {
 export default async function FichiersPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: profile } = await supabase
-    .from("profiles").select("default_market").eq("id", user!.id).single();
+  const profile = await getWorkspaceProfile(supabase, user!.id);
 
   const market = (profile?.default_market ?? "france") as Market;
   const [files, folders] = await Promise.all([

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient as createSupabase } from "@/lib/supabase/server";
+import { getWorkspaceUserId } from "@/lib/workspace";
 import type { Client, Market } from "@/types/database";
 
 type ClientInsert = Pick<Client,
@@ -18,7 +19,6 @@ export async function getClients(market?: Market): Promise<Client[]> {
   let q = supabase
     .from("clients")
     .select("*")
-    .eq("user_id", user.user.id)
     .eq("is_active", true)
     .order("name");
 
@@ -38,7 +38,6 @@ export async function getClient(id: string): Promise<Client | null> {
     .from("clients")
     .select("*")
     .eq("id", id)
-    .eq("user_id", user.user.id)
     .single();
 
   if (error) return null;
@@ -49,10 +48,11 @@ export async function createClientAction(payload: ClientInsert): Promise<{ id: s
   const supabase = await createSupabase();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) throw new Error("Non authentifié");
+  const workspaceUserId = await getWorkspaceUserId(supabase, auth.user.id);
 
   const { data, error } = await supabase
     .from("clients")
-    .insert({ ...payload, user_id: auth.user.id })
+    .insert({ ...payload, user_id: workspaceUserId })
     .select("id")
     .single();
 
@@ -69,8 +69,7 @@ export async function updateClientAction(id: string, payload: Partial<ClientInse
   const { error } = await supabase
     .from("clients")
     .update(payload)
-    .eq("id", id)
-    .eq("user_id", auth.user.id);
+    .eq("id", id);
 
   if (error) throw new Error(error.message);
   revalidatePath("/clients");
@@ -85,8 +84,7 @@ export async function archiveClientAction(id: string): Promise<void> {
   const { error } = await supabase
     .from("clients")
     .update({ is_active: false })
-    .eq("id", id)
-    .eq("user_id", auth.user.id);
+    .eq("id", id);
 
   if (error) throw new Error(error.message);
   revalidatePath("/clients");

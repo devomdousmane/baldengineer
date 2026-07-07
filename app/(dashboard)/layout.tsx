@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getWorkspaceProfile } from "@/lib/workspace";
 import { SidebarWrapper } from "@/components/layout/sidebar-wrapper";
 import { SidebarProvider } from "@/components/layout/sidebar-context";
 import { MainContent } from "@/components/layout/main-content";
@@ -10,11 +11,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, avatar_url, default_market")
-    .eq("id", user.id)
-    .single();
+  const profile = await getWorkspaceProfile(supabase, user.id);
 
   return (
     <SidebarProvider>

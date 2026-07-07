@@ -1,5 +1,6 @@
 import { getMissions } from "@/lib/actions/missions";
 import { createClient } from "@/lib/supabase/server";
+import { getWorkspaceProfile } from "@/lib/workspace";
 import { Header } from "@/components/layout/header";
 import { MissionsTable } from "@/components/tables/missions-table";
 import { PageWrapper } from "@/components/layout/page-wrapper";
@@ -28,8 +29,7 @@ const ASIDE_TIPS = [
 export default async function MissionsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: profile } = await supabase
-    .from("profiles").select("default_market, currency_fr, currency_gn").eq("id", user!.id).single();
+  const profile = await getWorkspaceProfile(supabase, user!.id);
 
   const market = (profile?.default_market ?? "france") as Market;
   const currency = market === "france" ? (profile?.currency_fr ?? "EUR") : (profile?.currency_gn ?? "GNF");

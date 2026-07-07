@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { getWorkspaceUserId } from "@/lib/workspace";
 import { auditLog } from "@/lib/audit";
 import type { Profile, Market } from "@/types/database";
 
@@ -17,11 +18,12 @@ export async function updateProfileAction(payload: ProfileUpdate): Promise<void>
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Non authentifié");
+  const workspaceUserId = await getWorkspaceUserId(supabase, user.id);
 
   const { error } = await supabase
     .from("profiles")
     .update({ ...payload, updated_at: new Date().toISOString() })
-    .eq("id", user.id);
+    .eq("id", workspaceUserId);
 
   if (error) throw new Error(error.message);
   auditLog({ action: "settings.updated", user_id: user.id });
@@ -32,11 +34,12 @@ export async function updateDefaultMarketAction(market: Market): Promise<void> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Non authentifié");
+  const workspaceUserId = await getWorkspaceUserId(supabase, user.id);
 
   const { error } = await supabase
     .from("profiles")
     .update({ default_market: market, updated_at: new Date().toISOString() })
-    .eq("id", user.id);
+    .eq("id", workspaceUserId);
 
   if (error) throw new Error(error.message);
   revalidatePath("/", "layout");
@@ -46,11 +49,12 @@ export async function updateSignatureAction(dataUrl: string | null): Promise<voi
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Non authentifié");
+  const workspaceUserId = await getWorkspaceUserId(supabase, user.id);
 
   const { error } = await supabase
     .from("profiles")
     .update({ signature_data_url: dataUrl, updated_at: new Date().toISOString() })
-    .eq("id", user.id);
+    .eq("id", workspaceUserId);
 
   if (error) throw new Error(error.message);
   auditLog({ action: "settings.updated", user_id: user.id });
