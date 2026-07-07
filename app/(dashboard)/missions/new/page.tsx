@@ -195,7 +195,7 @@ export default function NewMissionPage() {
                   </div>
                 )}
                 {clientMode === "external" && (
-                  <p className="text-[11px] text-[var(--color-text-3)] -mt-2">
+                  <p className="text-2xs text-[var(--color-text-3)] -mt-2">
                     Une fiche client sera créée automatiquement, réutilisable ensuite pour des devis/factures.
                   </p>
                 )}

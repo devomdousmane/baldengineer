@@ -7,6 +7,8 @@ import { DataTable, type Column } from "@/components/ui/data-table";
 import { ViewToggle, type ViewMode } from "@/components/ui/view-toggle";
 import { ListToolbar } from "@/components/ui/list-toolbar";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import { useDebouncedValue } from "@/lib/use-debounced-value";
 import { updateMissionStatusAction } from "@/lib/actions/missions";
 import { Briefcase, Calendar, TrendingUp, ArrowRight, CheckCircle2, Clock, XCircle, PlayCircle, Edit2 } from "lucide-react";
 import type { Mission, MissionStatus } from "@/types/database";
@@ -100,7 +102,7 @@ function MissionCard({
       <p className={`font-semibold text-[var(--color-text)] mb-1 truncate ${compact ? "text-xs" : "text-sm"}`}>
         {mission.title}
       </p>
-      <p className={`text-[var(--color-text-2)] mb-3 truncate ${compact ? "text-[10px]" : "text-xs"}`}>
+      <p className={`text-[var(--color-text-2)] mb-3 truncate ${compact ? "text-3xs" : "text-xs"}`}>
         {(mission.client as { name?: string })?.name ?? "—"}
       </p>
       <div className="space-y-1.5 border-t border-[var(--color-border)] pt-3">
@@ -126,6 +128,7 @@ function MissionCard({
 
 /* ── Grid ── */
 function MissionGrid({ missions, fmt, onEdit }: { missions: Mission[]; fmt: (n: number) => string; onEdit: (id: string) => void }) {
+  if (missions.length === 0) return <EmptyState message="Aucune mission" />;
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {missions.map((m, i) => (
@@ -139,6 +142,7 @@ function MissionGrid({ missions, fmt, onEdit }: { missions: Mission[]; fmt: (n: 
 
 /* ── List ── */
 function MissionList({ missions, fmt, onEdit }: { missions: Mission[]; fmt: (n: number) => string; onEdit: (id: string) => void }) {
+  if (missions.length === 0) return <EmptyState message="Aucune mission" />;
   return (
     <div className="space-y-1.5">
       {missions.map((m, i) => {
@@ -268,14 +272,16 @@ export function MissionsTable({ missions, currency }: { missions: Mission[]; cur
 
   const onEdit = (id: string) => router.push(`/missions/${id}`);
 
+  const debouncedSearch = useDebouncedValue(search);
+
   const searched = useMemo(() => {
-    if (!search.trim()) return missions;
-    const q = search.toLowerCase();
+    if (!debouncedSearch.trim()) return missions;
+    const q = debouncedSearch.toLowerCase();
     return missions.filter((m) => {
       const hay = `${m.title} ${(m.client as { name?: string })?.name ?? ""}`.toLowerCase();
       return hay.includes(q);
     });
-  }, [missions, search]);
+  }, [missions, debouncedSearch]);
 
   /* Le kanban groupe déjà par statut — le filtre de statut ne s'applique qu'aux autres vues. */
   const filtered = useMemo(() => {

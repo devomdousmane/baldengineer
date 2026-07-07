@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Send, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MarkdownEditor } from "@/components/ui/markdown-editor";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 
 export interface EmailDialogConfig {
   type: string;
@@ -41,6 +42,9 @@ export function EmailDialog({ open, onClose, config, onSent }: EmailDialogProps)
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useFocusTrap(dialogRef, { open, onEscape: () => { if (!isPending) onClose(); } });
 
   const send = () => {
     if (!to.trim()) { setError("L'adresse email est requise"); return; }
@@ -89,6 +93,7 @@ export function EmailDialog({ open, onClose, config, onSent }: EmailDialogProps)
           onClick={onClose}
         >
           <motion.div
+            ref={dialogRef}
             key="dialog"
             initial={{ opacity: 0, scale: 0.95, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -108,7 +113,7 @@ export function EmailDialog({ open, onClose, config, onSent }: EmailDialogProps)
                 </div>
                 <div className="min-w-0">
                   <h2 className="text-sm font-semibold text-[var(--color-text)]">Envoyer par email</h2>
-                  <p className="text-[11px] text-[var(--color-text-3)] truncate">{config.defaultSubject}</p>
+                  <p className="text-2xs text-[var(--color-text-3)] truncate">{config.defaultSubject}</p>
                 </div>
               </div>
               <button
@@ -167,10 +172,12 @@ export function EmailDialog({ open, onClose, config, onSent }: EmailDialogProps)
               {config.showProgress && (
                 <div className="space-y-3 pt-1">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-medium text-[var(--color-text-2)]">
+                    <label htmlFor="progress-pct" className="text-xs font-medium text-[var(--color-text-2)]">
                       Avancement ({progressPct}%)
                     </label>
                     <input
+                      id="progress-pct"
+                      aria-label={`Avancement (${progressPct}%)`}
                       type="range" min="0" max="100" step="5"
                       value={progressPct}
                       onChange={(e) => setProgressPct(e.target.value)}

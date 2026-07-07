@@ -177,6 +177,28 @@ export default function AidePage() {
   return (
     <>
       <Header title="Aide & documentation" subtitle="Tout comprendre sur BaldPro" />
+
+      {/* Sommaire mobile/tablette — le sommaire sticky de l'aside n'est visible qu'à partir de lg */}
+      <nav
+        className="lg:hidden sticky top-[var(--header-height)] z-[calc(var(--z-header)-1)] flex gap-1.5 overflow-x-auto px-4 py-2.5 border-b border-[var(--color-border)] bg-[var(--color-card)]/90 backdrop-blur-sm"
+        aria-label="Sommaire"
+      >
+        {SECTIONS.map((s) => (
+          <button
+            key={s.id}
+            onClick={() => scrollTo(s.id)}
+            className={`shrink-0 flex items-center gap-1.5 px-3 h-8 rounded-full text-xs whitespace-nowrap transition-colors duration-[var(--dur-fast)] cursor-pointer ${
+              activeId === s.id
+                ? "bg-[var(--color-accent-dim)] text-[var(--color-accent)] font-medium"
+                : "bg-[var(--color-bg-2)] text-[var(--color-text-2)]"
+            }`}
+          >
+            <span className="shrink-0">{s.icon}</span>
+            <span>{s.title}</span>
+          </button>
+        ))}
+      </nav>
+
       <PageWrapper
         aside={
           <motion.aside

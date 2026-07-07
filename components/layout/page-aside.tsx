@@ -163,7 +163,7 @@ function AsideContent({
               <ChevronRight className="w-3 h-3 shrink-0 text-[var(--color-accent)]" />
               <p className="text-xs font-semibold text-[var(--color-text)] font-heading">{tip.title}</p>
             </div>
-            <p className="text-[11px] text-[var(--color-text-2)] leading-snug pl-[18px]">{tip.body}</p>
+            <p className="text-2xs text-[var(--color-text-2)] leading-snug pl-[18px]">{tip.body}</p>
           </motion.div>
         ))}
       </div>

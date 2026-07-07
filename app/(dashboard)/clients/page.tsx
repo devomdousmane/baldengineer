@@ -4,7 +4,7 @@ import { Header } from "@/components/layout/header";
 import { ClientsTable } from "@/components/tables/clients-table";
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { PageAside } from "@/components/layout/page-aside";
-import { KpiCard } from "@/components/ui/card";
+import { KpiCard } from "@/components/ui/kpi-card";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Plus, Users, Building2, User, UserPlus } from "lucide-react";

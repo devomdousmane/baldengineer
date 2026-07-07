@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertTriangle, Trash2, CheckCircle2, Info, type LucideIcon } from "lucide-react";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 
 const ease = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
@@ -65,16 +66,13 @@ export function ConfirmModal({
   const styles = variantStyles[variant];
   const Icon = icon ?? styles.defaultIcon;
   const confirmRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    confirmRef.current?.focus();
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !loading) onCancel();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open, loading, onCancel]);
+  useFocusTrap(dialogRef, {
+    open,
+    initialFocusRef: confirmRef,
+    onEscape: () => { if (!loading) onCancel(); },
+  });
 
   return (
     <AnimatePresence>
@@ -88,6 +86,7 @@ export function ConfirmModal({
           onClick={singleAction ? undefined : onCancel}
         >
           <motion.div
+            ref={dialogRef}
             initial={{ opacity: 0, scale: 0.95, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 8 }}

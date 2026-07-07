@@ -7,6 +7,8 @@ import { DataTable, type Column } from "@/components/ui/data-table";
 import { ViewToggle, type ViewMode } from "@/components/ui/view-toggle";
 import { ListToolbar } from "@/components/ui/list-toolbar";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import { useDebouncedValue } from "@/lib/use-debounced-value";
 import { Building2, User, Mail, Phone, MapPin } from "lucide-react";
 import type { Client } from "@/types/database";
 
@@ -51,6 +53,7 @@ const columns: Column<Client>[] = [
 ];
 
 function ClientGrid({ clients, onOpen }: { clients: Client[]; onOpen: (c: Client) => void }) {
+  if (clients.length === 0) return <EmptyState message="Aucun client — ajoutez votre premier client" />;
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
       {clients.map((c, i) => (
@@ -101,6 +104,7 @@ function ClientGrid({ clients, onOpen }: { clients: Client[]; onOpen: (c: Client
 }
 
 function ClientList({ clients, onOpen }: { clients: Client[]; onOpen: (c: Client) => void }) {
+  if (clients.length === 0) return <EmptyState message="Aucun client — ajoutez votre premier client" />;
   return (
     <div className="space-y-1.5">
       {clients.map((c, i) => (
@@ -139,17 +143,19 @@ export function ClientsTable({ clients }: { clients: Client[] }) {
   const [type, setType] = useState("");
   const openClient = (c: Client) => router.push(`/clients/${c.id}/edit`);
 
+  const debouncedSearch = useDebouncedValue(search);
+
   const filtered = useMemo(() => {
     return clients.filter((c) => {
       if (type && c.type !== type) return false;
-      if (search.trim()) {
-        const q = search.toLowerCase();
+      if (debouncedSearch.trim()) {
+        const q = debouncedSearch.toLowerCase();
         const hay = `${c.name} ${c.email ?? ""} ${c.city ?? ""} ${c.siren ?? ""} ${c.nif ?? ""}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
     });
-  }, [clients, search, type]);
+  }, [clients, debouncedSearch, type]);
 
   return (
     <div className="space-y-3">

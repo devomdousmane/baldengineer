@@ -4,7 +4,7 @@ import { Header } from "@/components/layout/header";
 import { EmailLogsTable } from "@/components/tables/email-logs-table";
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { PageAside } from "@/components/layout/page-aside";
-import { KpiCard } from "@/components/ui/card";
+import { KpiCard } from "@/components/ui/kpi-card";
 import { Send, CheckCircle2, XCircle, FileText } from "lucide-react";
 import type { Market } from "@/types/database";
 

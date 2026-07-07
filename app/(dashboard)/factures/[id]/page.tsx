@@ -221,7 +221,7 @@ export default async function FactureDetailPage({ params }: { params: Promise<{ 
                 <div className="flex items-center gap-2.5">
                   <Hash className="w-3.5 h-3.5 text-[var(--color-text-3)] shrink-0" />
                   <div className="min-w-0">
-                    <p className="text-[11px] text-[var(--color-text-3)]">Numéro</p>
+                    <p className="text-2xs text-[var(--color-text-3)]">Numéro</p>
                     <p className="font-mono text-sm font-medium text-[var(--color-accent)] truncate">{invoice.number}</p>
                   </div>
                 </div>
@@ -230,14 +230,14 @@ export default async function FactureDetailPage({ params }: { params: Promise<{ 
                     ? <Building2 className="w-3.5 h-3.5 text-[var(--color-text-3)] shrink-0" />
                     : <User className="w-3.5 h-3.5 text-[var(--color-text-3)] shrink-0" />}
                   <div className="min-w-0">
-                    <p className="text-[11px] text-[var(--color-text-3)]">Client</p>
+                    <p className="text-2xs text-[var(--color-text-3)]">Client</p>
                     <p className="text-sm font-medium text-[var(--color-text)] truncate">{invoice.client?.name ?? "—"}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <Calendar className="w-3.5 h-3.5 text-[var(--color-text-3)] shrink-0" />
                   <div className="min-w-0">
-                    <p className="text-[11px] text-[var(--color-text-3)]">Émission</p>
+                    <p className="text-2xs text-[var(--color-text-3)]">Émission</p>
                     <p className="text-sm font-medium text-[var(--color-text)]">
                       {new Date(invoice.date).toLocaleDateString("fr-FR")}
                     </p>
@@ -246,7 +246,7 @@ export default async function FactureDetailPage({ params }: { params: Promise<{ 
                 <div className="flex items-center gap-2.5">
                   <Calendar className="w-3.5 h-3.5 text-[var(--color-text-3)] shrink-0" />
                   <div className="min-w-0">
-                    <p className="text-[11px] text-[var(--color-text-3)]">Échéance</p>
+                    <p className="text-2xs text-[var(--color-text-3)]">Échéance</p>
                     <p className="text-sm font-medium" style={{
                       color: invoice.status === "overdue" ? "var(--color-danger)" : "var(--color-text)",
                     }}>

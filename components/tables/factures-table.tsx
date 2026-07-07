@@ -7,6 +7,8 @@ import { DataTable, type Column } from "@/components/ui/data-table";
 import { ViewToggle, type ViewMode } from "@/components/ui/view-toggle";
 import { ListToolbar } from "@/components/ui/list-toolbar";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import { useDebouncedValue } from "@/lib/use-debounced-value";
 import { Receipt, Calendar, AlertTriangle } from "lucide-react";
 import type { Invoice, InvoiceStatus } from "@/types/database";
 
@@ -73,6 +75,7 @@ function makeColumns(fmt: (n: number) => string): Column<Invoice>[] {
 }
 
 function FactureGrid({ invoices, fmt, onRowClick }: { invoices: Invoice[]; fmt: (n: number) => string; onRowClick: (inv: Invoice) => void }) {
+  if (invoices.length === 0) return <EmptyState message="Aucune facture" />;
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {invoices.map((inv, i) => {
@@ -103,7 +106,7 @@ function FactureGrid({ invoices, fmt, onRowClick }: { invoices: Invoice[]; fmt: 
                 <div className="h-1.5 rounded-full bg-[var(--color-bg-2)] overflow-hidden">
                   <div className="h-full rounded-full transition-all" style={{ width: `${pctPaid}%`, backgroundColor: "var(--color-warning)" }} />
                 </div>
-                <p className="text-[10px] text-[var(--color-text-3)] mt-1">{Math.round(pctPaid)}% encaissé</p>
+                <p className="text-3xs text-[var(--color-text-3)] mt-1">{Math.round(pctPaid)}% encaissé</p>
               </div>
             )}
             <div className="flex items-center justify-between border-t border-[var(--color-border)] pt-3">
@@ -121,6 +124,7 @@ function FactureGrid({ invoices, fmt, onRowClick }: { invoices: Invoice[]; fmt: 
 }
 
 function FactureList({ invoices, fmt, onRowClick }: { invoices: Invoice[]; fmt: (n: number) => string; onRowClick: (inv: Invoice) => void }) {
+  if (invoices.length === 0) return <EmptyState message="Aucune facture" />;
   return (
     <div className="space-y-1.5">
       {invoices.map((inv, i) => {
@@ -161,17 +165,19 @@ export function FacturesTable({ invoices, currency }: { invoices: Invoice[]; cur
   const fmt = (n: number) =>
     new Intl.NumberFormat("fr-FR", { style: "currency", currency, maximumFractionDigits: 2 }).format(n);
 
+  const debouncedSearch = useDebouncedValue(search);
+
   const filtered = useMemo(() => {
     return invoices.filter((inv) => {
       if (status && inv.status !== status) return false;
-      if (search.trim()) {
-        const q = search.toLowerCase();
+      if (debouncedSearch.trim()) {
+        const q = debouncedSearch.toLowerCase();
         const hay = `${inv.number} ${inv.title} ${(inv.client as { name?: string })?.name ?? ""}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
     });
-  }, [invoices, search, status]);
+  }, [invoices, debouncedSearch, status]);
 
   return (
     <div className="space-y-3">

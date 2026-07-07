@@ -4,9 +4,10 @@ import { Header } from "@/components/layout/header";
 import { MissionsTable } from "@/components/tables/missions-table";
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { PageAside } from "@/components/layout/page-aside";
+import { KpiCard } from "@/components/ui/kpi-card";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Briefcase, Activity, CheckCircle2, Banknote } from "lucide-react";
 import type { Market } from "@/types/database";
 
 const ASIDE_TIPS = [
@@ -34,6 +35,13 @@ export default async function MissionsPage() {
   const currency = market === "france" ? (profile?.currency_fr ?? "EUR") : (profile?.currency_gn ?? "GNF");
   const missions = await getMissions(market);
 
+  const fmt = (n: number) =>
+    new Intl.NumberFormat("fr-FR", { style: "currency", currency, maximumFractionDigits: 0 }).format(n);
+
+  const activeCount = missions.filter((m) => m.status === "active").length;
+  const completedCount = missions.filter((m) => m.status === "completed").length;
+  const totalBudget = missions.reduce((s, m) => s + (m.daily_rate ?? 0) * (m.estimated_days ?? 0), 0);
+
   return (
     <>
       <Header
@@ -56,6 +64,37 @@ export default async function MissionsPage() {
           />
         }
       >
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <KpiCard
+            label="Total missions"
+            value={String(missions.length)}
+            icon={<Briefcase className="w-4 h-4" />}
+            accentColor="var(--color-accent)"
+            index={0}
+          />
+          <KpiCard
+            label="En cours"
+            value={String(activeCount)}
+            icon={<Activity className="w-4 h-4" />}
+            accentColor="var(--color-warning)"
+            index={1}
+          />
+          <KpiCard
+            label="Terminées"
+            value={String(completedCount)}
+            icon={<CheckCircle2 className="w-4 h-4" />}
+            accentColor="var(--color-success)"
+            index={2}
+          />
+          <KpiCard
+            label="Budget total estimé"
+            value={fmt(totalBudget)}
+            subtitle="Taux journalier × jours estimés"
+            icon={<Banknote className="w-4 h-4" />}
+            accentColor="var(--color-info)"
+            index={3}
+          />
+        </div>
         <MissionsTable missions={missions} currency={currency} />
       </PageWrapper>
     </>

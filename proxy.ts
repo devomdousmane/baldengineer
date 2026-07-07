@@ -111,8 +111,20 @@ function handleCors(req: NextRequest, res: NextResponse): NextResponse | null {
   return null;
 }
 
-function applySecurityHeaders(res: NextResponse): void {
+/**
+ * /print/preview est chargée dans une <iframe> same-origin par les formulaires de
+ * création (devis/facture) pour afficher un aperçu fidèle isolé de son CSS. Sur cette
+ * seule route, on autorise l'embarquement par la même origine ; partout ailleurs le
+ * clickjacking reste bloqué (frame-ancestors 'none' / X-Frame-Options DENY).
+ */
+function applySecurityHeaders(res: NextResponse, pathname: string): void {
+  const allowSelfFraming = pathname === "/print/preview";
   for (const [k, v] of Object.entries(SECURITY_HEADERS)) {
+    if (allowSelfFraming && k === "X-Frame-Options") { res.headers.set(k, "SAMEORIGIN"); continue; }
+    if (allowSelfFraming && k === "Content-Security-Policy") {
+      res.headers.set(k, v.replace("frame-ancestors 'none'", "frame-ancestors 'self'"));
+      continue;
+    }
     res.headers.set(k, v);
   }
 }
@@ -160,13 +172,13 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   const response = await updateSession(request);
 
   // 5. Security headers on every response
-  applySecurityHeaders(response);
+  applySecurityHeaders(response, pathname);
 
   // 6. CORS for API routes
   if (isApi) {
     const corsResult = handleCors(request, response);
     if (corsResult) {
-      applySecurityHeaders(corsResult);
+      applySecurityHeaders(corsResult, pathname);
       return corsResult;
     }
   }

@@ -119,7 +119,7 @@ export function AiPanel({ open, onClose, market }: AiPanelProps) {
               </div>
               <div className="flex-1">
                 <p className="text-sm font-semibold text-[var(--color-text)]">Assistant IA</p>
-                <p className="text-[10px] text-[var(--color-text-3)]">Propulsé par Claude</p>
+                <p className="text-3xs text-[var(--color-text-3)]">Propulsé par Claude</p>
               </div>
               <button
                 onClick={() => { setMessages([]); }}
@@ -232,7 +232,7 @@ export function AiPanel({ open, onClose, market }: AiPanelProps) {
                   <Send className="w-3.5 h-3.5" />
                 </motion.button>
               </div>
-              <p className="text-[10px] text-[var(--color-text-3)] text-center mt-2">Claude · Ne pas partager de données sensibles</p>
+              <p className="text-3xs text-[var(--color-text-3)] text-center mt-2">Claude · Ne pas partager de données sensibles</p>
             </div>
           </motion.aside>
         </>

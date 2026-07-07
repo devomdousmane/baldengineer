@@ -55,7 +55,7 @@ export function MissionEmailButton({ mission }: MissionEmailButtonProps) {
                   <Mail className="w-3.5 h-3.5 text-[var(--color-accent)] shrink-0" />
                   <div>
                     <p className="font-medium">{cfg.label}</p>
-                    <p className="text-[10px] text-[var(--color-text-3)]">{cfg.subject(mission.title).slice(0, 40)}…</p>
+                    <p className="text-3xs text-[var(--color-text-3)]">{cfg.subject(mission.title).slice(0, 40)}…</p>
                   </div>
                 </button>
               ))}

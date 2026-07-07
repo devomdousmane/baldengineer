@@ -95,7 +95,7 @@ export function FacturXDownloadButton({ invoiceId, invoiceNumber }: Props) {
               className="absolute right-0 top-full mt-1.5 z-50 w-52 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] shadow-[var(--shadow-lg)] overflow-hidden"
             >
               <div className="px-3 py-2 border-b border-[var(--color-border)]">
-                <p className="text-[10px] font-semibold text-[var(--color-text-3)] uppercase tracking-wide">Format de téléchargement</p>
+                <p className="text-3xs font-semibold text-[var(--color-text-3)] uppercase tracking-wide">Format de téléchargement</p>
               </div>
               <div className="p-1">
                 <button
@@ -107,7 +107,7 @@ export function FacturXDownloadButton({ invoiceId, invoiceNumber }: Props) {
                   </div>
                   <div>
                     <p className="text-xs font-medium text-[var(--color-text)]">PDF hybride</p>
-                    <p className="text-[10px] text-[var(--color-text-3)]">PDF + XML embarqué (Factur-X)</p>
+                    <p className="text-3xs text-[var(--color-text-3)]">PDF + XML embarqué (Factur-X)</p>
                   </div>
                 </button>
 
@@ -120,7 +120,7 @@ export function FacturXDownloadButton({ invoiceId, invoiceNumber }: Props) {
                   </div>
                   <div>
                     <p className="text-xs font-medium text-[var(--color-text)]">XML seul (CII)</p>
-                    <p className="text-[10px] text-[var(--color-text-3)]">Pour plateformes e-factures</p>
+                    <p className="text-3xs text-[var(--color-text-3)]">Pour plateformes e-factures</p>
                   </div>
                 </button>
               </div>

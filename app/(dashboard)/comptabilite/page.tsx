@@ -5,7 +5,7 @@ import { CashflowChart } from "@/components/modules/cashflow-chart";
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { PageAside } from "@/components/layout/page-aside";
 import { Button } from "@/components/ui/button";
-import { KpiCard } from "@/components/ui/card";
+import { KpiCard } from "@/components/ui/kpi-card";
 import Link from "next/link";
 import { Plus, TrendingUp, TrendingDown, Wallet } from "lucide-react";
 import type { AccountingEntry, Market } from "@/types/database";

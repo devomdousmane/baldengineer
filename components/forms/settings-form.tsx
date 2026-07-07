@@ -144,19 +144,15 @@ export function SettingsForm({ profile: p }: Props) {
       {tab === "company" && (
         <Card padding="lg">
           <h2 className="text-sm font-semibold text-[var(--color-text)] mb-4">Entreprise</h2>
-          <div className="space-y-4 max-w-3xl">
-            <Input label="Nom de l'entreprise" value={form.company_name} onChange={set("company_name")} placeholder="BaldEngineer SARL" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input label="Email" type="email" value={form.company_email} onChange={set("company_email")} placeholder="contact@baldengineer.fr" />
-              <Input label="Téléphone" type="tel" value={form.company_phone} onChange={set("company_phone")} placeholder="06 XX XX XX XX" />
-            </div>
-            <Input label="Site web" type="url" value={form.company_website} onChange={set("company_website")} placeholder="https://baldengineer.fr" />
-            <Input label="Adresse" value={form.company_address} onChange={set("company_address")} placeholder="42 rue Jacques Benoist" />
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              <Input label="Code postal" value={form.company_zip} onChange={set("company_zip")} placeholder="27140" />
-              <Input label="Ville" value={form.company_city} onChange={set("company_city")} placeholder="Gisors" className="col-span-2" />
-            </div>
-            <Select label="Pays" value={form.company_country} onChange={set("company_country")}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl">
+            <Input label="Nom de l'entreprise" value={form.company_name} onChange={set("company_name")} placeholder="BaldEngineer SARL" className="sm:col-span-2" />
+            <Input label="Email" type="email" value={form.company_email} onChange={set("company_email")} placeholder="contact@baldengineer.fr" />
+            <Input label="Téléphone" type="tel" value={form.company_phone} onChange={set("company_phone")} placeholder="06 XX XX XX XX" />
+            <Input label="Site web" type="url" value={form.company_website} onChange={set("company_website")} placeholder="https://baldengineer.fr" className="sm:col-span-2" />
+            <Input label="Adresse" value={form.company_address} onChange={set("company_address")} placeholder="42 rue Jacques Benoist" className="sm:col-span-2" />
+            <Input label="Code postal" value={form.company_zip} onChange={set("company_zip")} placeholder="27140" />
+            <Input label="Ville" value={form.company_city} onChange={set("company_city")} placeholder="Gisors" />
+            <Select label="Pays" value={form.company_country} onChange={set("company_country")} className="sm:col-span-2">
               <option>France</option>
               <option>Guinée</option>
               <option>Belgique</option>
@@ -164,7 +160,7 @@ export function SettingsForm({ profile: p }: Props) {
               <option>Autre</option>
             </Select>
 
-            <div className="pt-2 border-t border-[var(--color-border)]">
+            <div className="sm:col-span-2 pt-2 mt-1 border-t border-[var(--color-border)]">
               <p className="text-xs font-medium text-[var(--color-text-2)] mb-3">
                 Identifiants fiscaux · {market === "france" ? "🇫🇷 France" : "🇬🇳 Guinée"}
               </p>
@@ -197,20 +193,18 @@ export function SettingsForm({ profile: p }: Props) {
       {tab === "documents" && (
         <Card padding="lg">
           <h2 className="text-sm font-semibold text-[var(--color-text)] mb-4">Documents</h2>
-          <div className="space-y-4 max-w-3xl">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {isFrance ? (
-                <>
-                  <Input label="Préfixe devis" value={form.quote_prefix_fr} onChange={set("quote_prefix_fr")} />
-                  <Input label="Préfixe facture" value={form.invoice_prefix_fr} onChange={set("invoice_prefix_fr")} />
-                </>
-              ) : (
-                <>
-                  <Input label="Préfixe devis" value={form.quote_prefix_gn} onChange={set("quote_prefix_gn")} />
-                  <Input label="Préfixe facture" value={form.invoice_prefix_gn} onChange={set("invoice_prefix_gn")} />
-                </>
-              )}
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl">
+            {isFrance ? (
+              <>
+                <Input label="Préfixe devis" value={form.quote_prefix_fr} onChange={set("quote_prefix_fr")} />
+                <Input label="Préfixe facture" value={form.invoice_prefix_fr} onChange={set("invoice_prefix_fr")} />
+              </>
+            ) : (
+              <>
+                <Input label="Préfixe devis" value={form.quote_prefix_gn} onChange={set("quote_prefix_gn")} />
+                <Input label="Préfixe facture" value={form.invoice_prefix_gn} onChange={set("invoice_prefix_gn")} />
+              </>
+            )}
             <Input
               label="Délai de paiement (jours)"
               type="number"
@@ -218,6 +212,7 @@ export function SettingsForm({ profile: p }: Props) {
               onChange={set("payment_terms_days")}
               min="0"
               hint="Appliqué par défaut sur les nouvelles factures"
+              className="sm:col-span-2"
             />
             <Textarea
               label="Mentions légales (factures)"
@@ -225,6 +220,7 @@ export function SettingsForm({ profile: p }: Props) {
               onChange={set("legal_mention")}
               rows={3}
               placeholder="TVA non applicable, art. 293 B du CGI…"
+              className="sm:col-span-2"
             />
           </div>
         </Card>

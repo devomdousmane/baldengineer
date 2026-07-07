@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ListToolbar } from "@/components/ui/list-toolbar";
+import { Badge } from "@/components/ui/badge";
+import { useDebouncedValue } from "@/lib/use-debounced-value";
 import { Receipt } from "lucide-react";
 import type { Invoice, InvoiceStatus } from "@/types/database";
 
@@ -16,13 +18,13 @@ const STATUS_LABELS: Record<InvoiceStatus, string> = {
   cancelled: "Annulée",
 };
 
-const STATUS_COLORS: Record<InvoiceStatus, string> = {
-  draft:     "var(--color-text-3)",
-  sent:      "var(--color-warning)",
-  paid:      "var(--color-success)",
-  partial:   "var(--color-accent)",
-  overdue:   "var(--color-danger)",
-  cancelled: "var(--color-text-3)",
+const STATUS_VARIANTS: Record<InvoiceStatus, "default" | "success" | "warning" | "danger" | "info"> = {
+  draft:     "default",
+  sent:      "warning",
+  paid:      "success",
+  partial:   "info",
+  overdue:   "danger",
+  cancelled: "default",
 };
 
 const STATUS_FILTERS = [
@@ -46,17 +48,19 @@ export function PaymentsTable({ invoices, currency }: Props) {
   const fmt = (n: number) =>
     new Intl.NumberFormat("fr-FR", { style: "currency", currency, maximumFractionDigits: 0 }).format(n);
 
+  const debouncedSearch = useDebouncedValue(search);
+
   const filtered = useMemo(() => {
     return invoices.filter((inv) => {
       if (status && inv.status !== status) return false;
-      if (search.trim()) {
-        const q = search.toLowerCase();
+      if (debouncedSearch.trim()) {
+        const q = debouncedSearch.toLowerCase();
         const hay = `${inv.number} ${(inv.client as { name?: string })?.name ?? ""}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
     });
-  }, [invoices, search, status]);
+  }, [invoices, debouncedSearch, status]);
 
   return (
     <div className="space-y-3">
@@ -91,7 +95,6 @@ export function PaymentsTable({ invoices, currency }: Props) {
               </tr>
             ) : (
               filtered.map((inv, i) => {
-                const color = STATUS_COLORS[inv.status];
                 const remaining = inv.total_ttc - inv.paid_amount;
                 const paidPct = inv.total_ttc > 0 ? Math.min(100, Math.round((inv.paid_amount / inv.total_ttc) * 100)) : 0;
                 const isOverdue = inv.status === "overdue";
@@ -127,7 +130,7 @@ export function PaymentsTable({ invoices, currency }: Props) {
                             <div className="h-full rounded-full" style={{ width: `${paidPct}%`, backgroundColor: "var(--color-success)" }} />
                           </div>
                           {inv.status === "partial" && (
-                            <span className="text-[10px] text-[var(--color-text-3)]">reste {fmt(remaining)}</span>
+                            <span className="text-xs text-[var(--color-text-3)]">reste {fmt(remaining)}</span>
                           )}
                         </div>
                       ) : (
@@ -135,13 +138,7 @@ export function PaymentsTable({ invoices, currency }: Props) {
                       )}
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <span
-                        className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium border"
-                        style={{ color, borderColor: `${color}40`, backgroundColor: `${color}18` }}
-                      >
-                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
-                        {STATUS_LABELS[inv.status]}
-                      </span>
+                      <Badge variant={STATUS_VARIANTS[inv.status]}>{STATUS_LABELS[inv.status]}</Badge>
                     </td>
                   </motion.tr>
                 );

@@ -47,7 +47,7 @@ export async function RecentInvoices({ market }: { market: Market }) {
                 >
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-[var(--color-text)] truncate">{inv.number}</p>
-                    <p className="text-[11px] text-[var(--color-text-3)] truncate">
+                    <p className="text-2xs text-[var(--color-text-3)] truncate">
                       {(inv.client as { name?: string })?.name ?? "—"}
                     </p>
                   </div>

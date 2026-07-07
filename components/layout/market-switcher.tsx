@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Globe, ChevronDown, Check } from "lucide-react";
 import { updateDefaultMarketAction } from "@/lib/actions/profile";
@@ -16,6 +16,8 @@ const markets: { value: Market; label: string; flag: string; color: string }[] =
 
 export function MarketSwitcher({ market }: { market: Market }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const ref = useRef<HTMLDivElement>(null);
@@ -33,6 +35,17 @@ export function MarketSwitcher({ market }: { market: Market }) {
     setOpen(false);
     startTransition(async () => {
       await updateDefaultMarketAction(m);
+
+      /* Le marché global vient de changer : un filtre ?market= figé dans l'URL (ex. sur le
+         Dashboard) prendrait le dessus sur le nouveau default_market et désynchroniserait
+         l'affichage — on le retire pour que la page retombe sur le marché actif. */
+      if (searchParams.has("market")) {
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete("market");
+        const query = params.toString();
+        router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+      }
+
       router.refresh();
     });
   };

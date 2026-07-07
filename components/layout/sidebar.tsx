@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -7,11 +8,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Users, FileText, Receipt, Wallet, Briefcase,
   BookOpen, Settings, LogOut, X, HelpCircle, Sparkles, Send, ArrowLeft,
-  PanelLeftClose, PanelLeftOpen, Globe,
+  PanelLeftClose, PanelLeftOpen, Globe, ChevronDown, FolderOpen,
 } from "lucide-react";
 import { MarketSwitcher } from "./market-switcher";
 import { Tooltip } from "@/components/ui/tooltip";
 import { useSidebar } from "./sidebar-context";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 import type { Market } from "@/types/database";
 
 const ease = [0.22, 1, 0.36, 1] as [number, number, number, number];
@@ -20,23 +22,63 @@ interface NavItem {
   href: string;
   label: string;
   icon: React.ElementType;
-}
-
-interface NavItemWithTour extends NavItem {
   tourId?: string;
 }
 
-const navItems: NavItemWithTour[] = [
-  { href: "/",             label: "Tableau de bord", icon: LayoutDashboard },
-  { href: "/clients",      label: "Clients",          icon: Users,     tourId: "nav-clients"  },
-  { href: "/devis",        label: "Devis",            icon: FileText,  tourId: "nav-devis"    },
-  { href: "/factures",     label: "Factures",         icon: Receipt,   tourId: "nav-factures" },
-  { href: "/paiements",    label: "Paiements",        icon: Wallet          },
-  { href: "/emails",       label: "Suivi emails",     icon: Send            },
-  { href: "/missions",     label: "Missions",         icon: Briefcase       },
-  { href: "/comptabilite", label: "Comptabilité",     icon: BookOpen        },
-  { href: "/analytics",    label: "Visites",          icon: Globe           },
+interface NavCategory {
+  key: string;
+  label: string;
+  items: NavItem[];
+}
+
+/** Items en dehors de toute catégorie (toujours au premier niveau). */
+const topItems: NavItem[] = [
+  { href: "/", label: "Tableau de bord", icon: LayoutDashboard },
 ];
+
+const midItems: NavItem[] = [
+  { href: "/clients", label: "Clients", icon: Users, tourId: "nav-clients" },
+];
+
+const categories: NavCategory[] = [
+  {
+    key: "ventes",
+    label: "Ventes",
+    items: [
+      { href: "/devis", label: "Devis", icon: FileText, tourId: "nav-devis" },
+      { href: "/factures", label: "Factures", icon: Receipt, tourId: "nav-factures" },
+      { href: "/paiements", label: "Paiements", icon: Wallet },
+    ],
+  },
+  {
+    key: "operations",
+    label: "Opérations",
+    items: [
+      { href: "/missions", label: "Missions", icon: Briefcase },
+      { href: "/comptabilite", label: "Comptabilité", icon: BookOpen },
+      { href: "/fichiers", label: "Fichiers", icon: FolderOpen },
+    ],
+  },
+  {
+    key: "suivi",
+    label: "Suivi",
+    items: [
+      { href: "/emails", label: "Suivi emails", icon: Send },
+      { href: "/analytics", label: "Visites", icon: Globe },
+    ],
+  },
+];
+
+const STORAGE_KEY = "baldpro:sidebar-open-categories";
+
+function loadOpenCategories(): Record<string, boolean> {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
 
 const navContainer = {
   hidden: {},
@@ -60,9 +102,81 @@ export function Sidebar({ userName, userAvatar, market, onSignOut, onTourStart }
   const pathname = usePathname();
   const { mobileOpen, closeMobile, collapsed, toggleCollapsed } = useSidebar();
   const isActive = (href: string) => href === "/" ? pathname === "/" : pathname.startsWith(href);
+  const drawerRef = useRef<HTMLElement>(null);
+
+  useFocusTrap(drawerRef, { open: mobileOpen, onEscape: closeMobile });
+
+  /* État initial identique serveur/client (catégories ouvertes par défaut via `?? true` au rendu) —
+     la préférence sauvegardée et l'auto-ouverture de la catégorie active ne sont appliquées
+     qu'après montage, pour ne jamais désaccorder le HTML serveur du premier rendu client. */
+  const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({});
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    const stored = loadOpenCategories();
+    const active = categories.find((c) => c.items.some((i) => isActive(i.href)));
+    setOpenCategories(
+      active && !(active.key in stored) ? { ...stored, [active.key]: true } : stored
+    );
+    setHydrated(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (hydrated) localStorage.setItem(STORAGE_KEY, JSON.stringify(openCategories));
+  }, [openCategories, hydrated]);
+
+  const toggleCategory = (key: string) =>
+    setOpenCategories((prev) => ({ ...prev, [key]: !(prev[key] ?? true) }));
+
+  /* La visite guidée peut cibler un item masqué dans une catégorie repliée — on l'ouvre à la volée. */
+  useEffect(() => {
+    const onTourTarget = (e: Event) => {
+      const selector = (e as CustomEvent<string>).detail;
+      const href = selector.match(/data-tour="([^"]+)"/)?.[1];
+      if (!href) return;
+      const cat = categories.find((c) => c.items.some((i) => i.tourId === href));
+      if (cat) setOpenCategories((prev) => ({ ...prev, [cat.key]: true }));
+    };
+    window.addEventListener("baldpro:tour-target", onTourTarget);
+    return () => window.removeEventListener("baldpro:tour-target", onTourTarget);
+  }, []);
 
   /* Fermer le drawer mobile à chaque navigation */
   const handleNavigate = () => closeMobile();
+
+  const renderNavLink = ({ href, label, icon: Icon, tourId }: NavItem, isCollapsed: boolean, indent = false) => {
+    const active = isActive(href);
+    const link = (
+      <Link
+        href={href}
+        onClick={handleNavigate}
+        data-tour={tourId}
+        className={`
+          flex items-center gap-2.5 px-3 py-2 rounded-[var(--radius-md)] text-sm transition-all duration-[var(--dur-fast)]
+          ${isCollapsed ? "justify-center" : ""}
+          ${indent && !isCollapsed ? "pl-8" : ""}
+          ${active
+            ? "bg-[var(--color-accent-dim)] text-[var(--color-accent)] font-medium"
+            : "text-[var(--color-text-2)] hover:bg-[var(--color-bg-2)] hover:text-[var(--color-text)]"
+          }
+        `}
+        aria-current={active ? "page" : undefined}
+      >
+        <Icon className="w-4 h-4 shrink-0" strokeWidth={active ? 2 : 1.75} />
+        {!isCollapsed && <span className="flex-1 truncate">{label}</span>}
+        {active && !isCollapsed && (
+          <motion.span
+            layoutId="nav-pill"
+            className="w-1 h-1 rounded-full shrink-0"
+            style={{ backgroundColor: "var(--color-accent)" }}
+            transition={{ type: "spring", stiffness: 500, damping: 35 }}
+          />
+        )}
+      </Link>
+    );
+    return isCollapsed ? <Tooltip content={label} side="right">{link}</Tooltip> : link;
+  };
 
   const renderContent = (forceExpanded: boolean) => {
     const isCollapsed = !forceExpanded && collapsed;
@@ -129,38 +243,62 @@ export function Sidebar({ userName, userAvatar, market, onSignOut, onTourStart }
             className="space-y-0.5"
             role="list"
           >
-            {navItems.map(({ href, label, icon: Icon, tourId }) => {
-              const active = isActive(href);
-              const link = (
-                <Link
-                  href={href}
-                  onClick={handleNavigate}
-                  data-tour={tourId}
-                  className={`
-                    flex items-center gap-2.5 px-3 py-2 rounded-[var(--radius-md)] text-sm transition-all duration-[var(--dur-fast)]
-                    ${isCollapsed ? "justify-center" : ""}
-                    ${active
-                      ? "bg-[var(--color-accent-dim)] text-[var(--color-accent)] font-medium"
-                      : "text-[var(--color-text-2)] hover:bg-[var(--color-bg-2)] hover:text-[var(--color-text)]"
-                    }
-                  `}
-                  aria-current={active ? "page" : undefined}
-                >
-                  <Icon className="w-4 h-4 shrink-0" strokeWidth={active ? 2 : 1.75} />
-                  {!isCollapsed && <span className="flex-1 truncate">{label}</span>}
-                  {active && !isCollapsed && (
-                    <motion.span
-                      layoutId="nav-pill"
-                      className="w-1 h-1 rounded-full shrink-0"
-                      style={{ backgroundColor: "var(--color-accent)" }}
-                      transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                    />
-                  )}
-                </Link>
-              );
+            {topItems.map((item) => (
+              <motion.li key={item.href} variants={navItem}>
+                {renderNavLink(item, isCollapsed)}
+              </motion.li>
+            ))}
+
+            {midItems.map((item) => (
+              <motion.li key={item.href} variants={navItem}>
+                {renderNavLink(item, isCollapsed)}
+              </motion.li>
+            ))}
+
+            {categories.map((cat) => {
+              const isOpen = openCategories[cat.key] ?? true;
               return (
-                <motion.li key={href} variants={navItem}>
-                  {isCollapsed ? <Tooltip content={label} side="right">{link}</Tooltip> : link}
+                <motion.li key={cat.key} variants={navItem} className="pt-1">
+                  {isCollapsed ? (
+                    /* Mode replié : pas de titre de section, items à plat avec tooltips */
+                    <ul className="space-y-0.5">
+                      {cat.items.map((item) => (
+                        <li key={item.href}>{renderNavLink(item, true)}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => toggleCategory(cat.key)}
+                        className="w-full flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-md)] text-3xs font-semibold uppercase tracking-wider text-[var(--color-text-3)] hover:text-[var(--color-text-2)] transition-colors cursor-pointer"
+                        aria-expanded={isOpen}
+                      >
+                        <span className="flex-1 text-left">{cat.label}</span>
+                        <motion.span
+                          animate={{ rotate: isOpen ? 0 : -90 }}
+                          transition={{ duration: 0.2, ease }}
+                        >
+                          <ChevronDown className="w-3 h-3 shrink-0" />
+                        </motion.span>
+                      </button>
+                      <AnimatePresence initial={false}>
+                        {isOpen && (
+                          <motion.ul
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2, ease }}
+                            className="overflow-hidden space-y-0.5"
+                          >
+                            {cat.items.map((item) => (
+                              <li key={item.href}>{renderNavLink(item, false, true)}</li>
+                            ))}
+                          </motion.ul>
+                        )}
+                      </AnimatePresence>
+                    </>
+                  )}
                 </motion.li>
               );
             })}
@@ -253,7 +391,7 @@ export function Sidebar({ userName, userAvatar, market, onSignOut, onTourStart }
           {/* User */}
           <div className={`flex items-center gap-2 px-3 py-2 mt-1 ${isCollapsed ? "justify-center" : ""}`}>
             <div
-              className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0 overflow-hidden"
+              className="w-6 h-6 rounded-full flex items-center justify-center text-white text-3xs font-bold shrink-0 overflow-hidden"
               style={{ backgroundColor: "var(--color-primary)" }}
             >
               {userAvatar ? (
@@ -308,6 +446,7 @@ export function Sidebar({ userName, userAvatar, market, onSignOut, onTourStart }
               onClick={closeMobile}
             />
             <motion.aside
+              ref={drawerRef}
               key="sidebar-drawer"
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}

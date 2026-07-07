@@ -17,11 +17,13 @@ interface BadgeProps {
   variant?: Variant;
   children: ReactNode;
   className?: string;
+  title?: string;
 }
 
-export function Badge({ variant = "default", children, className = "" }: BadgeProps) {
+export function Badge({ variant = "default", children, className = "", title }: BadgeProps) {
   return (
     <span
+      title={title}
       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium leading-none ${variantStyles[variant]} ${className}`}
     >
       {children}

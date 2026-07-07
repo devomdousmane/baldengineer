@@ -92,10 +92,14 @@ function useTargetRect(selector: string | null): Rect | null {
     };
 
     const raf = requestAnimationFrame(measure);
+    /* Re-mesure pendant ~300ms : couvre l'ouverture animée d'une catégorie de sidebar
+       repliée (accordéon height:0→auto), qui ne déclenche ni resize ni scroll. */
+    const retimers = [50, 100, 150, 220, 300].map((ms) => setTimeout(measure, ms));
     window.addEventListener("resize", measure);
     window.addEventListener("scroll", measure, true);
     return () => {
       cancelAnimationFrame(raf);
+      retimers.forEach(clearTimeout);
       window.removeEventListener("resize", measure);
       window.removeEventListener("scroll", measure, true);
     };
@@ -137,6 +141,14 @@ export function SpotlightTour({ open, onClose, steps = TOUR_STEPS }: SpotlightTo
       router.push(step.href);
     }
   }, [open, step, pathname, router]);
+
+  /* Signale la cible de l'étape — permet à la sidebar d'ouvrir la catégorie qui la contient
+     avant qu'on ne mesure sa position (sinon un item dans une section repliée resterait invisible). */
+  useEffect(() => {
+    if (open && step?.target) {
+      window.dispatchEvent(new CustomEvent("baldpro:tour-target", { detail: step.target }));
+    }
+  }, [open, step]);
 
   const finish = useCallback(() => {
     localStorage.setItem(STORAGE_KEY, "1");
@@ -261,7 +273,7 @@ export function SpotlightTour({ open, onClose, steps = TOUR_STEPS }: SpotlightTo
           <p className="text-xs text-[var(--color-text-2)] leading-relaxed mb-4">{step.body}</p>
 
           <div className="flex items-center justify-between">
-            <p className="text-[10px] text-[var(--color-text-3)] tabular-nums">{index + 1} / {steps.length}</p>
+            <p className="text-3xs text-[var(--color-text-3)] tabular-nums">{index + 1} / {steps.length}</p>
             <div className="flex items-center gap-1.5">
               {index > 0 && (
                 <button

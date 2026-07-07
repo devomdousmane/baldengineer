@@ -7,6 +7,8 @@ import { DataTable, type Column } from "@/components/ui/data-table";
 import { ViewToggle, type ViewMode } from "@/components/ui/view-toggle";
 import { ListToolbar } from "@/components/ui/list-toolbar";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import { useDebouncedValue } from "@/lib/use-debounced-value";
 import { FileText, Calendar, Euro } from "lucide-react";
 import type { Quote, QuoteStatus } from "@/types/database";
 
@@ -57,6 +59,7 @@ function makeColumns(fmt: (n: number) => string): Column<Quote>[] {
 }
 
 function DevisGrid({ quotes, fmt, onRowClick }: { quotes: Quote[]; fmt: (n: number) => string; onRowClick: (q: Quote) => void }) {
+  if (quotes.length === 0) return <EmptyState message="Aucun devis" />;
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {quotes.map((q, i) => {
@@ -94,6 +97,7 @@ function DevisGrid({ quotes, fmt, onRowClick }: { quotes: Quote[]; fmt: (n: numb
 }
 
 function DevisList({ quotes, fmt, onRowClick }: { quotes: Quote[]; fmt: (n: number) => string; onRowClick: (q: Quote) => void }) {
+  if (quotes.length === 0) return <EmptyState message="Aucun devis" />;
   return (
     <div className="space-y-1.5">
       {quotes.map((q, i) => {
@@ -129,17 +133,19 @@ export function DevisTable({ quotes, currency }: { quotes: Quote[]; currency: st
   const fmt = (n: number) =>
     new Intl.NumberFormat("fr-FR", { style: "currency", currency, maximumFractionDigits: 2 }).format(n);
 
+  const debouncedSearch = useDebouncedValue(search);
+
   const filtered = useMemo(() => {
     return quotes.filter((q) => {
       if (status && q.status !== status) return false;
-      if (search.trim()) {
-        const query = search.toLowerCase();
+      if (debouncedSearch.trim()) {
+        const query = debouncedSearch.toLowerCase();
         const hay = `${q.number} ${q.title} ${(q.client as { name?: string })?.name ?? ""}`.toLowerCase();
         if (!hay.includes(query)) return false;
       }
       return true;
     });
-  }, [quotes, search, status]);
+  }, [quotes, debouncedSearch, status]);
 
   return (
     <div className="space-y-3">

@@ -4,9 +4,13 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ListToolbar } from "@/components/ui/list-toolbar";
+import { Badge } from "@/components/ui/badge";
+import { useDebouncedValue } from "@/lib/use-debounced-value";
 import { Mail, FileText, Receipt, RefreshCw, Bell, CheckCircle2, XCircle, Clock } from "lucide-react";
 import type { EmailLogEntry, EmailLogType } from "@/lib/actions/email-logs";
 import type { QuoteStatus, InvoiceStatus } from "@/types/database";
+
+type BadgeVariant = "default" | "success" | "warning" | "danger" | "info";
 
 const TYPE_CONFIG: Record<EmailLogType, { label: string; icon: React.ElementType; kind: "quote" | "invoice" }> = {
   devis_envoye:        { label: "Devis envoyé",       icon: FileText,   kind: "quote"   },
@@ -17,11 +21,11 @@ const TYPE_CONFIG: Record<EmailLogType, { label: string; icon: React.ElementType
   paiement_notif_admin:{ label: "Notif. paiement",    icon: CheckCircle2, kind: "invoice" },
 };
 
-const SEND_STATUS_CONFIG: Record<EmailLogEntry["status"], { label: string; color: string; icon: React.ElementType }> = {
-  sent:      { label: "Envoyé",   color: "var(--color-success)", icon: CheckCircle2 },
-  delivered: { label: "Délivré",  color: "var(--color-success)", icon: CheckCircle2 },
-  failed:    { label: "Échec",    color: "var(--color-danger)",  icon: XCircle      },
-  bounced:   { label: "Rejeté",   color: "var(--color-danger)",  icon: XCircle      },
+const SEND_STATUS_CONFIG: Record<EmailLogEntry["status"], { label: string; variant: BadgeVariant; icon: React.ElementType }> = {
+  sent:      { label: "Envoyé",   variant: "success", icon: CheckCircle2 },
+  delivered: { label: "Délivré",  variant: "success", icon: CheckCircle2 },
+  failed:    { label: "Échec",    variant: "danger",  icon: XCircle      },
+  bounced:   { label: "Rejeté",   variant: "danger",  icon: XCircle      },
 };
 
 const QUOTE_STATUS_LABELS: Record<QuoteStatus, string> = {
@@ -30,13 +34,13 @@ const QUOTE_STATUS_LABELS: Record<QuoteStatus, string> = {
 const INVOICE_STATUS_LABELS: Record<InvoiceStatus, string> = {
   draft: "Brouillon", sent: "Envoyée", paid: "Payée", partial: "Partielle", overdue: "En retard", cancelled: "Annulée",
 };
-const QUOTE_STATUS_COLORS: Record<QuoteStatus, string> = {
-  draft: "var(--color-text-3)", sent: "var(--color-accent)", accepted: "var(--color-success)",
-  refused: "var(--color-danger)", expired: "var(--color-text-3)",
+const QUOTE_STATUS_VARIANTS: Record<QuoteStatus, BadgeVariant> = {
+  draft: "default", sent: "info", accepted: "success",
+  refused: "danger", expired: "default",
 };
-const INVOICE_STATUS_COLORS: Record<InvoiceStatus, string> = {
-  draft: "var(--color-text-3)", sent: "var(--color-accent)", paid: "var(--color-success)",
-  partial: "var(--color-warning)", overdue: "var(--color-danger)", cancelled: "var(--color-text-3)",
+const INVOICE_STATUS_VARIANTS: Record<InvoiceStatus, BadgeVariant> = {
+  draft: "default", sent: "info", paid: "success",
+  partial: "warning", overdue: "danger", cancelled: "default",
 };
 
 const TYPE_FILTERS = [
@@ -58,18 +62,20 @@ export function EmailLogsTable({ logs }: Props) {
   const [search, setSearch] = useState("");
   const [kind, setKind] = useState("");
 
+  const debouncedSearch = useDebouncedValue(search);
+
   const filtered = useMemo(() => {
     return logs.filter((log) => {
       const cfg = TYPE_CONFIG[log.type];
       if (kind && cfg.kind !== kind) return false;
-      if (search.trim()) {
-        const q = search.toLowerCase();
+      if (debouncedSearch.trim()) {
+        const q = debouncedSearch.toLowerCase();
         const hay = `${log.toEmail} ${log.subject} ${log.documentNumber ?? ""} ${log.clientName ?? ""}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
     });
-  }, [logs, search, kind]);
+  }, [logs, debouncedSearch, kind]);
 
   const openDocument = (log: EmailLogEntry) => {
     const base = log.resourceType === "quote" ? "/devis" : "/factures";
@@ -116,9 +122,9 @@ export function EmailLogsTable({ logs }: Props) {
                 const docLabel = log.documentStatus
                   ? (typeCfg.kind === "quote" ? QUOTE_STATUS_LABELS[log.documentStatus as QuoteStatus] : INVOICE_STATUS_LABELS[log.documentStatus as InvoiceStatus])
                   : null;
-                const docColor = log.documentStatus
-                  ? (typeCfg.kind === "quote" ? QUOTE_STATUS_COLORS[log.documentStatus as QuoteStatus] : INVOICE_STATUS_COLORS[log.documentStatus as InvoiceStatus])
-                  : "var(--color-text-3)";
+                const docVariant: BadgeVariant = log.documentStatus
+                  ? (typeCfg.kind === "quote" ? QUOTE_STATUS_VARIANTS[log.documentStatus as QuoteStatus] : INVOICE_STATUS_VARIANTS[log.documentStatus as InvoiceStatus])
+                  : "default";
 
                 return (
                   <motion.tr
@@ -137,7 +143,7 @@ export function EmailLogsTable({ logs }: Props) {
                     </td>
                     <td className="px-4 py-3">
                       <p className="font-mono text-xs text-[var(--color-accent)]">{log.documentNumber ?? "—"}</p>
-                      <p className="text-[11px] text-[var(--color-text-3)] truncate max-w-[160px]">{log.clientName ?? "—"}</p>
+                      <p className="text-2xs text-[var(--color-text-3)] truncate max-w-[160px]">{log.clientName ?? "—"}</p>
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell">
                       <span className="text-xs text-[var(--color-text-2)]">{log.toEmail}</span>
@@ -146,26 +152,16 @@ export function EmailLogsTable({ logs }: Props) {
                       <span className="text-xs text-[var(--color-text-3)]">{fmtDate(log.createdAt)}</span>
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <span
-                        className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium border"
-                        style={{ color: sendCfg.color, borderColor: `${sendCfg.color}40`, backgroundColor: `${sendCfg.color}18` }}
-                        title={log.errorMessage ?? undefined}
-                      >
+                      <Badge variant={sendCfg.variant} title={log.errorMessage ?? undefined}>
                         <SendIcon className="w-3 h-3 shrink-0" />
                         {sendCfg.label}
-                      </span>
+                      </Badge>
                     </td>
                     <td className="px-4 py-3 text-center">
                       {docLabel ? (
-                        <span
-                          className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium border"
-                          style={{ color: docColor, borderColor: `${docColor}40`, backgroundColor: `${docColor}18` }}
-                        >
-                          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: docColor }} />
-                          {docLabel}
-                        </span>
+                        <Badge variant={docVariant}>{docLabel}</Badge>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-[10px] text-[var(--color-text-3)]">
+                        <span className="inline-flex items-center gap-1 text-xs text-[var(--color-text-3)]">
                           <Clock className="w-3 h-3" /> Supprimé
                         </span>
                       )}

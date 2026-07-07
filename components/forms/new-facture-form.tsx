@@ -7,10 +7,11 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Select, Textarea } from "@/components/ui/input";
-import { DocPreview, type PreviewProfile } from "@/components/modules/doc-preview";
+import { DocumentPreviewFrame } from "@/components/modules/document-preview-frame";
 import { createInvoiceAction } from "@/lib/actions/invoices";
-import { Plus, Trash2, Eye, ArrowLeft } from "lucide-react";
-import type { Client, Market } from "@/types/database";
+import { defaultVatRate } from "@/lib/vat";
+import { Plus, Trash2, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import type { Client, Market, Profile } from "@/types/database";
 
 interface LineItem {
   id: number;
@@ -45,10 +46,10 @@ interface Props {
   defaultMarket: Market;
   vatRateDefault: number;
   paymentTermsDays: number;
-  previewProfile?: PreviewProfile | null;
+  profile?: Profile | null;
 }
 
-export function NewFactureForm({ clients, defaultMarket, vatRateDefault, paymentTermsDays, previewProfile }: Props) {
+export function NewFactureForm({ clients, defaultMarket, vatRateDefault, paymentTermsDays, profile }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -62,7 +63,7 @@ export function NewFactureForm({ clients, defaultMarket, vatRateDefault, payment
   const [notes, setNotes] = useState("");
   const [terms, setTerms] = useState("");
   const [lines, setLines] = useState<LineItem[]>([
-    { id: lineIdCounter++, description: "", quantity: 1, unit: "j", unit_price: 0, vat_rate: vatRateDefault, discount_pct: 0 },
+    { id: lineIdCounter++, description: "", quantity: 1, unit: "j", unit_price: 0, vat_rate: defaultVatRate(defaultMarket, vatRateDefault), discount_pct: 0 },
   ]);
 
   const filteredClients = clients.filter((c) => c.market === market);
@@ -79,14 +80,12 @@ export function NewFactureForm({ clients, defaultMarket, vatRateDefault, payment
   })();
   const dueDateLabel = new Date(dueDate).toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
 
-  const colTemplate = market === "france"
-    ? "1fr 64px 64px 88px 56px 48px 28px"
-    : "1fr 64px 64px 88px 48px 28px";
+  const colTemplate = "1fr 64px 64px 88px 56px 48px 28px";
 
   const addLine = () =>
     setLines((prev) => [
       ...prev,
-      { id: lineIdCounter++, description: "", quantity: 1, unit: "j", unit_price: 0, vat_rate: market === "france" ? vatRateDefault : 0, discount_pct: 0 },
+      { id: lineIdCounter++, description: "", quantity: 1, unit: "j", unit_price: 0, vat_rate: defaultVatRate(market, vatRateDefault), discount_pct: 0 },
     ]);
 
   const removeLine = (id: number) => setLines((prev) => prev.filter((l) => l.id !== id));
@@ -143,11 +142,11 @@ export function NewFactureForm({ clients, defaultMarket, vatRateDefault, payment
             type="button"
             variant={showPreview ? "secondary" : "outline"}
             size="sm"
-            iconLeft={<Eye className="w-3.5 h-3.5" />}
+            iconLeft={showPreview ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
             onClick={() => setShowPreview((v) => !v)}
             className="hidden xl:inline-flex"
           >
-            Aperçu
+            {showPreview ? "Masquer l'aperçu" : "Afficher l'aperçu"}
           </Button>
           <Button type="submit" form="new-facture-form" size="sm" loading={isPending}>
             Créer la facture
@@ -160,14 +159,24 @@ export function NewFactureForm({ clients, defaultMarket, vatRateDefault, payment
         <form
           id="new-facture-form"
           onSubmit={handleSubmit}
-          className="w-full xl:w-[560px] shrink-0 overflow-y-auto p-5 space-y-4 border-r border-[var(--color-border)]"
+          className={`w-full overflow-y-auto p-5 space-y-4 border-r border-[var(--color-border)] ${showPreview ? "xl:w-[560px] xl:shrink-0" : ""}`}
         >
 
         <motion.div {...card(0)}>
           <Card padding="lg">
             <h2 className="font-heading text-sm font-semibold text-[var(--color-text)] mb-4">Informations générales</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Select label="Marché" value={market} onChange={(e) => { setMarket(e.target.value as Market); setClientId(""); }} required>
+              <Select
+                label="Marché"
+                value={market}
+                onChange={(e) => {
+                  const newMarket = e.target.value as Market;
+                  setMarket(newMarket);
+                  setClientId("");
+                  setLines((prev) => prev.map((l) => ({ ...l, vat_rate: defaultVatRate(newMarket, vatRateDefault) })));
+                }}
+                required
+              >
                 <option value="france">🇫🇷 France</option>
                 <option value="guinee">🇬🇳 Guinée</option>
               </Select>
@@ -198,7 +207,7 @@ export function NewFactureForm({ clients, defaultMarket, vatRateDefault, payment
 
             <div className="hidden sm:grid gap-2 text-xs font-medium text-[var(--color-text-3)] pb-2 border-b border-[var(--color-border)] mb-3" style={{ gridTemplateColumns: colTemplate }}>
               <span>Description</span><span>Qté</span><span>Unité</span><span>PU HT</span>
-              {market === "france" && <span>TVA%</span>}
+              <span>TVA%</span>
               <span>Rem%</span><span />
             </div>
 
@@ -222,15 +231,9 @@ export function NewFactureForm({ clients, defaultMarket, vatRateDefault, payment
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <Input label="PU HT" type="number" value={line.unit_price} onChange={(e) => updateLine(line.id, "unit_price", e.target.value)} min="0" step="0.01" />
-                        {market === "france" ? (
-                          <Input label="TVA%" type="number" value={line.vat_rate} onChange={(e) => updateLine(line.id, "vat_rate", e.target.value)} min="0" max="100" step="0.1" />
-                        ) : (
-                          <Input label="Rem%" type="number" value={line.discount_pct} onChange={(e) => updateLine(line.id, "discount_pct", e.target.value)} min="0" max="100" step="0.1" />
-                        )}
+                        <Input label="TVA%" type="number" value={line.vat_rate} onChange={(e) => updateLine(line.id, "vat_rate", e.target.value)} min="0" max="100" step="0.1" />
                       </div>
-                      {market === "france" && (
-                        <Input label="Rem%" type="number" value={line.discount_pct} onChange={(e) => updateLine(line.id, "discount_pct", e.target.value)} min="0" max="100" step="0.1" />
-                      )}
+                      <Input label="Rem%" type="number" value={line.discount_pct} onChange={(e) => updateLine(line.id, "discount_pct", e.target.value)} min="0" max="100" step="0.1" />
                       <button
                         type="button" onClick={() => removeLine(line.id)} disabled={lines.length === 1}
                         className="w-full h-9 flex items-center justify-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--color-border)] text-xs text-[var(--color-text-3)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-dim)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
@@ -245,9 +248,7 @@ export function NewFactureForm({ clients, defaultMarket, vatRateDefault, payment
                       <Input type="number" value={line.quantity} onChange={(e) => updateLine(line.id, "quantity", e.target.value)} min="0" step="0.01" />
                       <Input value={line.unit} onChange={(e) => updateLine(line.id, "unit", e.target.value)} placeholder="j" />
                       <Input type="number" value={line.unit_price} onChange={(e) => updateLine(line.id, "unit_price", e.target.value)} min="0" step="0.01" />
-                      {market === "france" && (
-                        <Input type="number" value={line.vat_rate} onChange={(e) => updateLine(line.id, "vat_rate", e.target.value)} min="0" max="100" step="0.1" />
-                      )}
+                      <Input type="number" value={line.vat_rate} onChange={(e) => updateLine(line.id, "vat_rate", e.target.value)} min="0" max="100" step="0.1" />
                       <Input type="number" value={line.discount_pct} onChange={(e) => updateLine(line.id, "discount_pct", e.target.value)} min="0" max="100" step="0.1" />
                       <button
                         type="button" onClick={() => removeLine(line.id)} disabled={lines.length === 1}
@@ -257,8 +258,8 @@ export function NewFactureForm({ clients, defaultMarket, vatRateDefault, payment
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
-                    <p className="text-[10px] text-[var(--color-text-3)] mt-1 text-right pr-0 sm:pr-7">
-                      HT : {fmt(ht)}{market === "france" ? ` · TTC : ${fmt(Math.round(ht * (1 + line.vat_rate / 100) * 100) / 100)}` : ""}
+                    <p className="text-3xs text-[var(--color-text-3)] mt-1 text-right pr-0 sm:pr-7">
+                      HT : {fmt(ht)} · TTC : {fmt(Math.round(ht * (1 + line.vat_rate / 100) * 100) / 100)}
                     </p>
                   </motion.div>
                 );
@@ -267,7 +268,7 @@ export function NewFactureForm({ clients, defaultMarket, vatRateDefault, payment
 
             <div className="mt-3 pt-3 border-t border-[var(--color-border)] flex flex-col items-end gap-1 text-sm">
               <div className="flex gap-8 text-[var(--color-text-2)]"><span>Total HT</span><span className="tabular-nums font-medium text-[var(--color-text)] w-28 text-right">{fmt(totals.ht)}</span></div>
-              {market === "france" && <div className="flex gap-8 text-[var(--color-text-2)]"><span>TVA</span><span className="tabular-nums font-medium text-[var(--color-text)] w-28 text-right">{fmt(totals.vat)}</span></div>}
+              <div className="flex gap-8 text-[var(--color-text-2)]"><span>TVA</span><span className="tabular-nums font-medium text-[var(--color-text)] w-28 text-right">{fmt(totals.vat)}</span></div>
               <div className="flex gap-8 font-semibold text-base border-t border-[var(--color-border)] pt-2 mt-1">
                 <span>Total TTC</span>
                 <span className="tabular-nums text-[var(--color-accent)] w-28 text-right">{fmt(totals.ttc)}</span>
@@ -306,24 +307,40 @@ export function NewFactureForm({ clients, defaultMarket, vatRateDefault, payment
               animate={{ opacity: 1, width: "100%" }}
               exit={{ opacity: 0, width: 0 }}
               transition={{ duration: 0.25, ease }}
-              className="hidden xl:block flex-1 overflow-y-auto p-6 bg-[var(--color-bg)]"
+              className="hidden xl:flex flex-col flex-1 overflow-hidden p-6 bg-[var(--color-bg)]"
             >
-              <p className="flex items-center gap-2 text-xs font-medium text-[var(--color-text-3)] mb-4">
+              <p className="flex items-center gap-2 text-xs font-medium text-[var(--color-text-3)] mb-4 shrink-0">
                 <Eye className="w-3.5 h-3.5" /> Aperçu en temps réel
               </p>
-              <DocPreview
+              <DocumentPreviewFrame
                 type="facture"
-                title={title}
-                date={date}
-                extraDate={dueDate}
-                extraDateLabel="Échéance"
-                market={market}
-                currency={currency}
-                lines={lines}
-                notes={notes}
-                terms={terms}
-                client={selectedClient ? { name: selectedClient.name, address: selectedClient.address, city: selectedClient.city, zip: selectedClient.zip, siren: selectedClient.siren, nif: selectedClient.nif, vat_number: selectedClient.vat_number } : null}
-                profile={previewProfile}
+                document={{
+                  number: "(numéro attribué à la création)",
+                  title,
+                  date,
+                  dateLabel: "Date de facturation",
+                  extraDate: dueDate,
+                  extraDateLabel: "Échéance",
+                  status: "draft",
+                  market,
+                  currency,
+                  subtotal_ht: totals.ht,
+                  total_vat: totals.vat,
+                  total_ttc: totals.ttc,
+                  notes: notes || undefined,
+                  terms: terms || undefined,
+                  lines: lines.map((l, i) => ({
+                    position: i + 1,
+                    description: l.description,
+                    quantity: l.quantity,
+                    unit: l.unit,
+                    unit_price: l.unit_price,
+                    vat_rate: l.vat_rate,
+                    discount_pct: l.discount_pct,
+                  })),
+                }}
+                client={selectedClient}
+                profile={profile ?? null}
               />
             </motion.div>
           )}

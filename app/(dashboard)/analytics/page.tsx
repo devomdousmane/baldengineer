@@ -2,7 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { Header } from "@/components/layout/header";
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { PageAside } from "@/components/layout/page-aside";
-import { KpiCard } from "@/components/ui/card";
+import { KpiCard } from "@/components/ui/kpi-card";
 import { VisitsChart, CountryBreakdownChart } from "@/components/modules/visits-chart";
 import { Eye, Globe, FileText } from "lucide-react";
 import type { SiteVisit } from "@/types/database";

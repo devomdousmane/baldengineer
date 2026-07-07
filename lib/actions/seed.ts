@@ -153,22 +153,43 @@ export async function seedDemoDataAction(): Promise<{ inserted: number }> {
     },
   ];
 
-  const { error: ignErr } = await supabase.from("invoices").insert(invoicesGN).select("id");
+  const { data: iGN, error: ignErr } = await supabase.from("invoices").insert(invoicesGN).select("id");
   if (ignErr) throw new Error(ignErr.message);
 
-  /* ─── Quote lines (FR accepted quote) ─── */
-  await supabase.from("quote_lines").insert([
-    { quote_id: qFR![0].id, position: 1, description: "Audit thermique et aéraulique", quantity: 10, unit: "j", unit_price: 600, vat_rate: 20, discount_pct: 0, total_ht: 6000, total_ttc: 7200 },
-    { quote_id: qFR![0].id, position: 2, description: "Rapport d'ingénierie CFO", quantity: 5, unit: "j", unit_price: 600, vat_rate: 20, discount_pct: 0, total_ht: 3000, total_ttc: 3600 },
-    { quote_id: qFR![0].id, position: 3, description: "Réunion de restitution", quantity: 5, unit: "j", unit_price: 600, vat_rate: 20, discount_pct: 0, total_ht: 3000, total_ttc: 3600 },
+  /* ─── Quote lines (FR) ─── */
+  const { error: qlFrErr } = await supabase.from("quote_lines").insert([
+    { quote_id: qFR![0].id, position: 1, description: "Audit thermique et aéraulique", quantity: 10, unit: "j", unit_price: 600, vat_rate: 20, discount_pct: 0 },
+    { quote_id: qFR![0].id, position: 2, description: "Rapport d'ingénierie CFO", quantity: 5, unit: "j", unit_price: 600, vat_rate: 20, discount_pct: 0 },
+    { quote_id: qFR![0].id, position: 3, description: "Réunion de restitution", quantity: 5, unit: "j", unit_price: 600, vat_rate: 20, discount_pct: 0 },
+    { quote_id: qFR![1].id, position: 1, description: "Ingénierie process raffinerie", quantity: 15, unit: "j", unit_price: 600, vat_rate: 20, discount_pct: 0 },
+    { quote_id: qFR![2].id, position: 1, description: "Consultation énergie renouvelable", quantity: 5, unit: "j", unit_price: 700, vat_rate: 20, discount_pct: 0 },
   ]);
+  if (qlFrErr) throw new Error(qlFrErr.message);
 
-  /* ─── Invoice lines ─── */
-  await supabase.from("invoice_lines").insert([
-    { invoice_id: iFR![0].id, position: 1, description: "Audit thermique et aéraulique", quantity: 10, unit: "j", unit_price: 600, vat_rate: 20, discount_pct: 0, total_ht: 6000, total_ttc: 7200 },
-    { invoice_id: iFR![0].id, position: 2, description: "Rapport CFO", quantity: 5, unit: "j", unit_price: 600, vat_rate: 20, discount_pct: 0, total_ht: 3000, total_ttc: 3600 },
-    { invoice_id: iFR![0].id, position: 3, description: "Réunion restitution", quantity: 5, unit: "j", unit_price: 600, vat_rate: 20, discount_pct: 0, total_ht: 3000, total_ttc: 3600 },
+  /* ─── Quote lines (GN) ─── */
+  const { error: qlGnErr } = await supabase.from("quote_lines").insert([
+    { quote_id: qGN![0].id, position: 1, description: "Mission CFO mine de bauxite", quantity: 200, unit: "j", unit_price: 900_000, vat_rate: 0, discount_pct: 0 },
+    { quote_id: qGN![1].id, position: 1, description: "Conception ventilation industrielle", quantity: 127, unit: "j", unit_price: 750_000, vat_rate: 0, discount_pct: 0 },
   ]);
+  if (qlGnErr) throw new Error(qlGnErr.message);
+
+  /* ─── Invoice lines (FR) ─── */
+  const { error: ilFrErr } = await supabase.from("invoice_lines").insert([
+    { invoice_id: iFR![0].id, position: 1, description: "Audit thermique et aéraulique", quantity: 10, unit: "j", unit_price: 600, vat_rate: 20, discount_pct: 0 },
+    { invoice_id: iFR![0].id, position: 2, description: "Rapport CFO", quantity: 5, unit: "j", unit_price: 600, vat_rate: 20, discount_pct: 0 },
+    { invoice_id: iFR![0].id, position: 3, description: "Réunion restitution", quantity: 5, unit: "j", unit_price: 600, vat_rate: 20, discount_pct: 0 },
+    { invoice_id: iFR![1].id, position: 1, description: "Étude préliminaire ingénierie", quantity: 7.5, unit: "j", unit_price: 600, vat_rate: 20, discount_pct: 0 },
+    { invoice_id: iFR![2].id, position: 1, description: "Bilan thermique installation", quantity: 13.33, unit: "j", unit_price: 600, vat_rate: 20, discount_pct: 0 },
+    { invoice_id: iFR![3].id, position: 1, description: "Bilan énergétique résidentiel", quantity: 4, unit: "j", unit_price: 500, vat_rate: 20, discount_pct: 0 },
+  ]);
+  if (ilFrErr) throw new Error(ilFrErr.message);
+
+  /* ─── Invoice lines (GN) ─── */
+  const { error: ilGnErr } = await supabase.from("invoice_lines").insert([
+    { invoice_id: iGN![0].id, position: 1, description: "Mission CFO Boké — acompte 50%", quantity: 100, unit: "j", unit_price: 900_000, vat_rate: 0, discount_pct: 0 },
+    { invoice_id: iGN![1].id, position: 1, description: "Étude ventilation industrielle — livrable 1", quantity: 66.67, unit: "j", unit_price: 750_000, vat_rate: 0, discount_pct: 0 },
+  ]);
+  if (ilGnErr) throw new Error(ilGnErr.message);
 
   /* ─── Missions ─── */
   await supabase.from("missions").insert([

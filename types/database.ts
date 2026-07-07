@@ -184,8 +184,33 @@ export interface AccountingEntry {
   currency: string;
   date: string;
   invoice_id: string | null;
+  receipt_file_id: string | null;
   reference: string | null;
   notes: string | null;
+  created_at: string;
+}
+
+export type FileCategory = "facture" | "contrat" | "rib" | "justificatif" | "autre";
+
+export interface CompanyFile {
+  id: string;
+  user_id: string;
+  market: Market;
+  folder_id: string | null;
+  storage_path: string;
+  file_name: string;
+  file_type: string;
+  size_bytes: number;
+  category: FileCategory | string;
+  created_at: string;
+}
+
+export interface CompanyFolder {
+  id: string;
+  user_id: string;
+  market: Market;
+  parent_id: string | null;
+  name: string;
   created_at: string;
 }
 
@@ -212,6 +237,8 @@ export interface Database {
       invoice_lines: { Row: InvoiceLine; Insert: Partial<InvoiceLine>; Update: Partial<InvoiceLine> };
       missions: { Row: Mission; Insert: Partial<Mission>; Update: Partial<Mission> };
       accounting_entries: { Row: AccountingEntry; Insert: Partial<AccountingEntry>; Update: Partial<AccountingEntry> };
+      company_files: { Row: CompanyFile; Insert: Partial<CompanyFile>; Update: Partial<CompanyFile> };
+      company_folders: { Row: CompanyFolder; Insert: Partial<CompanyFolder>; Update: Partial<CompanyFolder> };
       site_visits: { Row: SiteVisit; Insert: Partial<SiteVisit>; Update: Partial<SiteVisit> };
     };
     Views: Record<string, never>;

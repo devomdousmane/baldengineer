@@ -250,24 +250,24 @@ export default function EditMissionPage() {
               <p className="text-xs font-semibold text-[var(--color-text-2)] uppercase tracking-widest mb-3">Résumé</p>
               <div className="space-y-3">
                 <div>
-                  <p className="text-[10px] uppercase tracking-widest text-[var(--color-text-3)] mb-0.5">Marché</p>
+                  <p className="text-3xs uppercase tracking-widest text-[var(--color-text-3)] mb-0.5">Marché</p>
                   <p className="text-sm font-medium">{mission.market === "france" ? "🇫🇷 France · EUR" : "🇬🇳 Guinée · GNF"}</p>
                 </div>
                 {estimatedTotal && (
                   <div>
-                    <p className="text-[10px] uppercase tracking-widest text-[var(--color-text-3)] mb-0.5">Budget prévisionnel</p>
+                    <p className="text-3xs uppercase tracking-widest text-[var(--color-text-3)] mb-0.5">Budget prévisionnel</p>
                     <p className="text-lg font-semibold tabular-nums" style={{ color: "var(--color-success)" }}>{fmt(estimatedTotal)}</p>
                     <p className="text-xs text-[var(--color-text-3)]">{estimatedDays}j × {dailyRate ? fmt(parseFloat(dailyRate)) : "—"}/j</p>
                   </div>
                 )}
                 {startDate && (
                   <div>
-                    <p className="text-[10px] uppercase tracking-widest text-[var(--color-text-3)] mb-0.5">Période</p>
+                    <p className="text-3xs uppercase tracking-widest text-[var(--color-text-3)] mb-0.5">Période</p>
                     <p className="text-sm">{new Date(startDate).toLocaleDateString("fr-FR")}{endDate ? ` → ${new Date(endDate).toLocaleDateString("fr-FR")}` : ""}</p>
                   </div>
                 )}
                 <div>
-                  <p className="text-[10px] uppercase tracking-widest text-[var(--color-text-3)] mb-0.5">Créée le</p>
+                  <p className="text-3xs uppercase tracking-widest text-[var(--color-text-3)] mb-0.5">Créée le</p>
                   <p className="text-sm">{new Date(mission.created_at).toLocaleDateString("fr-FR")}</p>
                 </div>
               </div>

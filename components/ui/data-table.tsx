@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useMemo, type ReactNode } from "react";
-import { ChevronUp, ChevronDown, ChevronsUpDown, ChevronRight, Search } from "lucide-react";
+import { useState, useMemo, useEffect, type ReactNode } from "react";
+import { ChevronUp, ChevronDown, ChevronsUpDown, ChevronRight, ChevronLeft, Search } from "lucide-react";
+
+const PAGE_SIZE = 25;
 
 export interface Column<T> {
   key: keyof T | string;
@@ -45,6 +47,7 @@ export function DataTable<T extends { id: string }>({
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>(null);
+  const [page, setPage] = useState(1);
 
   const handleSort = (key: string) => {
     if (sortKey !== key) { setSortKey(key); setSortDir("asc"); }
@@ -69,6 +72,18 @@ export function DataTable<T extends { id: string }>({
       return sortDir === "asc" ? cmp : -cmp;
     });
   }, [filtered, sortKey, sortDir]);
+
+  const pageCount = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+
+  /* Revenir en page 1 si les données/le filtre changent et rendent la page courante hors bornes. */
+  useEffect(() => {
+    setPage(1);
+  }, [data, search, sortKey, sortDir]);
+
+  const paginated = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return sorted.slice(start, start + PAGE_SIZE);
+  }, [sorted, page]);
 
   const allCols = actions
     ? [...columns, { key: "_actions", label: "", sortable: false, align: "right" as const }]
@@ -127,15 +142,15 @@ export function DataTable<T extends { id: string }>({
               <tr>
                 <td colSpan={allCols.length} className="px-4 py-12 text-center">
                   <div className="flex flex-col items-center justify-center gap-2.5">
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: "var(--color-bg-2)" }}>
-                      <Search className="w-4 h-4" style={{ color: "var(--color-text-3)" }} />
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[var(--color-bg-2)]">
+                      <Search className="w-4 h-4 text-[var(--color-text-3)]" />
                     </div>
                     <p className="text-sm text-[var(--color-text-3)]">{emptyMessage}</p>
                   </div>
                 </td>
               </tr>
             ) : (
-              sorted.map((row) => (
+              paginated.map((row) => (
                 <tr
                   key={row.id}
                   className={`group border-b border-[var(--color-border)] last:border-0 transition-colors duration-[var(--dur-fast)] hover:bg-[var(--color-bg-2)] ${onRowClick ? "cursor-pointer" : ""}`}
@@ -152,7 +167,7 @@ export function DataTable<T extends { id: string }>({
                         <span className="inline-flex items-center gap-1.5">
                           {col.render ? col.render(raw, row) : (raw != null ? String(raw) : "—")}
                           {onRowClick && i === columns.length - 1 && !actions && (
-                            <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-0 -translate-x-1 group-hover:opacity-40 group-hover:translate-x-0 transition-all duration-[var(--dur-fast)]" style={{ color: "var(--color-text-3)" }} />
+                            <ChevronRight className="w-3.5 h-3.5 shrink-0 opacity-0 -translate-x-1 group-hover:opacity-40 group-hover:translate-x-0 transition-all duration-[var(--dur-fast)] text-[var(--color-text-3)]" />
                           )}
                         </span>
                       </td>
@@ -171,9 +186,32 @@ export function DataTable<T extends { id: string }>({
       </div>
 
       {!loading && sorted.length > 0 && (
-        <p className="text-xs text-[var(--color-text-3)] text-right">
-          {sorted.length} résultat{sorted.length > 1 ? "s" : ""}
-        </p>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs text-[var(--color-text-3)]">
+            {sorted.length} résultat{sorted.length > 1 ? "s" : ""}
+            {pageCount > 1 && ` · page ${page}/${pageCount}`}
+          </p>
+          {pageCount > 1 && (
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page <= 1}
+                aria-label="Page précédente"
+                className="w-7 h-7 rounded-[var(--radius-md)] flex items-center justify-center text-[var(--color-text-2)] hover:bg-[var(--color-bg-2)] disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+                disabled={page >= pageCount}
+                aria-label="Page suivante"
+                className="w-7 h-7 rounded-[var(--radius-md)] flex items-center justify-center text-[var(--color-text-2)] hover:bg-[var(--color-bg-2)] disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

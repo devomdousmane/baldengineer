@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Header } from "@/components/layout/header";
 import { Card } from "@/components/ui/card";
@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input, Select, Textarea } from "@/components/ui/input";
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { createAccountingEntryAction } from "@/lib/actions/accounting";
-import { ArrowLeft, TrendingUp, TrendingDown } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
+import { ArrowLeft, TrendingUp, TrendingDown, ScanLine, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import type { Market } from "@/types/database";
 
@@ -41,20 +42,30 @@ const card = (i: number) => ({
 
 export default function NewAccountingEntryPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const toast = useToast();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  const [type, setType] = useState<"income" | "expense">("income");
-  const [market, setMarket] = useState<Market>("france");
-  const [category, setCategory] = useState("");
-  const [label, setLabel] = useState("");
-  const [amount, setAmount] = useState("");
-  const [date, setDate] = useState(today);
+  const scannedReceiptFileId = searchParams.get("receipt_file_id");
+  const isFromScan = !!scannedReceiptFileId;
+  const scannedCurrency = searchParams.get("scanned_currency");
+
+  const [type, setType] = useState<"income" | "expense">("expense");
+  const [market, setMarket] = useState<Market>((searchParams.get("market") as Market) ?? "france");
+  const [category, setCategory] = useState(searchParams.get("category") ?? "");
+  const [label, setLabel] = useState(searchParams.get("label") ?? "");
+  const [amount, setAmount] = useState(searchParams.get("amount") ?? "");
+  const [date, setDate] = useState(searchParams.get("date") ?? today);
   const [reference, setReference] = useState("");
   const [notes, setNotes] = useState("");
 
   const categories = type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
   const currency = market === "france" ? "EUR" : "GNF";
+  /* La devise lue sur le document scanné peut différer de celle du marché sélectionné
+     (ex. facture en EUR rattachée par erreur au marché Guinée) — aucune conversion de
+     change fiable n'est possible ici, donc on prévient plutôt que de fausser le montant. */
+  const currencyMismatch = isFromScan && scannedCurrency && scannedCurrency !== currency;
 
   const handleTypeChange = (newType: "income" | "expense") => {
     setType(newType);
@@ -72,7 +83,9 @@ export default function NewAccountingEntryPage() {
         await createAccountingEntryAction({
           market, type, category, label, amount: amt,
           date, reference: reference || undefined, notes: notes || undefined,
+          receipt_file_id: scannedReceiptFileId || undefined,
         });
+        toast.success("Écriture enregistrée", { description: label });
         router.push("/comptabilite");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Erreur lors de la création");
@@ -96,6 +109,32 @@ export default function NewAccountingEntryPage() {
 
       <PageWrapper>
         <form onSubmit={handleSubmit} className="max-w-lg mx-auto space-y-5">
+          {isFromScan && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-[var(--radius-md)] text-sm"
+              style={{ backgroundColor: "var(--color-info-dim)", color: "var(--color-info)" }}
+            >
+              <ScanLine className="w-4 h-4 shrink-0" />
+              Champs pré-remplis depuis le fichier scanné — vérifiez avant d&apos;enregistrer.
+            </motion.div>
+          )}
+
+          {currencyMismatch && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-start gap-2 px-4 py-2.5 rounded-[var(--radius-md)] text-sm"
+              style={{ backgroundColor: "var(--color-warning-dim)", color: "var(--color-warning)" }}
+            >
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>
+                Le document est en <strong>{scannedCurrency}</strong>, mais le marché sélectionné utilise le <strong>{currency}</strong> —
+                aucune conversion automatique n&apos;est faite. Corrigez le montant manuellement ou changez de marché avant d&apos;enregistrer.
+              </span>
+            </motion.div>
+          )}
 
           {/* Type toggle */}
           <motion.div {...card(0)}>

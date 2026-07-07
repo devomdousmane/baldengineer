@@ -8,6 +8,9 @@ export type AuditAction =
   | "settings.updated"
   | "facturx.generated"
   | "ai.chat"
+  | "ai.scan_receipt"
+  | "file.uploaded"
+  | "file.deleted"
   | `email.${string}`;
 
 export interface AuditPayload {

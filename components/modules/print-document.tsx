@@ -40,6 +40,8 @@ interface PrintDocumentProps {
   document: DocData;
   client: Client | null;
   profile: Profile | null;
+  /** Masque la barre d'actions Imprimer/Fermer — pour un usage en aperçu intégré (ex. panneau latéral). */
+  hideToolbar?: boolean;
 }
 
 const BRAND    = "#2D8A3E";
@@ -131,7 +133,7 @@ table { width: 100%; border-collapse: collapse; }
 th {
   background: #F8FAFC;
   padding: 7px 10px;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: .06em;
@@ -145,9 +147,9 @@ td { padding: 8px 10px; font-size: 10.5px; border-bottom: 1px solid #F1F5F9; ver
 tr:last-child td { border-bottom: none; }
 tr:nth-child(even) td { background: #FAFAFA; }
 .divider { border: none; border-top: 1px solid #E2E8F0; margin: 20px 0; }
-.label { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: #94A3B8; margin-bottom: 4px; }
+.label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: #94A3B8; margin-bottom: 4px; }
 .mono { font-family: "JetBrains Mono", "Courier New", monospace; }
-.badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 999px; font-size: 9.5px; font-weight: 600; letter-spacing: .03em; }
+.badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 999px; font-size: 10px; font-weight: 600; letter-spacing: .03em; }
 h1 { font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
 h2 { font-size: 13px; font-weight: 700; }
 .watermark {
@@ -160,13 +162,13 @@ h2 { font-size: 13px; font-weight: 700; }
 .trace-box { border: 1px solid #E2E8F0; border-radius: 6px; padding: 10px 14px; background: #F8FAFC; display: flex; align-items: flex-start; gap: 14px; }
 .trace-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 20px; flex: 1; }
 .trace-row { display: flex; flex-direction: column; }
-.trace-label { font-size: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #94A3B8; }
-.trace-value { font-size: 9.5px; font-weight: 600; color: #334155; font-family: "JetBrains Mono", monospace; letter-spacing: 0.03em; }
+.trace-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: #94A3B8; }
+.trace-value { font-size: 10px; font-weight: 600; color: #334155; font-family: "JetBrains Mono", monospace; letter-spacing: 0.03em; }
 .sign-box { border: 1px solid #E2E8F0; border-radius: 6px; padding: 12px; background: #FAFAFA; }
 .sign-line { border-top: 1px solid #CBD5E1; margin-top: 40px; width: 100%; }
 `;
 
-export function PrintDocument({ type, document: doc, client, profile }: PrintDocumentProps) {
+export function PrintDocument({ type, document: doc, client, profile, hideToolbar = false }: PrintDocumentProps) {
   const [qrUrl, setQrUrl] = useState("");
   const [traceHash, setTraceHash] = useState("");
 
@@ -176,19 +178,24 @@ export function PrintDocument({ type, document: doc, client, profile }: PrintDoc
 
   useEffect(() => {
     const qrData = `BALDPRO|${doc.number}|${doc.date}|${doc.total_ttc.toFixed(2)}|${currency}`;
-    Promise.all([
-      QRCode.toDataURL(qrData, { width: 88, margin: 1, color: { dark: BRAND, light: "#FFFFFF" } }),
-      crypto.subtle.digest("SHA-256", new TextEncoder().encode(
+
+    QRCode.toDataURL(qrData, { width: 88, margin: 1, color: { dark: BRAND, light: "#FFFFFF" } })
+      .then(setQrUrl)
+      .catch(() => {});
+
+    /* crypto.subtle n'existe que dans un contexte sécurisé (HTTPS ou localhost) —
+       sans ce garde, l'accès plante hors de ces contextes (ex. accès via IP réseau en HTTP). */
+    if (typeof crypto === "undefined" || !crypto.subtle) return;
+
+    crypto.subtle
+      .digest("SHA-256", new TextEncoder().encode(
         qrData + (client?.name ?? "") + (profile?.vat_number ?? "") + (profile?.company_nif ?? "")
-      )).then((buf) => {
+      ))
+      .then((buf) => {
         const hex = Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("").toUpperCase();
-        return `${hex.slice(0, 8)}-${hex.slice(8, 16)}-${hex.slice(16, 24)}`;
-      }),
-    ]).then(([url, hash]) => {
-      setQrUrl(url);
-      setTraceHash(hash);
-      setTimeout(() => window.print(), 150);
-    });
+        setTraceHash(`${hex.slice(0, 8)}-${hex.slice(8, 16)}-${hex.slice(16, 24)}`);
+      })
+      .catch(() => {});
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const status = STATUS_LABELS[doc.status] ?? { label: doc.status, color: "#64748B", bg: "#F1F5F9" };
@@ -218,17 +225,19 @@ export function PrintDocument({ type, document: doc, client, profile }: PrintDoc
       )}
 
       {/* Screen toolbar */}
-      <div className="no-print" style={{ maxWidth: 794, margin: "0 auto 16px", gap: 8, alignItems: "center" }}>
-        <button onClick={() => window.print()}
-          style={{ background: BRAND, color: "white", border: "none", borderRadius: 7, padding: "9px 20px", cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 600 }}>
-          Imprimer / Sauvegarder en PDF
-        </button>
-        <button onClick={() => window.close()}
-          style={{ background: "#F1F5F9", color: "#475569", border: "none", borderRadius: 7, padding: "9px 16px", cursor: "pointer", fontFamily: "inherit", fontSize: 13 }}>
-          Fermer
-        </button>
-        {!qrUrl && <span style={{ fontSize: 12, color: "#94A3B8" }}>Génération du QR code…</span>}
-      </div>
+      {!hideToolbar && (
+        <div className="no-print" style={{ maxWidth: 794, margin: "0 auto 16px", gap: 8, alignItems: "center" }}>
+          <button onClick={() => window.print()}
+            style={{ background: BRAND, color: "white", border: "none", borderRadius: 7, padding: "9px 20px", cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 600 }}>
+            Imprimer / Sauvegarder en PDF
+          </button>
+          <button onClick={() => window.close()}
+            style={{ background: "#F1F5F9", color: "#475569", border: "none", borderRadius: 7, padding: "9px 16px", cursor: "pointer", fontFamily: "inherit", fontSize: 13 }}>
+            Fermer
+          </button>
+          {!qrUrl && <span style={{ fontSize: 12, color: "#94A3B8" }}>Génération du QR code…</span>}
+        </div>
+      )}
 
       <div className="doc-page">
         <div className="accent-bar" />
@@ -241,7 +250,11 @@ export function PrintDocument({ type, document: doc, client, profile }: PrintDoc
             {/* Left: company info */}
             <div style={{ display: "flex", alignItems: "flex-start", gap: 14, maxWidth: "52%" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.png" alt="Logo" style={{ width: 82, height: 48, objectFit: "contain", flexShrink: 0 }} />
+              <img
+                src={isGuinee ? "/logo-guinee.png" : "/logo.png"}
+                alt="Logo"
+                style={{ width: isGuinee ? 48 : 82, height: 48, objectFit: "contain", flexShrink: 0 }}
+              />
               <div>
                 {companyName && <h2 style={{ marginBottom: 3 }}>{companyName}</h2>}
                 {profile?.company_address && <p style={{ color: "#475569", fontSize: 10 }}>{profile.company_address}</p>}
@@ -250,19 +263,19 @@ export function PrintDocument({ type, document: doc, client, profile }: PrintDoc
                     {isGuinee && "B.P. "}{[profile?.company_zip, profile?.company_city].filter(Boolean).join(" ")}
                   </p>
                 )}
-                {profile?.company_country && <p style={{ color: "#475569", fontSize: 10 }}>{profile.company_country}</p>}
-                {profile?.company_phone && <p style={{ color: "#94A3B8", fontSize: 9, marginTop: 3 }}>{profile.company_phone}</p>}
-                {profile?.company_email && <p style={{ color: "#94A3B8", fontSize: 9 }}>{profile.company_email}</p>}
-                {profile?.company_website && <p style={{ color: "#94A3B8", fontSize: 9 }}>{profile.company_website}</p>}
+                <p style={{ color: "#475569", fontSize: 10 }}>{isGuinee ? "Guinée" : "France"}</p>
+                {profile?.company_phone && <p style={{ color: "#94A3B8", fontSize: 10, marginTop: 3 }}>{profile.company_phone}</p>}
+                {profile?.company_email && <p style={{ color: "#94A3B8", fontSize: 10 }}>{profile.company_email}</p>}
+                {profile?.company_website && <p style={{ color: "#94A3B8", fontSize: 10 }}>{profile.company_website}</p>}
                 <div style={{ marginTop: 6, display: "flex", flexWrap: "wrap", gap: 4 }}>
                   {isFrance && profile?.company_siren && (
-                    <span style={{ fontSize: 8, background: "#F1F5F9", color: "#475569", padding: "1px 6px", borderRadius: 4 }}>SIREN {profile.company_siren}</span>
+                    <span style={{ fontSize: 10, background: "#F1F5F9", color: "#475569", padding: "1px 6px", borderRadius: 4 }}>SIREN {profile.company_siren}</span>
                   )}
                   {isFrance && profile?.vat_number && (
-                    <span style={{ fontSize: 8, background: "#F1F5F9", color: "#475569", padding: "1px 6px", borderRadius: 4 }}>TVA {profile.vat_number}</span>
+                    <span style={{ fontSize: 10, background: "#F1F5F9", color: "#475569", padding: "1px 6px", borderRadius: 4 }}>TVA {profile.vat_number}</span>
                   )}
                   {isGuinee && profile?.company_nif && (
-                    <span style={{ fontSize: 8, background: "#F0FFF4", color: BRAND, padding: "1px 6px", borderRadius: 4 }}>NIF {profile.company_nif}</span>
+                    <span style={{ fontSize: 10, background: "#F0FFF4", color: BRAND, padding: "1px 6px", borderRadius: 4 }}>NIF {profile.company_nif}</span>
                   )}
                 </div>
               </div>
@@ -278,7 +291,7 @@ export function PrintDocument({ type, document: doc, client, profile }: PrintDoc
               </div>
               {isFrance && type === "facture" && (
                 <div style={{ marginTop: 6 }}>
-                  <span style={{ fontSize: 7.5, background: "#EFF6FF", color: "#1D4ED8", padding: "1px 7px", borderRadius: 4, fontWeight: 600 }}>
+                  <span style={{ fontSize: 10, background: "#EFF6FF", color: "#1D4ED8", padding: "1px 7px", borderRadius: 4, fontWeight: 600 }}>
                     Factur-X EN 16931
                   </span>
                 </div>
@@ -302,17 +315,17 @@ export function PrintDocument({ type, document: doc, client, profile }: PrintDoc
                     </p>
                   )}
                   {client.country && <p style={{ color: "#475569", fontSize: 10 }}>{client.country}</p>}
-                  {client.phone && <p style={{ color: "#94A3B8", fontSize: 9, marginTop: 4 }}>{client.phone}</p>}
-                  {client.email && <p style={{ color: "#94A3B8", fontSize: 9 }}>{client.email}</p>}
+                  {client.phone && <p style={{ color: "#94A3B8", fontSize: 10, marginTop: 4 }}>{client.phone}</p>}
+                  {client.email && <p style={{ color: "#94A3B8", fontSize: 10 }}>{client.email}</p>}
                   <div style={{ marginTop: 5, display: "flex", gap: 4, flexWrap: "wrap" }}>
                     {isFrance && client.siren && (
-                      <span style={{ fontSize: 8, background: "#F1F5F9", color: "#475569", padding: "1px 6px", borderRadius: 4 }}>SIREN {client.siren}</span>
+                      <span style={{ fontSize: 10, background: "#F1F5F9", color: "#475569", padding: "1px 6px", borderRadius: 4 }}>SIREN {client.siren}</span>
                     )}
                     {isFrance && client.vat_number && (
-                      <span style={{ fontSize: 8, background: "#F1F5F9", color: "#475569", padding: "1px 6px", borderRadius: 4 }}>TVA {client.vat_number}</span>
+                      <span style={{ fontSize: 10, background: "#F1F5F9", color: "#475569", padding: "1px 6px", borderRadius: 4 }}>TVA {client.vat_number}</span>
                     )}
                     {isGuinee && client.nif && (
-                      <span style={{ fontSize: 8, background: "#F0FFF4", color: BRAND, padding: "1px 6px", borderRadius: 4 }}>NIF {client.nif}</span>
+                      <span style={{ fontSize: 10, background: "#F0FFF4", color: BRAND, padding: "1px 6px", borderRadius: 4 }}>NIF {client.nif}</span>
                     )}
                   </div>
                 </div>
@@ -368,7 +381,7 @@ export function PrintDocument({ type, document: doc, client, profile }: PrintDoc
                 const ttc = Math.round(ht * (1 + l.vat_rate / 100) * 100) / 100;
                 return (
                   <tr key={l.position}>
-                    <td style={{ color: "#94A3B8", fontSize: 9 }}>{l.position}</td>
+                    <td style={{ color: "#94A3B8", fontSize: 10 }}>{l.position}</td>
                     <td>{l.description}</td>
                     <td className="c" style={{ color: "#475569" }}>{l.quantity}</td>
                     <td className="c" style={{ color: "#475569" }}>{l.unit}</td>
@@ -397,10 +410,10 @@ export function PrintDocument({ type, document: doc, client, profile }: PrintDoc
               {isFrance && vatGroups.length > 1 && (
                 <div style={{ marginBottom: 8, border: "1px solid #E2E8F0", borderRadius: 6, overflow: "hidden" }}>
                   <div style={{ background: "#F8FAFC", padding: "5px 12px", borderBottom: "1px solid #E2E8F0" }}>
-                    <span style={{ fontSize: 8.5, fontWeight: 600, color: "#64748B", textTransform: "uppercase", letterSpacing: ".06em" }}>Détail TVA</span>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: "#64748B", textTransform: "uppercase", letterSpacing: ".06em" }}>Détail TVA</span>
                   </div>
                   {vatGroups.map(([rate, { base, vat }]) => (
-                    <div key={rate} style={{ display: "flex", justifyContent: "space-between", padding: "5px 12px", borderBottom: "1px solid #F1F5F9", fontSize: 9 }}>
+                    <div key={rate} style={{ display: "flex", justifyContent: "space-between", padding: "5px 12px", borderBottom: "1px solid #F1F5F9", fontSize: 10 }}>
                       <span style={{ color: "#64748B" }}>Base {rate}% : <span className="mono">{fmtAmt(base, currency)}</span></span>
                       <span className="mono" style={{ fontWeight: 600 }}>TVA {fmtAmt(vat, currency)}</span>
                     </div>
@@ -424,8 +437,8 @@ export function PrintDocument({ type, document: doc, client, profile }: PrintDoc
                 ) : (
                   isGuinee && (
                     <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 14px", borderBottom: "1px solid #F1F5F9" }}>
-                      <span style={{ color: "#64748B", fontSize: 9.5 }}>TVA</span>
-                      <span style={{ color: "#94A3B8", fontSize: 9.5 }}>Exonéré</span>
+                      <span style={{ color: "#64748B", fontSize: 10 }}>TVA</span>
+                      <span style={{ color: "#94A3B8", fontSize: 10 }}>Exonéré</span>
                     </div>
                   )
                 )}
@@ -459,7 +472,7 @@ export function PrintDocument({ type, document: doc, client, profile }: PrintDoc
                   <div style={{ display: "grid", gap: 3 }}>
                     {profile.bank_name && <p style={{ fontWeight: 600, fontSize: 11 }}>{profile.bank_name}</p>}
                     <p className="mono" style={{ color: BRAND, letterSpacing: "0.05em", fontSize: 11 }}>{profile.bank_iban}</p>
-                    {profile.bank_bic && <p className="mono" style={{ color: "#475569", fontSize: 9.5 }}>BIC : {profile.bank_bic}</p>}
+                    {profile.bank_bic && <p className="mono" style={{ color: "#475569", fontSize: 10 }}>BIC : {profile.bank_bic}</p>}
                   </div>
                 </div>
               ) : isGuinee && profile?.bank_iban ? (
@@ -469,7 +482,7 @@ export function PrintDocument({ type, document: doc, client, profile }: PrintDoc
                     <p className="label" style={{ marginBottom: 6 }}>Versement bancaire</p>
                     {profile.bank_name && <p style={{ fontWeight: 600, fontSize: 11 }}>{profile.bank_name}</p>}
                     <p className="mono" style={{ color: BRAND, fontSize: 10, marginTop: 3 }}>{profile.bank_iban}</p>
-                    {profile.bank_bic && <p className="mono" style={{ color: "#475569", fontSize: 9 }}>BIC : {profile.bank_bic}</p>}
+                    {profile.bank_bic && <p className="mono" style={{ color: "#475569", fontSize: 10 }}>BIC : {profile.bank_bic}</p>}
                   </div>
                   {/* Mobile money */}
                   <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 6, padding: "12px 14px" }}>
@@ -478,14 +491,14 @@ export function PrintDocument({ type, document: doc, client, profile }: PrintDoc
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                         <span style={{ fontSize: 14 }}>🟠</span>
                         <div>
-                          <p style={{ fontSize: 8.5, color: "#94A3B8" }}>Orange Money</p>
+                          <p style={{ fontSize: 10, color: "#94A3B8" }}>Orange Money</p>
                           <p style={{ fontSize: 10, fontFamily: "monospace", fontWeight: 600, color: "#334155" }}>—</p>
                         </div>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                         <span style={{ fontSize: 14 }}>🟡</span>
                         <div>
-                          <p style={{ fontSize: 8.5, color: "#94A3B8" }}>MTN Mobile Money</p>
+                          <p style={{ fontSize: 10, color: "#94A3B8" }}>MTN Mobile Money</p>
                           <p style={{ fontSize: 10, fontFamily: "monospace", fontWeight: 600, color: "#334155" }}>—</p>
                         </div>
                       </div>
@@ -500,7 +513,7 @@ export function PrintDocument({ type, document: doc, client, profile }: PrintDoc
                     {[{ e: "🟠", n: "Orange Money" }, { e: "🟡", n: "MTN Mobile Money" }, { e: "💵", n: "Espèces" }, { e: "🏦", n: "Virement bancaire" }].map(({ e, n }) => (
                       <div key={n} style={{ display: "flex", alignItems: "center", gap: 5 }}>
                         <span style={{ fontSize: 13 }}>{e}</span>
-                        <span style={{ fontSize: 9.5, color: "#475569" }}>{n}</span>
+                        <span style={{ fontSize: 10, color: "#475569" }}>{n}</span>
                       </div>
                     ))}
                   </div>
@@ -539,8 +552,8 @@ export function PrintDocument({ type, document: doc, client, profile }: PrintDoc
                   {/* Emetteur */}
                   <div className="sign-box">
                     <p className="label" style={{ marginBottom: 8 }}>Émetteur · {companyName || "Prestataire"}</p>
-                    <p style={{ fontSize: 9, color: "#64748B", marginBottom: 4 }}>Fait à {profile?.company_city || "___________"}, le {fmtDate(doc.date)}</p>
-                    <p style={{ fontSize: 9, color: "#64748B" }}>Cachet et signature :</p>
+                    <p style={{ fontSize: 10, color: "#64748B", marginBottom: 4 }}>Fait à {profile?.company_city || "___________"}, le {fmtDate(doc.date)}</p>
+                    <p style={{ fontSize: 10, color: "#64748B" }}>Cachet et signature :</p>
                     <div className="sign-line" />
                   </div>
                   {/* Client */}
@@ -548,8 +561,8 @@ export function PrintDocument({ type, document: doc, client, profile }: PrintDoc
                     <p className="label" style={{ marginBottom: 8 }}>
                       BON POUR ACCORD · {client?.name || "Client"}
                     </p>
-                    <p style={{ fontSize: 9, color: "#64748B", marginBottom: 4 }}>Lu et approuvé, le ________________</p>
-                    <p style={{ fontSize: 9, color: "#64748B" }}>Cachet et signature du client :</p>
+                    <p style={{ fontSize: 10, color: "#64748B", marginBottom: 4 }}>Lu et approuvé, le ________________</p>
+                    <p style={{ fontSize: 10, color: "#64748B" }}>Cachet et signature du client :</p>
                     <div className="sign-line" />
                   </div>
                 </div>
@@ -558,13 +571,13 @@ export function PrintDocument({ type, document: doc, client, profile }: PrintDoc
                 <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 6, padding: "10px 14px", display: "flex", alignItems: "flex-start", gap: 12 }}>
                   <div style={{ flex: 1 }}>
                     <p className="label" style={{ marginBottom: 4 }}>Validité & acceptation</p>
-                    <p style={{ fontSize: 9.5, color: "#475569" }}>
+                    <p style={{ fontSize: 10, color: "#475569" }}>
                       Ce devis est valable jusqu&apos;au <strong>{doc.extraDate ? fmtDate(doc.extraDate) : "—"}</strong>.
                       Pour l&apos;accepter, veuillez le retourner signé avec la mention &quot;Bon pour accord&quot;.
                     </p>
                   </div>
                   <div style={{ flexShrink: 0, borderLeft: "1px solid #E2E8F0", paddingLeft: 12 }}>
-                    <p style={{ fontSize: 8, color: "#94A3B8", marginBottom: 24 }}>Signature :</p>
+                    <p style={{ fontSize: 10, color: "#94A3B8", marginBottom: 24 }}>Signature :</p>
                     <div style={{ borderTop: "1px solid #CBD5E1", width: 100 }} />
                   </div>
                 </div>
@@ -576,7 +589,7 @@ export function PrintDocument({ type, document: doc, client, profile }: PrintDoc
           {isFrance && (
             <>
               <hr className="divider" />
-              <p style={{ color: "#94A3B8", fontSize: 8.5, lineHeight: 1.6 }}>
+              <p style={{ color: "#94A3B8", fontSize: 10, lineHeight: 1.6 }}>
                 {profile?.legal_mention ||
                   (type === "facture"
                     ? "Tout retard de paiement entraîne des pénalités de retard égales à 3 fois le taux d'intérêt légal, ainsi qu'une indemnité forfaitaire de 40 € pour frais de recouvrement (L.441-10 C.Com.)."
@@ -588,7 +601,7 @@ export function PrintDocument({ type, document: doc, client, profile }: PrintDoc
           {isGuinee && profile?.legal_mention && (
             <>
               <hr className="divider" />
-              <p style={{ color: "#94A3B8", fontSize: 8.5, lineHeight: 1.6 }}>{profile.legal_mention}</p>
+              <p style={{ color: "#94A3B8", fontSize: 10, lineHeight: 1.6 }}>{profile.legal_mention}</p>
             </>
           )}
 
@@ -606,7 +619,7 @@ export function PrintDocument({ type, document: doc, client, profile }: PrintDoc
               </div>
               <div className="trace-row">
                 <span className="trace-label">Empreinte numérique</span>
-                <span className="trace-value" style={{ fontSize: 8.5 }}>{traceHash || "—"}</span>
+                <span className="trace-value" style={{ fontSize: 10 }}>{traceHash || "—"}</span>
               </div>
               <div className="trace-row">
                 <span className="trace-label">Émis le</span>
@@ -625,9 +638,9 @@ export function PrintDocument({ type, document: doc, client, profile }: PrintDoc
 
           {/* ══ FOOTER ════════════════════════════════════════════ */}
           <hr className="divider" style={{ marginTop: 14 }} />
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", color: "#94A3B8", fontSize: 8.5 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", color: "#94A3B8", fontSize: 10 }}>
             <span>{companyName}</span>
-            <span className="mono" style={{ color: "#CBD5E1", fontSize: 8 }}>● ● ●</span>
+            <span className="mono" style={{ color: "#CBD5E1", fontSize: 10 }}>● ● ●</span>
             <span>{doc.number} · {new Date(doc.date).toLocaleDateString("fr-FR")} · BaldPro</span>
           </div>
         </div>

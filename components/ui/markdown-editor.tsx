@@ -114,7 +114,7 @@ export function MarkdownEditor({ value, onChange, label, placeholder, rows = 4 }
           />
         )}
       </div>
-      <p className="text-[11px] text-[var(--color-text-3)]">
+      <p className="text-2xs text-[var(--color-text-3)]">
         Markdown supporté : **gras**, _italique_, listes, [liens](url)
       </p>
     </div>

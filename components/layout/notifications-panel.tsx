@@ -65,7 +65,7 @@ export function NotificationsPanel() {
               animate={{ scale: 1 }}
               exit={{ scale: 0 }}
               transition={{ type: "spring", stiffness: 400, damping: 20 }}
-              className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center text-white"
+              className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-3xs font-bold flex items-center justify-center text-white"
               style={{ backgroundColor: "var(--color-danger)" }}
             >
               {count > 9 ? "9+" : count}
@@ -146,7 +146,7 @@ export function NotificationsPanel() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-medium text-[var(--color-text)] truncate">{notif.title}</p>
-                              <p className="text-[11px] text-[var(--color-text-3)] mt-0.5 truncate">{notif.description}</p>
+                              <p className="text-2xs text-[var(--color-text-3)] mt-0.5 truncate">{notif.description}</p>
                             </div>
                           </Link>
                           <button

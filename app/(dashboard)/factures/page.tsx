@@ -4,7 +4,7 @@ import { Header } from "@/components/layout/header";
 import { FacturesTable } from "@/components/tables/factures-table";
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { PageAside } from "@/components/layout/page-aside";
-import { KpiCard } from "@/components/ui/card";
+import { KpiCard } from "@/components/ui/kpi-card";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Plus, Receipt, Wallet, AlertTriangle, FileStack } from "lucide-react";

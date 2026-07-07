@@ -4,7 +4,7 @@ import { Header } from "@/components/layout/header";
 import { PaymentsTable } from "@/components/tables/payments-table";
 import { PageWrapper } from "@/components/layout/page-wrapper";
 import { PageAside } from "@/components/layout/page-aside";
-import { KpiCard } from "@/components/ui/card";
+import { KpiCard } from "@/components/ui/kpi-card";
 import { Wallet, TrendingUp, AlertTriangle, Receipt } from "lucide-react";
 import type { Market, InvoiceStatus } from "@/types/database";
 

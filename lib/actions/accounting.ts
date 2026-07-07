@@ -13,6 +13,7 @@ interface AccountingEntryInput {
   date: string;
   reference?: string;
   notes?: string;
+  receipt_file_id?: string;
 }
 
 export async function createAccountingEntryAction(payload: AccountingEntryInput): Promise<void> {
@@ -41,6 +42,7 @@ export async function createAccountingEntryAction(payload: AccountingEntryInput)
     date: payload.date,
     reference: payload.reference ?? null,
     notes: payload.notes ?? null,
+    receipt_file_id: payload.receipt_file_id ?? null,
   });
 
   if (error) throw new Error(error.message);
