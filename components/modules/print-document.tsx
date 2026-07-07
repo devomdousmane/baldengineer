@@ -33,6 +33,9 @@ interface DocData {
   notes?: string | null;
   terms?: string | null;
   lines: LineItem[];
+  signedAt?: string | null;
+  signatureDataUrl?: string | null;
+  signerName?: string | null;
 }
 
 interface PrintDocumentProps {
@@ -263,7 +266,6 @@ export function PrintDocument({ type, document: doc, client, profile, hideToolba
                     {isGuinee && "B.P. "}{[profile?.company_zip, profile?.company_city].filter(Boolean).join(" ")}
                   </p>
                 )}
-                <p style={{ color: "#475569", fontSize: 10 }}>{isGuinee ? "Guinée" : "France"}</p>
                 {profile?.company_phone && <p style={{ color: "#94A3B8", fontSize: 10, marginTop: 3 }}>{profile.company_phone}</p>}
                 {profile?.company_email && <p style={{ color: "#94A3B8", fontSize: 10 }}>{profile.company_email}</p>}
                 {profile?.company_website && <p style={{ color: "#94A3B8", fontSize: 10 }}>{profile.company_website}</p>}
@@ -543,47 +545,48 @@ export function PrintDocument({ type, document: doc, client, profile, hideToolba
             </>
           )}
 
-          {/* ══ BON POUR ACCORD (Guinea quotes) ══════════════════ */}
-          {type === "devis" && (
-            <>
-              <hr className="divider" />
-              {isGuinee ? (
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 8 }}>
-                  {/* Emetteur */}
-                  <div className="sign-box">
-                    <p className="label" style={{ marginBottom: 8 }}>Émetteur · {companyName || "Prestataire"}</p>
-                    <p style={{ fontSize: 10, color: "#64748B", marginBottom: 4 }}>Fait à {profile?.company_city || "___________"}, le {fmtDate(doc.date)}</p>
+          {/* ══ SIGNATURES (Émetteur + Client) ═══════════════════ */}
+          <>
+            <hr className="divider" />
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 8 }}>
+              {/* Emetteur */}
+              <div className="sign-box">
+                <p className="label" style={{ marginBottom: 8 }}>Émetteur · {companyName || "Prestataire"}</p>
+                <p style={{ fontSize: 10, color: "#64748B", marginBottom: 4 }}>Fait à {profile?.company_city || "___________"}, le {fmtDate(doc.date)}</p>
+                {profile?.signature_data_url ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img src={profile.signature_data_url} alt="Signature de l'émetteur" style={{ height: 44, objectFit: "contain", marginTop: 4 }} />
+                ) : (
+                  <>
                     <p style={{ fontSize: 10, color: "#64748B" }}>Cachet et signature :</p>
                     <div className="sign-line" />
-                  </div>
-                  {/* Client */}
-                  <div className="sign-box">
-                    <p className="label" style={{ marginBottom: 8 }}>
-                      BON POUR ACCORD · {client?.name || "Client"}
+                  </>
+                )}
+              </div>
+              {/* Client */}
+              <div className="sign-box">
+                <p className="label" style={{ marginBottom: 8 }}>
+                  {type === "devis" ? "BON POUR ACCORD · " : "Reçu par · "}{client?.name || "Client"}
+                </p>
+                {doc.signatureDataUrl ? (
+                  <>
+                    <p style={{ fontSize: 10, color: "#64748B", marginBottom: 4 }}>
+                      {doc.signerName ? `Signé par ${doc.signerName}` : "Signé"}
+                      {doc.signedAt && `, le ${fmtDate(doc.signedAt)}`}
                     </p>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={doc.signatureDataUrl} alt="Signature du client" style={{ height: 44, objectFit: "contain", marginTop: 4 }} />
+                  </>
+                ) : (
+                  <>
                     <p style={{ fontSize: 10, color: "#64748B", marginBottom: 4 }}>Lu et approuvé, le ________________</p>
                     <p style={{ fontSize: 10, color: "#64748B" }}>Cachet et signature du client :</p>
                     <div className="sign-line" />
-                  </div>
-                </div>
-              ) : (
-                /* France: simple acceptance mention */
-                <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 6, padding: "10px 14px", display: "flex", alignItems: "flex-start", gap: 12 }}>
-                  <div style={{ flex: 1 }}>
-                    <p className="label" style={{ marginBottom: 4 }}>Validité & acceptation</p>
-                    <p style={{ fontSize: 10, color: "#475569" }}>
-                      Ce devis est valable jusqu&apos;au <strong>{doc.extraDate ? fmtDate(doc.extraDate) : "—"}</strong>.
-                      Pour l&apos;accepter, veuillez le retourner signé avec la mention &quot;Bon pour accord&quot;.
-                    </p>
-                  </div>
-                  <div style={{ flexShrink: 0, borderLeft: "1px solid #E2E8F0", paddingLeft: 12 }}>
-                    <p style={{ fontSize: 10, color: "#94A3B8", marginBottom: 24 }}>Signature :</p>
-                    <div style={{ borderTop: "1px solid #CBD5E1", width: 100 }} />
-                  </div>
-                </div>
-              )}
-            </>
-          )}
+                  </>
+                )}
+              </div>
+            </div>
+          </>
 
           {/* ══ LEGAL ═════════════════════════════════════════════ */}
           {isFrance && (

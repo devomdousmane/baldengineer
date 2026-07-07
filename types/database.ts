@@ -39,6 +39,7 @@ export interface Profile {
   bank_iban: string | null;
   bank_bic: string | null;
   legal_mention: string | null;
+  signature_data_url: string | null; /* signature de l'émetteur, réutilisée sur tous les documents */
   created_at: string;
   updated_at: string;
 }
@@ -98,6 +99,9 @@ export interface Quote {
   accepted_at: string | null;
   refused_at: string | null;
   converted_to_invoice_id: string | null;
+  signed_at: string | null;
+  signature_data_url: string | null;
+  signer_name: string | null;
   public_token: string;
   created_at: string;
   updated_at: string;
@@ -145,6 +149,9 @@ export interface Invoice {
   facturx_status: "none" | "pending" | "submitted" | "acknowledged" | "rejected" | null;
   facturx_id: string | null;
   chorus_pro_id: string | null;
+  signed_at: string | null;
+  signature_data_url: string | null;
+  signer_name: string | null;
   public_token: string;
   created_at: string;
   updated_at: string;

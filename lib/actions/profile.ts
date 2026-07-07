@@ -41,3 +41,20 @@ export async function updateDefaultMarketAction(market: Market): Promise<void> {
   if (error) throw new Error(error.message);
   revalidatePath("/", "layout");
 }
+
+export async function updateSignatureAction(dataUrl: string | null): Promise<void> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Non authentifié");
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ signature_data_url: dataUrl, updated_at: new Date().toISOString() })
+    .eq("id", user.id);
+
+  if (error) throw new Error(error.message);
+  auditLog({ action: "settings.updated", user_id: user.id });
+  revalidatePath("/settings");
+  revalidatePath("/devis/new");
+  revalidatePath("/factures/new");
+}

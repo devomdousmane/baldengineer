@@ -333,7 +333,7 @@ export function NewFactureForm({ clients: initialClients, defaultMarket, vatRate
               <DocumentPreviewFrame
                 type="facture"
                 document={{
-                  number: "(numéro attribué à la création)",
+                  number: "—",
                   title,
                   date,
                   dateLabel: "Date de facturation",

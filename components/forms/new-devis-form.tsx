@@ -320,7 +320,7 @@ export function NewDevisForm({ clients: initialClients, defaultMarket, vatRateDe
               <DocumentPreviewFrame
                 type="devis"
                 document={{
-                  number: "(numéro attribué à la création)",
+                  number: "—",
                   title,
                   date,
                   dateLabel: "Date du devis",

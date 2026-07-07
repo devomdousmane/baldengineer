@@ -4,8 +4,9 @@ import { useState, useTransition, type ReactNode } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Select, Textarea } from "@/components/ui/input";
-import { updateProfileAction, updateDefaultMarketAction } from "@/lib/actions/profile";
-import { CheckCircle2, Globe, Building2, Landmark, Hash } from "lucide-react";
+import { SignaturePad } from "@/components/ui/signature-pad";
+import { updateProfileAction, updateDefaultMarketAction, updateSignatureAction } from "@/lib/actions/profile";
+import { CheckCircle2, Globe, Building2, Landmark, Hash, PenLine } from "lucide-react";
 import type { Profile, Market } from "@/types/database";
 
 interface Props {
@@ -14,13 +15,14 @@ interface Props {
 
 const MARKET_COUNTRY: Record<Market, string> = { france: "France", guinee: "Guinée" };
 
-type TabKey = "market" | "company" | "bank" | "documents";
+type TabKey = "market" | "company" | "bank" | "documents" | "signature";
 
 const TABS: { key: TabKey; label: string; icon: ReactNode }[] = [
   { key: "market", label: "Marché", icon: <Globe className="w-3.5 h-3.5" /> },
   { key: "company", label: "Entreprise", icon: <Building2 className="w-3.5 h-3.5" /> },
   { key: "bank", label: "Banque", icon: <Landmark className="w-3.5 h-3.5" /> },
   { key: "documents", label: "Documents", icon: <Hash className="w-3.5 h-3.5" /> },
+  { key: "signature", label: "Signature", icon: <PenLine className="w-3.5 h-3.5" /> },
 ];
 
 export function SettingsForm({ profile: p }: Props) {
@@ -31,6 +33,18 @@ export function SettingsForm({ profile: p }: Props) {
   const [market, setMarket] = useState<Market>(p?.default_market ?? "france");
   const [tab, setTab] = useState<TabKey>("market");
   const isFrance = market === "france";
+
+  const [signature, setSignature] = useState<string | null>(p?.signature_data_url ?? null);
+  const [signaturePending, startSignatureTransition] = useTransition();
+  const [signatureSaved, setSignatureSaved] = useState(false);
+
+  const handleSaveSignature = () => {
+    setSignatureSaved(false);
+    startSignatureTransition(async () => {
+      await updateSignatureAction(signature);
+      setSignatureSaved(true);
+    });
+  };
 
   const [form, setForm] = useState({
     company_name: p?.company_name ?? "",
@@ -226,19 +240,45 @@ export function SettingsForm({ profile: p }: Props) {
         </Card>
       )}
 
+      {/* Signature de l'émetteur — réutilisée automatiquement sur tous les devis/factures */}
+      {tab === "signature" && (
+        <Card padding="lg">
+          <h2 className="text-sm font-semibold text-[var(--color-text)] mb-1">Signature</h2>
+          <p className="text-xs text-[var(--color-text-3)] mb-4">
+            Dessinez votre signature une fois — elle sera automatiquement apposée sur tous les devis et factures que vous générez.
+          </p>
+          <div className="max-w-sm space-y-4">
+            <SignaturePad initialValue={signature} onChange={setSignature} />
+            <div className="flex items-center gap-3">
+              <Button type="button" size="sm" loading={signaturePending} onClick={handleSaveSignature}>
+                Enregistrer la signature
+              </Button>
+              {signatureSaved && (
+                <div className="flex items-center gap-1.5 text-sm font-medium text-[var(--color-success)]">
+                  <CheckCircle2 className="w-4 h-4" />
+                  Sauvegardée
+                </div>
+              )}
+            </div>
+          </div>
+        </Card>
+      )}
+
       {error && <p className="text-sm text-[var(--color-danger)] px-1">{error}</p>}
 
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pb-5">
-        <Button type="submit" loading={isPending} className="flex-1">
-          Enregistrer les modifications
-        </Button>
-        {success && (
-          <div className="flex items-center justify-center gap-1.5 text-sm font-medium text-[var(--color-success)]">
-            <CheckCircle2 className="w-4 h-4" />
-            Sauvegardé
-          </div>
-        )}
-      </div>
+      {tab !== "signature" && (
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pb-5">
+          <Button type="submit" loading={isPending} className="flex-1">
+            Enregistrer les modifications
+          </Button>
+          {success && (
+            <div className="flex items-center justify-center gap-1.5 text-sm font-medium text-[var(--color-success)]">
+              <CheckCircle2 className="w-4 h-4" />
+              Sauvegardé
+            </div>
+          )}
+        </div>
+      )}
     </form>
   );
 }
