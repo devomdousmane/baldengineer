@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Users, FileText, Receipt, Wallet, Briefcase,
   BookOpen, Settings, LogOut, X, HelpCircle, Sparkles, Send, ArrowLeft,
-  PanelLeftClose, PanelLeftOpen, Globe, ChevronDown, FolderOpen,
+  PanelLeftClose, PanelLeftOpen, Globe, ChevronDown, FolderOpen, Bot,
 } from "lucide-react";
 import { MarketSwitcher } from "./market-switcher";
 import { Tooltip } from "@/components/ui/tooltip";
@@ -98,7 +98,7 @@ interface SidebarProps {
   onTourStart?: () => void;
 }
 
-export function Sidebar({ userName, userAvatar, market, onSignOut, onTourStart }: SidebarProps) {
+export function Sidebar({ userName, userAvatar, market, onSignOut, onAiOpen, onTourStart }: SidebarProps) {
   const pathname = usePathname();
   const { mobileOpen, closeMobile, collapsed, toggleCollapsed } = useSidebar();
   const isActive = (href: string) => href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -339,6 +339,27 @@ export function Sidebar({ userName, userAvatar, market, onSignOut, onTourStart }
               <ArrowLeft className="w-4 h-4 shrink-0" strokeWidth={1.75} />
               <span>Retour au site</span>
             </a>
+          )}
+
+          {onAiOpen && (
+            isCollapsed ? (
+              <Tooltip content="Assistant IA" side="right">
+                <button
+                  onClick={() => { handleNavigate(); onAiOpen(); }}
+                  className="w-full flex items-center justify-center px-3 py-2 rounded-[var(--radius-md)] text-sm text-[var(--color-text-2)] hover:bg-[var(--color-bg-2)] hover:text-[var(--color-text)] transition-colors duration-[var(--dur-fast)] cursor-pointer"
+                >
+                  <Bot className="w-4 h-4 shrink-0" strokeWidth={1.75} />
+                </button>
+              </Tooltip>
+            ) : (
+              <button
+                onClick={() => { handleNavigate(); onAiOpen(); }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-[var(--radius-md)] text-sm text-[var(--color-text-2)] hover:bg-[var(--color-bg-2)] hover:text-[var(--color-text)] transition-colors duration-[var(--dur-fast)] cursor-pointer"
+              >
+                <Bot className="w-4 h-4 shrink-0" strokeWidth={1.75} />
+                <span>Assistant IA</span>
+              </button>
+            )
           )}
 
           {onTourStart && !isCollapsed && (
