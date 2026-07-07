@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, type RefObject } from "react";
+import { useEffect, useRef, type RefObject } from "react";
 
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -17,6 +17,15 @@ interface UseFocusTrapOptions {
  * ferme sur Escape, et restitue le focus à l'élément précédemment actif à la fermeture.
  */
 export function useFocusTrap(containerRef: RefObject<HTMLElement | null>, { open, onEscape, initialFocusRef }: UseFocusTrapOptions) {
+  /* onEscape est souvent une closure inline recréée à chaque render du parent (ex. re-render
+     déclenché par la frappe dans un champ du formulaire) — si elle figurait dans le tableau de
+     dépendances ci-dessous, l'effet entier se relançait à chaque frappe : son cleanup reforce le
+     focus vers l'élément actif avant ouverture, puis le setup le renvoie dans le champ, ce qui
+     éjectait le focus du champ à chaque caractère tapé. On la lit via une ref pour ne dépendre
+     que de ce qui doit réellement redéclencher le piège de focus : l'ouverture/fermeture. */
+  const onEscapeRef = useRef(onEscape);
+  onEscapeRef.current = onEscape;
+
   useEffect(() => {
     if (!open) return;
     const previouslyFocused = document.activeElement as HTMLElement | null;
@@ -30,7 +39,7 @@ export function useFocusTrap(containerRef: RefObject<HTMLElement | null>, { open
     const raf = requestAnimationFrame(focusInitial);
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") { onEscape?.(); return; }
+      if (e.key === "Escape") { onEscapeRef.current?.(); return; }
       if (e.key !== "Tab" || !containerRef.current) return;
 
       const focusable = Array.from(
@@ -56,5 +65,6 @@ export function useFocusTrap(containerRef: RefObject<HTMLElement | null>, { open
       window.removeEventListener("keydown", onKeyDown);
       previouslyFocused?.focus();
     };
-  }, [open, onEscape, containerRef, initialFocusRef]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, containerRef, initialFocusRef]);
 }
