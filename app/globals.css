@@ -44,6 +44,14 @@
   --color-fr: var(--color-fr);
   --color-gn: var(--color-gn);
 
+  /* Dataviz status */
+  --color-viz-inactive: var(--color-viz-inactive);
+  --color-viz-neutral: var(--color-viz-neutral);
+  --color-viz-positive: var(--color-viz-positive);
+  --color-viz-warning: var(--color-viz-warning);
+  --color-viz-negative: var(--color-viz-negative);
+  --color-viz-amber: var(--color-viz-amber);
+
   /* Radius */
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
@@ -113,6 +121,18 @@
   --color-fr-dim:      rgba(29, 78, 216, 0.10);
   --color-gn:          #B45309;    /* Guinée — ambre, distinct de --color-danger */
   --color-gn-dim:      rgba(180, 83, 9, 0.10);
+
+  /* ── Dataviz status (graphiques uniquement) ──
+     Jeu dédié, validé avec validate_palette.js (CVD, chroma, contraste) : les tokens
+     --color-success/warning/danger dark-mode sont calibrés pour du texte à fort
+     contraste et échouent la bande de luminosité recommandée pour des aplats de
+     graphique — ce jeu reste dans la bande sans toucher aux tokens UI globaux. */
+  --color-viz-inactive: #6D28D9;   /* brouillon / annulé / expiré */
+  --color-viz-neutral:  #0369A1;   /* envoyé / en attente */
+  --color-viz-positive: #059669;   /* payé / accepté */
+  --color-viz-warning:  #D97706;   /* partiel */
+  --color-viz-negative: #DC2626;   /* en retard / refusé */
+  --color-viz-amber:    #B45309;   /* série Guinée en graphique — --color-gn dark-mode est hors bande */
 
   /* ── Elevation shadows — plus douces, blur superposé ── */
   --shadow-xs: 0 1px 2px rgba(15,23,42,0.04);
@@ -210,6 +230,19 @@
   --color-fr-dim:      rgba(96,165,250,0.13);
   --color-gn:          #F0A560;
   --color-gn-dim:      rgba(240,165,96,0.13);
+
+  /* Dataviz status — validés dans la bande de luminosité dataviz (L 0.48–0.67)
+     contre la surface carte #1C2128 ; voir le commentaire dans :root pour le
+     pourquoi de ce jeu séparé des tokens UI dark-mode. Le violet est éclairci par
+     rapport au clair pour rester dans la bande sombre (léger WARN de contraste
+     sinon, atténué ici sans compromis) ; le bleu reprend le pas plus profond
+     validé pour ce mode — les trois autres restent identiques au clair. */
+  --color-viz-inactive: #8B5CF6;
+  --color-viz-neutral:  #0284C7;
+  --color-viz-positive: #059669;
+  --color-viz-warning:  #D97706;
+  --color-viz-negative: #DC2626;
+  --color-viz-amber:    #B45309;
 
   --shadow-xs: 0 1px 2px rgba(0,0,0,0.35);
   --shadow-sm: 0 2px 5px rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.28);

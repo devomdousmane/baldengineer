@@ -22,10 +22,18 @@ const STATUS_LABELS: Record<string, string> = {
   overdue: "En retard", cancelled: "Annulée", accepted: "Accepté", refused: "Refusé", expired: "Expiré",
 };
 
+/* Jeu de couleurs status dédié aux graphiques (--color-viz-*), validé avec
+   validate_palette.js (CVD, chroma, contraste) — contrairement à --color-text-3
+   (décoratif, échoue le seuil de chroma) ou aux tokens dark-mode --color-success/
+   danger (trop clairs pour un aplat). 5 identités distinctes pour que les statuts
+   "inactifs" (brouillon/annulé/expiré) ne se confondent pas avec "envoyé/en attente"
+   quand plusieurs coexistent dans le même donut. Voir globals.css pour le détail. */
 const STATUS_COLORS: Record<string, string> = {
-  draft: "var(--color-text-3)", sent: "var(--color-accent)", paid: "var(--color-success)",
-  partial: "var(--color-warning)", overdue: "var(--color-danger)", cancelled: "var(--color-text-3)",
-  accepted: "var(--color-success)", refused: "var(--color-danger)", expired: "var(--color-text-3)",
+  draft: "var(--color-viz-inactive)", cancelled: "var(--color-viz-inactive)", expired: "var(--color-viz-inactive)",
+  sent: "var(--color-viz-neutral)",
+  paid: "var(--color-viz-positive)", accepted: "var(--color-viz-positive)",
+  partial: "var(--color-viz-warning)",
+  overdue: "var(--color-viz-negative)", refused: "var(--color-viz-negative)",
 };
 
 export function InvoiceStatusChart({ data, currency, title = "Répartition par statut" }: Props) {

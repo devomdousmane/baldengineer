@@ -54,8 +54,8 @@ export function RevenueChart({ data, year, currency, market = "all" }: Props) {
               <stop offset="95%" stopColor="var(--color-accent)" stopOpacity={0} />
             </linearGradient>
             <linearGradient id="gradGN" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="var(--color-gn)" stopOpacity={0.15} />
-              <stop offset="95%" stopColor="var(--color-gn)" stopOpacity={0} />
+              <stop offset="5%" stopColor="var(--color-viz-amber)" stopOpacity={0.15} />
+              <stop offset="95%" stopColor="var(--color-viz-amber)" stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
@@ -97,7 +97,7 @@ export function RevenueChart({ data, year, currency, market = "all" }: Props) {
           )}
           {showGuinee && (
             <Area
-              type="monotone" dataKey="guinee" stroke="var(--color-gn)"
+              type="monotone" dataKey="guinee" stroke="var(--color-viz-amber)"
               fill="url(#gradGN)" strokeWidth={2} dot={false} activeDot={{ r: 4 }}
             />
           )}

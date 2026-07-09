@@ -82,8 +82,8 @@ export function CashflowChart({ data, year, currency }: Props) {
             formatter={(v) => v === "recettes" ? "Recettes" : "Dépenses"}
             wrapperStyle={{ fontSize: "12px", color: "var(--color-text-2)" }}
           />
-          <Bar dataKey="recettes" fill="var(--color-success)" radius={[4, 4, 0, 0]} maxBarSize={18} />
-          <Bar dataKey="depenses" fill="var(--color-danger)" radius={[4, 4, 0, 0]} maxBarSize={18} />
+          <Bar dataKey="recettes" fill="var(--color-viz-positive)" radius={[4, 4, 0, 0]} maxBarSize={18} />
+          <Bar dataKey="depenses" fill="var(--color-viz-negative)" radius={[4, 4, 0, 0]} maxBarSize={18} />
         </BarChart>
       </ResponsiveContainer>
     </Card>
