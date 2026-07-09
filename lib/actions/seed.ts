@@ -236,14 +236,28 @@ export async function deleteDemoDataAction(): Promise<void> {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) throw new Error("Non authentifié");
 
-  /* Delete in order to respect FK constraints */
-  await supabase.from("accounting_entries").delete().not("id", "is", null);
-  await supabase.from("invoice_lines").delete().not("id", "is", null);
-  await supabase.from("invoices").delete().not("id", "is", null);
-  await supabase.from("quote_lines").delete().not("id", "is", null);
-  await supabase.from("quotes").delete().not("id", "is", null);
-  await supabase.from("missions").delete().not("id", "is", null);
-  await supabase.from("clients").delete().not("id", "is", null);
+  /* quotes.converted_to_invoice_id référence invoices(id) sans ON DELETE CASCADE
+     (contrainte fk_quotes_invoice) — supprimer une facture convertie échouerait
+     silencieusement si ce lien n'est pas cassé d'abord. */
+  const { error: unlinkErr } = await supabase
+    .from("quotes").update({ converted_to_invoice_id: null }).not("id", "is", null);
+  if (unlinkErr) throw new Error(unlinkErr.message);
+
+  /* Delete in order to respect FK constraints — chaque erreur est vérifiée pour ne
+     jamais laisser croire à une suppression totale en cas d'échec partiel. */
+  const steps: [string, string][] = [
+    ["accounting_entries", "les écritures comptables"],
+    ["invoice_lines", "les lignes de facture"],
+    ["invoices", "les factures"],
+    ["quote_lines", "les lignes de devis"],
+    ["quotes", "les devis"],
+    ["missions", "les missions"],
+    ["clients", "les clients"],
+  ];
+  for (const [table, label] of steps) {
+    const { error } = await supabase.from(table).delete().not("id", "is", null);
+    if (error) throw new Error(`Échec de la suppression pour ${label} : ${error.message}`);
+  }
 
   revalidatePath("/", "layout");
 }
