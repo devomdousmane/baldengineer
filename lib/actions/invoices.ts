@@ -105,7 +105,6 @@ export async function createInvoiceAction(payload: InvoiceInput): Promise<{ id: 
   if (!auth.user) throw new Error("Non authentifié");
   const workspaceUserId = await getWorkspaceUserId(supabase, auth.user.id);
 
-  const number = await nextInvoiceNumber(supabase, workspaceUserId, payload.market);
   const currency = payload.market === "france" ? "EUR" : "GNF";
   const totals = calcTotals(payload.lines);
 
@@ -114,26 +113,37 @@ export async function createInvoiceAction(payload: InvoiceInput): Promise<{ id: 
   dateObj.setDate(dateObj.getDate() + (payload.payment_terms_days ?? 30));
   const due_date = dateObj.toISOString().slice(0, 10);
 
-  const { data: invoice, error: iErr } = await supabase
-    .from("invoices")
-    .insert({
-      user_id: workspaceUserId,
-      client_id: payload.client_id,
-      quote_id: payload.quote_id ?? null,
-      market: payload.market,
-      number,
-      title: payload.title,
-      date: payload.date,
-      due_date,
-      currency,
-      notes: payload.notes ?? null,
-      terms: payload.terms ?? null,
-      ...totals,
-    })
-    .select("id")
-    .single();
+  /* Le compteur peut être en retard (créations concurrentes, migration de données…) —
+     en cas de collision sur le numéro (contrainte UNIQUE), on régénère et retente plutôt
+     que d'échouer immédiatement. */
+  let invoice: { id: string } | null = null;
+  let lastError: string | null = null;
+  for (let attempt = 0; attempt < 5 && !invoice; attempt++) {
+    const number = await nextInvoiceNumber(supabase, workspaceUserId, payload.market);
+    const { data, error: iErr } = await supabase
+      .from("invoices")
+      .insert({
+        user_id: workspaceUserId,
+        client_id: payload.client_id,
+        quote_id: payload.quote_id ?? null,
+        market: payload.market,
+        number,
+        title: payload.title,
+        date: payload.date,
+        due_date,
+        currency,
+        notes: payload.notes ?? null,
+        terms: payload.terms ?? null,
+        ...totals,
+      })
+      .select("id")
+      .single();
 
-  if (iErr) throw new Error(iErr.message);
+    if (!iErr) { invoice = data; break; }
+    lastError = iErr.message;
+    if (iErr.code !== "23505") throw new Error(iErr.message);
+  }
+  if (!invoice) throw new Error(lastError ?? "Échec de la création de la facture");
 
   if (payload.lines.length > 0) {
     const { error: lErr } = await supabase.from("invoice_lines").insert(

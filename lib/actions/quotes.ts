@@ -104,29 +104,39 @@ export async function createQuoteAction(payload: QuoteInput): Promise<{ id: stri
   if (!auth.user) throw new Error("Non authentifié");
   const workspaceUserId = await getWorkspaceUserId(supabase, auth.user.id);
 
-  const number = await nextQuoteNumber(supabase, workspaceUserId, payload.market);
   const currency = payload.market === "france" ? "EUR" : "GNF";
   const totals = calcTotals(payload.lines);
 
-  const { data: quote, error: qErr } = await supabase
-    .from("quotes")
-    .insert({
-      user_id: workspaceUserId,
-      client_id: payload.client_id,
-      market: payload.market,
-      number,
-      title: payload.title,
-      date: payload.date,
-      valid_until: payload.valid_until,
-      currency,
-      notes: payload.notes ?? null,
-      terms: payload.terms ?? null,
-      ...totals,
-    })
-    .select("id")
-    .single();
+  /* Le compteur peut être en retard (créations concurrentes, migration de données…) —
+     en cas de collision sur le numéro (contrainte UNIQUE), on régénère et retente plutôt
+     que d'échouer immédiatement. */
+  let quote: { id: string } | null = null;
+  let lastError: string | null = null;
+  for (let attempt = 0; attempt < 5 && !quote; attempt++) {
+    const number = await nextQuoteNumber(supabase, workspaceUserId, payload.market);
+    const { data, error: qErr } = await supabase
+      .from("quotes")
+      .insert({
+        user_id: workspaceUserId,
+        client_id: payload.client_id,
+        market: payload.market,
+        number,
+        title: payload.title,
+        date: payload.date,
+        valid_until: payload.valid_until,
+        currency,
+        notes: payload.notes ?? null,
+        terms: payload.terms ?? null,
+        ...totals,
+      })
+      .select("id")
+      .single();
 
-  if (qErr) throw new Error(qErr.message);
+    if (!qErr) { quote = data; break; }
+    lastError = qErr.message;
+    if (qErr.code !== "23505") throw new Error(qErr.message);
+  }
+  if (!quote) throw new Error(lastError ?? "Échec de la création du devis");
 
   if (payload.lines.length > 0) {
     const { error: lErr } = await supabase.from("quote_lines").insert(
