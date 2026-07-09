@@ -41,17 +41,15 @@ export default async function SettingsPage() {
       >
         <SettingsForm profile={profile as Profile | null} />
 
-        {process.env.NODE_ENV !== "production" && (
-          <div className="max-w-3xl pt-4 mt-2 border-t-2 border-dashed border-[var(--color-warning-dim)]">
-            <div className="flex items-center gap-2 mb-4 mt-4">
-              <p className="text-3xs font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full"
-                style={{ backgroundColor: "var(--color-warning-dim)", color: "var(--color-warning)" }}>
-                Zone développeur — visible en environnement de développement uniquement
-              </p>
-            </div>
-            <DemoDataPanel />
+        <div className="max-w-3xl pt-4 mt-2 border-t-2 border-dashed border-[var(--color-warning-dim)]">
+          <div className="flex items-center gap-2 mb-4 mt-4">
+            <p className="text-3xs font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full"
+              style={{ backgroundColor: "var(--color-warning-dim)", color: "var(--color-warning)" }}>
+              Zone sensible — données de test et réinitialisation
+            </p>
           </div>
-        )}
+          <DemoDataPanel />
+        </div>
       </PageWrapper>
     </>
   );
